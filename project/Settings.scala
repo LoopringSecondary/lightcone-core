@@ -35,7 +35,7 @@ object Settings {
     resolvers += Resolver.bintrayRepo("hseeberger", "maven"),
     resolvers += Opts.resolver.sonatypeSnapshots,
     resolvers += Opts.resolver.sonatypeReleases,
-    libraryDependencies += "org.scala-lang" % "scala-library" % "2.12.7",
+    libraryDependencies += "org.scala-lang" % "scala-library" % Globals.scalaVersion,
     javacOptions := Seq( //"-source", Globals.jvmVersion,
     ),
     scalacOptions := Seq(
