@@ -13,6 +13,7 @@ import scalariform.formatter.preferences._
 
 object Settings {
   lazy val basicSettings: Seq[Setting[_]] = Seq(
+    name := "lightcone-core",
     scalaVersion := Globals.scalaVersion,
     organization := "org.loopring",
     organizationName := "Loopring Foundation",
