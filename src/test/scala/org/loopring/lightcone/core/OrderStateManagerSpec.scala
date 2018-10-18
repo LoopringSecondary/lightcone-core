@@ -47,41 +47,58 @@ class OrderStateManagerSpec extends FlatSpec with Matchers {
     val lrc = manager.getTokenManager("LRC")
     lrc.reset(100, 200)
 
+    val xyz = manager.addTokenManager(new TokenManager("XYZ"))
     val gto = manager.addTokenManager(new TokenManager("GTO"))
     gto.reset(5000, 4000)
 
     manager.submitOrder(Order(
       Raw(),
       "order1",
+      "LRC",
+      "XYZ",
+      None,
       10,
-      "LRC"
+      0
     ))
 
     manager.submitOrder(Order(
       Raw(),
       "order2",
-      15,
       "LRC",
+      "XYZ",
+      None,
+      15,
       1
     ))
 
     manager.submitOrder(Order(
       Raw(),
       "order3",
-      15,
       "LRC",
-      10,
-      Some("GTO")
+      "XYZ",
+      Some("GTO"),
+      15,
+      10
     ))
 
     manager.submitOrder(Order(
       Raw(),
       "order4",
-      150,
       "GTO",
-      10,
-      Some("LRC")
+      "LRC",
+      Some("LRC"),
+      150,
+      10
     ))
+
+    println("LRC =")
+    println(lrc.getDebugInfo)
+
+    println("--------orderPool.orders")
+    orderPool.orders.foreach(println)
+
+    println("--------receivedOrders")
+    receivedOrders.foreach(println)
 
     manager.cancelOrder("order1")
     manager.cancelOrder("order2")

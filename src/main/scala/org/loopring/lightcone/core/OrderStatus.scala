@@ -21,8 +21,10 @@ final object OrderStatus extends Enumeration {
 
   val NEW = Value(0)
   val PENDING = Value(1)
-  val CANCELLED_LOW_BALANCE = Value(2)
-  val CANCELLED_LOW_FEE_BALANCE = Value(3)
-  val CANCELLED_BY_USER = Value(4)
-  val EXPIRED = Value(5)
+  val EXPIRED = Value(2)
+  val CANCELLED_BY_USER = Value(3)
+  val CANCELLED_LOW_BALANCE = Value(4)
+  val CANCELLED_LOW_FEE_BALANCE = Value(5)
+  val CANCELLED_TOO_MANY_ORDERS = Value(6)
+
 }

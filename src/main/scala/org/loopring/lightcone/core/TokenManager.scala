@@ -17,6 +17,7 @@
 package org.loopring.lightcone.core
 
 import org.slf4j.LoggerFactory
+import OrderStatus._
 
 case class TokenBalance(
     balance: Amount,
@@ -33,7 +34,10 @@ private[core] case class Reservation(
 
 private[core] class TokenManager[T](
     val token: Address
-)(implicit orderPool: OrderPool[T]) {
+)(
+    implicit
+    orderPool: OrderPool[T]
+) {
   implicit private val _t = token
   import OrderStatus._
 
@@ -47,6 +51,8 @@ private[core] class TokenManager[T](
   private[core] var cursor: Int = -1
   private[core] var idxMap = Map.empty[ID, Int]
   private[core] var reservations = Seq.empty[Reservation]
+
+  def size() = reservations.size
 
   def getTokenBalance() =
     TokenBalance(balance, allowance, availableBalance, availableAllowance)

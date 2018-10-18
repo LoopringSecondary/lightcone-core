@@ -21,10 +21,11 @@ import OrderStatus._
 case class Order[T](
     origin: T,
     id: ID,
-    amountS: Amount,
     tokenS: Address,
-    amountFee: Amount = 0,
-    tokenFee: Option[Address] = None,
+    tokenB: Address,
+    tokenFee: Option[Address],
+    amountS: Amount,
+    amountFee: Amount,
     reservedAmountS: Amount = 0,
     reservedAmountFee: Amount = 0,
     scale: Double = 0,
@@ -59,12 +60,15 @@ case class Order[T](
   }
 
   // Private methods
-  private[core] def as(status: OrderStatus) = copy(
-    reservedAmountS = 0,
-    reservedAmountFee = 0,
-    scale = 0,
-    status = status
-  )
+  private[core] def as(status: OrderStatus) = {
+    assert(status != PENDING)
+    copy(
+      reservedAmountS = 0,
+      reservedAmountFee = 0,
+      scale = 0,
+      status = status
+    )
+  }
 
   private def withReservedAmountS(v: Amount) = copy(reservedAmountS = v).updateScale()
   private def withReservedAmountFee(v: Amount) = copy(reservedAmountFee = v).updateScale()
