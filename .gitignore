@@ -1,0 +1,13 @@
+
+it target/
+project/project/
+**/target/
+
+**/.DS_Store
+**/log/
+
+.history
+.gradle/
+.idea/
+lib.iml
+logs

@@ -1,0 +1,164 @@
+/*
+ * Copyright 2018 Loopring Foundation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package org.loopring.lightcone.core
+
+import org.slf4j.LoggerFactory
+
+private[core] case class Reservation(
+    orderId: ID,
+    accumulatedBalance: Amount,
+    accumulatedAllowance: Amount
+)
+
+private[core] class TokenManager[T](
+    val token: Address
+)(implicit orderPool: OrderPool[T]) {
+  implicit private val _t = token
+  import OrderStatus._
+
+  private val log = LoggerFactory.getLogger(getClass.getName)
+
+  // TODO(dongw): add method to get availableBalance and availableAllowance
+  private[core] var balance: Amount = 0
+  private[core] var allowance: Amount = 0
+  private[core] var cursor: Int = -1
+  private[core] var idxMap = Map.empty[ID, Int]
+  private[core] var reservations = Seq.empty[Reservation]
+
+  def reset(balance_ : Amount, allowance_ : Amount): Set[ID] = {
+    val cursor1 =
+      if (balance_ >= balance) cursor
+      else {
+        val idx = reservations.indexWhere { r ⇒
+          r.accumulatedBalance > balance_
+        }
+        if (idx == -1) cursor else idx - 1
+      }
+
+    val cursor2 = if (allowance_ >= allowance) {
+      val idx = reservations.indexWhere { r ⇒
+        val order = orderPool(r.orderId)
+        order.reservedAmount != order.requestedAmount
+      }
+      if (idx == -1) cursor else idx - 1
+    } else {
+      val idx = reservations.indexWhere { r ⇒
+        r.accumulatedAllowance > allowance_
+      }
+      if (idx == -1) cursor else idx - 1
+    }
+
+    cursor = Math.min(cursor1, cursor2)
+
+    balance = balance_
+    allowance = allowance_
+
+    rebalance()
+  }
+
+  // returns orders to be deleted
+  def reserve(orderId: ID): Set[ID] = {
+    assert(orderPool.contains(orderId))
+    idxMap.get(orderId) match {
+      case Some(_) ⇒ Set.empty
+      case None ⇒
+        reservations :+= Reservation(orderId, 0, 0)
+        rebalance()
+    }
+
+  }
+
+  // returns orders to be deleted
+  def release(orderId: ID): Set[ID] = {
+    idxMap.get(orderId) match {
+      case None ⇒ Set.empty
+      case Some(idx) ⇒
+        reservations = reservations.patch(idx, Nil, 1)
+        idxMap -= orderId
+        cursor = idx - 1
+        rebalance() + orderId
+    }
+  }
+
+  // returns orders to be deleted
+  def adjust(id: ID): Set[ID] = {
+    idxMap.get(id) match {
+      case None ⇒ Set.empty
+      case Some(idx) ⇒
+        assert(orderPool.contains(id))
+        cursor = Math.min(cursor, idx)
+        val order = orderPool(id)
+        cursor = idx - 1
+        rebalance()
+    }
+  }
+
+  private[core] def getAccumulatedAtCursor(): (Amount, Amount) = {
+    if (cursor < 0) (0, 0)
+    else {
+      val r = reservations(cursor)
+      (r.accumulatedBalance, r.accumulatedAllowance)
+    }
+  }
+
+  private[core] def rebalance(): Set[ID] = {
+    val (goodOnes, badOnes) = reservations.splitAt(cursor + 1)
+    reservations = goodOnes
+
+    var (accumulatedBalance, accumulatedAllowance) = getAccumulatedAtCursor()
+
+    var availableBalance = balance - accumulatedBalance
+    var availableAllowance = allowance - accumulatedAllowance
+
+    var ordersToDelete = Set.empty[ID]
+
+    badOnes.foreach { r ⇒
+      val order = orderPool(r.orderId)
+
+      if (availableBalance < order.requestedAmount) {
+        ordersToDelete += order.id
+        // orderPool -= order.id
+        idxMap -= order.id
+      } else {
+        val reserved =
+          if (availableAllowance >= order.requestedAmount) order.requestedAmount
+          else availableAllowance
+
+        accumulatedBalance += order.requestedAmount
+        accumulatedAllowance += reserved
+
+        availableBalance = balance - accumulatedBalance
+        availableAllowance = allowance - accumulatedAllowance
+
+        idxMap += order.id -> reservations.size
+        orderPool += order.withReservedAmount(reserved)
+        reservations :+= Reservation(order.id, accumulatedBalance, accumulatedAllowance)
+        cursor += 1
+      }
+    }
+
+    log.trace("getDebugInfo: " + getDebugInfo)
+    log.debug("ordersToDelete: " + ordersToDelete)
+    ordersToDelete
+  }
+
+  private[core] def getDebugInfo() = {
+    val localOrders = reservations.map(r ⇒ orderPool(r.orderId))
+    (localOrders, reservations, idxMap, cursor)
+  }
+
+}
