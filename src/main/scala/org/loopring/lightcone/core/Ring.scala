@@ -32,5 +32,6 @@ case class Ring[T](
     createdAt: Timestamp,
     committedAt: Option[Timestamp] = None
 ) {
+  // TODO(dongw): maybe we should use XOR of the two hashes of the orders.
   val id: ID = maker.order.id + "-" + taker.order.id // This is not correct
 }
