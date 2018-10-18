@@ -50,30 +50,24 @@ private[core] final class DemoManager() {
         val idx = reservations.indexWhere { r ⇒
           r.accumulatedBalance > balance_
         }
-
         if (idx == -1) cursor else idx - 1
       }
 
-    val cursor2 = if (allowance_ >= allowance) {
-      val idx = reservations.indexWhere { r ⇒
-        val item = items(r.id)
-        item.reserved != item.amount
+    val cursor2 =
+      if (allowance_ >= allowance) {
+        val idx = reservations.indexWhere { r ⇒
+          val item = items(r.id)
+          item.reserved != item.amount
+        }
+        if (idx == -1) cursor else idx - 1
+      } else {
+        val idx = reservations.indexWhere { r ⇒
+          r.accumulatedAllowance > allowance_
+        }
+        if (idx == -1) cursor else idx - 1
       }
 
-      if (idx == -1) cursor else idx - 1
-    } else {
-
-      val idx = reservations.indexWhere { r ⇒
-        r.accumulatedAllowance > allowance_
-      }
-
-      if (idx == -1) cursor else idx - 1
-
-    }
-    // println("--cursor1: " + cursor1)
-    // println("--cursor2: " + cursor2)
     cursor = Math.min(cursor1, cursor2)
-
     balance = balance_
     allowance = allowance_
 
@@ -92,7 +86,11 @@ private[core] final class DemoManager() {
   def resize(id: String, newAmount: Int) =
     resizeInternal(id, newAmount, _ ⇒ newAmount)
 
-  private def resizeInternal(id: String, value: Int, getNewAmount: Item ⇒ Int): Boolean = {
+  private def resizeInternal(
+    id: String,
+    value: Int,
+    getNewAmount: Item ⇒ Int
+  ): Boolean = {
     idxMap.get(id) match {
       case None ⇒ false
       case Some(idx) ⇒
