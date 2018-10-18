@@ -18,6 +18,13 @@ package org.loopring.lightcone.core
 
 import org.slf4j.LoggerFactory
 
+case class TokenBalance(
+    balance: Amount,
+    allowance: Amount,
+    availableBalance: Amount,
+    availableAllowance: Amount
+)
+
 private[core] case class Reservation(
     orderId: ID,
     accumulatedBalance: Amount,
@@ -32,12 +39,17 @@ private[core] class TokenManager[T](
 
   private val log = LoggerFactory.getLogger(getClass.getName)
 
-  // TODO(dongw): add method to get availableBalance and availableAllowance
   private[core] var balance: Amount = 0
   private[core] var allowance: Amount = 0
+  private[core] var availableBalance: Amount = 0
+  private[core] var availableAllowance: Amount = 0
+
   private[core] var cursor: Int = -1
   private[core] var idxMap = Map.empty[ID, Int]
   private[core] var reservations = Seq.empty[Reservation]
+
+  def getTokenBalance() =
+    TokenBalance(balance, allowance, availableBalance, availableAllowance)
 
   def reset(balance_ : Amount, allowance_ : Amount): Set[ID] = {
     val cursor1 =
@@ -121,8 +133,8 @@ private[core] class TokenManager[T](
 
     var (accumulatedBalance, accumulatedAllowance) = getAccumulatedAtCursor()
 
-    var availableBalance = balance - accumulatedBalance
-    var availableAllowance = allowance - accumulatedAllowance
+    availableBalance = balance - accumulatedBalance
+    availableAllowance = allowance - accumulatedAllowance
 
     var ordersToDelete = Set.empty[ID]
 
