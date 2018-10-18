@@ -13,7 +13,6 @@ import scalariform.formatter.preferences._
 
 object Settings {
   lazy val basicSettings: Seq[Setting[_]] = Seq(
-    //name := Globals.name,
     scalaVersion := Globals.scalaVersion,
     organization := "org.loopring",
     organizationName := "Loopring Foundation",
@@ -36,9 +35,7 @@ object Settings {
     resolvers += Resolver.bintrayRepo("hseeberger", "maven"),
     resolvers += Opts.resolver.sonatypeSnapshots,
     resolvers += Opts.resolver.sonatypeReleases,
-    libraryDependencies ++= Seq(
-      "com.thesamet.scalapb" %% "scalapb-runtime" % scalapb.compiler.Version.scalapbVersion,
-      "com.thesamet.scalapb" %% "scalapb-runtime" % scalapb.compiler.Version.scalapbVersion % "protobuf"),
+    libraryDependencies += "org.scala-lang" % "scala-library" % "2.12.7",
     javacOptions := Seq( //"-source", Globals.jvmVersion,
     ),
     scalacOptions := Seq(
