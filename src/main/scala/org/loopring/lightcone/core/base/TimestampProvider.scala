@@ -16,14 +16,14 @@
 
 package org.loopring.lightcone.core
 
-object TimestampProvider {
-  val default = new SystemTimestampProvider()
+object TimeProvider {
+  val default = new SystemTimeProvider()
 }
 
-trait TimestampProvider {
-  def getTimestamp(): Timestamp
+trait TimeProvider {
+  def getCurrentTimeMillis(): Long
 }
 
-final class SystemTimestampProvider extends TimestampProvider {
-  def getTimestamp() = System.currentTimeMillis
+final class SystemTimeProvider extends TimeProvider {
+  def getCurrentTimeMillis() = System.currentTimeMillis
 }

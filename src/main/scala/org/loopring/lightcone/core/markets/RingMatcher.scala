@@ -16,15 +16,20 @@
 
 package org.loopring.lightcone.core
 
-final object OrderStatus extends Enumeration {
-  type OrderStatus = Value
+trait RingMatcher[T] {
+  def matchOrders(
+    taker: Order[T],
+    maker: Order[T]
+  ): Either[MatchingFailure.Value, Ring[T]]
+}
 
-  val NEW = Value(0)
-  val PENDING = Value(1)
-  val EXPIRED = Value(2)
-  val CANCELLED_BY_USER = Value(3)
-  val CANCELLED_LOW_BALANCE = Value(4)
-  val CANCELLED_LOW_FEE_BALANCE = Value(5)
-  val CANCELLED_TOO_MANY_ORDERS = Value(6)
+abstract class SimpleRingMatcher[T](
+    ringIncomeEstimator: RingIncomeEstimator[T]
+) extends RingMatcher[T] {
+
+  def matchOrders(
+    taker: Order[T],
+    maker: Order[T]
+  ): Either[MatchingFailure.Value, Ring[T]]
 
 }

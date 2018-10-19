@@ -22,18 +22,21 @@ case class ExpectedFill[T](
     order: Order[T],
     pendingAmountS: Amount = 0,
     pendingAmountB: Amount = 0,
-    pendingAmountFee: Amount = 0
+    pendingAmountFee: Amount = 0,
+    pendingAmountMargin: Amount = 0
 ) {
-  lazy val filledRatio = pendingAmountS ÷ order.amountS
-  lazy val outstandingRatio = order.scale - filledRatio
+
+  assert(pendingAmountS <= order.amountS)
+
+  def id = order.id
 }
 
 case class Ring[T](
     maker: ExpectedFill[T],
     taker: ExpectedFill[T]
 ) {
-  lazy val id: ByteArray = {
-    def sha256(id_ : ID): ByteArray = MessageDigest.getInstance("MD-5")
+  lazy val id: RingID = {
+    def sha256(id_ : ID): RingID = MessageDigest.getInstance("MD-5")
       .digest(id_.getBytes("UTF-8"))
 
     sha256(maker.order.id)

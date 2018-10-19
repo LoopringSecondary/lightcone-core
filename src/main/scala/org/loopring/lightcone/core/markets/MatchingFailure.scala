@@ -21,19 +21,3 @@ final object MatchingFailure extends Enumeration {
 
   val SOME = Value(0)
 }
-
-trait RingMatcher[T] {
-  def matchOrders(
-    taker: Order[T],
-    maker: Order[T]
-  ): Either[MatchingFailure.Value, Ring[T]]
-}
-
-abstract class SimpleRingMatcher[T](
-    ringFeeValueEvaluator: RingFeeValueEvaluator[T]
-) extends RingMatcher[T] {
-  def matchOrders(
-    taker: Order[T],
-    maker: Order[T]
-  ): Either[MatchingFailure.Value, Ring[T]]
-}

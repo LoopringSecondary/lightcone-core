@@ -29,10 +29,12 @@ case class Order[T](
     amountFee: Amount,
     reservedAmountS: Amount = 0,
     reservedAmountFee: Amount = 0,
-    scale: Double = 0,
-    status: OrderStatus = NEW
+    status: OrderStatus = NEW,
+    actualAmountS: Amount = 0, // updated automatically
+    actualAmountB: Amount = 0, // updated automatically
+    actualAmountFee: Amount = 0, // updated automatically
+    actualScale: Double = 0 // updated automatically
 ) {
-
   // Advance methods with implicit contextual arguments
   private[core] def requestedAmount()(implicit token: Address) = tokenFee match {
     case None ⇒ amountS + amountFee
@@ -68,22 +70,31 @@ case class Order[T](
     copy(
       reservedAmountS = 0,
       reservedAmountFee = 0,
-      scale = 0,
-      status = status
+      status = status,
+      actualAmountS = 0,
+      actualAmountB = 0,
+      actualAmountFee = 0,
+      actualScale = 0
     )
   }
 
   private def withReservedAmountS(v: Amount) =
-    copy(reservedAmountS = v).updateScale()
+    copy(reservedAmountS = v).updateActuals()
 
   private def withReservedAmountFee(v: Amount) =
-    copy(reservedAmountFee = v).updateScale()
+    copy(reservedAmountFee = v).updateActuals()
 
-  private def updateScale() = {
-    var scale = reservedAmountS ÷ amountS
+  private def updateActuals() = {
+    var scale = Rational(reservedAmountS, amountS)
     if (amountFee > 0) {
-      scale = Math.min(scale, reservedAmountFee ÷ amountFee)
+      scale = scale min Rational(reservedAmountFee, amountFee)
     }
-    copy(scale = scale)
+
+    copy(
+      actualAmountS = (scale * Rational(amountS)).bigintValue,
+      actualAmountB = (scale * Rational(amountB)).bigintValue,
+      actualAmountFee = (scale * Rational(amountFee)).bigintValue,
+      actualScale = scale.doubleValue
+    )
   }
 }

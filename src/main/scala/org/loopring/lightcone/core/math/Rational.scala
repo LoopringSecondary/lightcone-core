@@ -19,10 +19,37 @@ package org.loopring.lightcone.core
 import java.math.{ MathContext, RoundingMode }
 import scala.math._
 
+object Rational {
+  val MaxIntValue = Rational(Integer.MAX_VALUE)
+  val MaxDoubleValue = BigDecimal(Double.MaxValue)
+
+  def apply(numerator: BigInt, denominator: BigInt) =
+    new Rational(numerator, denominator)
+
+  def apply(value: Double) = new Rational(
+    (MaxDoubleValue * BigDecimal(value)).toBigInt(),
+    MaxDoubleValue.toBigInt()
+  )
+
+  def apply(numerator: BigInt) =
+    new Rational(numerator, BigInt(1))
+
+  def apply(numerator: Int, denominator: Int) =
+    new Rational(BigInt(numerator), BigInt(denominator))
+
+  def apply(numerator: Int) =
+    new Rational(BigInt(numerator), BigInt(1))
+}
+
 class Rational(numerator: BigInt, denominator: BigInt)
-  extends ScalaNumber with ScalaNumericConversions with Serializable with Ordered[Rational] {
+  extends ScalaNumber
+  with ScalaNumericConversions
+  with Serializable
+  with Ordered[Rational] {
+
   require(denominator.signum != 0)
   private val gcd = if (numerator.signum == 0) BigInt(1) else numerator gcd denominator
+
   val num: BigInt = numerator / gcd
   val denom: BigInt = denominator / gcd
 
@@ -56,9 +83,13 @@ class Rational(numerator: BigInt, denominator: BigInt)
     )
   }
 
-  def min(that: Rational): Rational = if (this.num * that.denom > this.denom * that.num) that else this
+  def min(that: Rational): Rational =
+    if (this.num * that.denom > this.denom * that.num) that
+    else this
 
-  def max(that: Rational): Rational = if (this.num * that.denom > this.denom * that.num) this else that
+  def max(that: Rational): Rational =
+    if (this.num * that.denom > this.denom * that.num) this
+    else that
 
   def pow(exp: Rational) = {
     require(
@@ -77,7 +108,8 @@ class Rational(numerator: BigInt, denominator: BigInt)
 
   override def underlying(): AnyRef = this
 
-  override def compare(that: Rational): Int = this.num * that.denom compareTo this.denom * that.num
+  override def compare(that: Rational): Int =
+    this.num * that.denom compareTo this.denom * that.num
 
   override def isWhole(): Boolean = true
 
@@ -105,7 +137,7 @@ class Rational(numerator: BigInt, denominator: BigInt)
     this.abs() * Rational(-1)
   }
 
-  override def toString: String = s"${this.num.toString()}/${this.denom.toString()}"
+  override def toString() = s"${this.num.toString()}/${this.denom.toString()}"
 
   def floatString(precisionOpt: Option[Int] = None): String = {
     val mc = precisionOpt match {
@@ -123,23 +155,3 @@ class Rational(numerator: BigInt, denominator: BigInt)
   }
 }
 
-object Rational {
-
-  val MaxIntValue = Rational(Integer.MAX_VALUE)
-
-  val MaxDoubleValue = BigDecimal(Double.MaxValue)
-
-  def apply(numerator: BigInt, denominator: BigInt) = new Rational(numerator, denominator)
-
-  def apply(value: Double) = new Rational(
-    (MaxDoubleValue * BigDecimal(value)).toBigInt(),
-    MaxDoubleValue.toBigInt()
-  )
-
-  def apply(numerator: BigInt) = new Rational(numerator, BigInt(1))
-
-  def apply(numerator: Int, denominator: Int) = new Rational(BigInt(numerator), BigInt(denominator))
-
-  def apply(numerator: Int) = new Rational(BigInt(numerator), BigInt(1))
-
-}

@@ -16,6 +16,12 @@
 
 package org.loopring.lightcone.core
 
-trait TokenFiatValueEstimator {
-  def getEstimatedValue(token: Address, amount: Amount): Double
+case class Settlement[T](
+    rings: Seq[Ring[T]],
+    nonce: Int,
+    createdAt: Long,
+    txid: Option[ID] = None,
+    committedAt: Option[Long] = None,
+    confirmedBlock: Option[Long] = None
+) {
 }
