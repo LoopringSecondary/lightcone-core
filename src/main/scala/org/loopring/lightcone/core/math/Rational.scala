@@ -20,7 +20,6 @@ import java.math.{ MathContext, RoundingMode }
 import scala.math._
 
 object Rational {
-
   val MaxIntValue = Rational(Integer.MAX_VALUE)
   val MaxDoubleValue = BigDecimal(Double.MaxValue)
 
@@ -43,9 +42,14 @@ object Rational {
 }
 
 class Rational(numerator: BigInt, denominator: BigInt)
-  extends ScalaNumber with ScalaNumericConversions with Serializable with Ordered[Rational] {
+  extends ScalaNumber
+  with ScalaNumericConversions
+  with Serializable
+  with Ordered[Rational] {
+
   require(denominator.signum != 0)
   private val gcd = if (numerator.signum == 0) BigInt(1) else numerator gcd denominator
+
   val num: BigInt = numerator / gcd
   val denom: BigInt = denominator / gcd
 
