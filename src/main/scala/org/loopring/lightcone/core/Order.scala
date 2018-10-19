@@ -25,6 +25,7 @@ case class Order[T](
     tokenB: Address,
     tokenFee: Option[Address],
     amountS: Amount,
+    amountB: Amount,
     amountFee: Amount,
     reservedAmountS: Amount = 0,
     reservedAmountFee: Amount = 0,

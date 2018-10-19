@@ -14,19 +14,14 @@
  * limitations under the License.
  */
 
-package org.loopring.lightcone
+package org.loopring.lightcone.core
 
-package object core {
-  type Amount = BigInt
-  type Address = String
-  type ID = String
-  type Timestamp = Long
-  type ByteArray = Array[Byte]
-
-  implicit class RichAmount(this_ : Amount) {
-    def ÷(that: Amount): Double = (BigDecimal(this_) / BigDecimal(that)).toDouble
-    def ×(d: Double): Amount = (BigDecimal(this_) * BigDecimal(d)).toBigInt
-    def min(that: Amount): Amount = if (this_ < that) this_ else that
-    def max(that: Amount): Amount = if (this_ > that) this_ else that
-  }
+case class Settlement[T](
+    rings: Seq[Ring[T]],
+    nonce: Int,
+    createdAt: Timestamp,
+    txid: Option[ID] = None,
+    committedAt: Option[Timestamp] = None,
+    confirmedBlock: Option[Long] = None
+) {
 }

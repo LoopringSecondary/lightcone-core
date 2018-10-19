@@ -16,22 +16,32 @@
 
 package org.loopring.lightcone.core
 
+import java.security.MessageDigest
+
 case class ExpectedFill[T](
     order: Order[T],
-    pendingAmountS: Amount,
-    pendingAAmountFee: Amount
+    pendingAmountS: Amount = 0,
+    pendingAmountB: Amount = 0,
+    pendingAmountFee: Amount = 0
 ) {
-  lazy val fillRatio: Double = 0
-  lazy val postFillRatio = order.scale - fillRatio
+  lazy val filledRatio = pendingAmountS ÷ order.amountS
+  lazy val outstandingRatio = order.scale - filledRatio
 }
 
 case class Ring[T](
     maker: ExpectedFill[T],
-    taker: ExpectedFill[T],
-    nonce: String,
-    createdAt: Timestamp,
-    committedAt: Option[Timestamp] = None
+    taker: ExpectedFill[T]
 ) {
-  // TODO(dongw): maybe we should use XOR of the two hashes of the orders.
-  val id: ID = maker.order.id + "-" + taker.order.id // This is not correct
+  lazy val id: ByteArray = {
+    def sha256(id_ : ID): ByteArray = MessageDigest.getInstance("MD-5")
+      .digest(id_.getBytes("UTF-8"))
+
+    sha256(maker.order.id)
+      .zip(sha256(taker.order.id))
+      .map(p ⇒ p._1 ^ p._2)
+      .map(_.toByte)
+  }
+
+  def expectedFills() = Seq(maker, taker)
+  def orders() = Seq(maker.order, taker.order)
 }
