@@ -29,12 +29,11 @@ case class Order[T](
     amountFee: Amount,
     reservedAmountS: Amount = 0,
     reservedAmountFee: Amount = 0,
-
     status: OrderStatus = NEW,
-    actualAmountS: Amount = 0,
-    actualAmountB: Amount = 0,
-    actualAmountFee: Amount = 0,
-    actualScale: Double = 0
+    actualAmountS: Amount = 0, // updated automatically
+    actualAmountB: Amount = 0, // updated automatically
+    actualAmountFee: Amount = 0, // updated automatically
+    actualScale: Double = 0 // updated automatically
 ) {
   // Advance methods with implicit contextual arguments
   private[core] def requestedAmount()(implicit token: Address) = tokenFee match {
