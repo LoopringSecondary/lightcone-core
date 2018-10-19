@@ -19,6 +19,7 @@ package org.loopring.lightcone.core
 trait PendingRingPool[T] {
 
   def getOrderPendingAmountS(orderId: ID): Amount
+  def hasRing(ringId: RingID): Boolean
 
   def addRing(ring: Ring[T]): Unit
   def removeRing(ringId: RingID): Unit
@@ -60,13 +61,10 @@ class PendingRingPoolImpl[T]()(
   private[core] var orderMap = Map.empty[ID, OrderInfo]
   private[core] var ringMap = Map.empty[RingID, RingInfo]
 
-  def removeAllRings() {
-    orderMap = Map.empty[ID, OrderInfo]
-    ringMap = Map.empty[RingID, RingInfo]
-  }
-
   def getOrderPendingAmountS(orderId: ID): Amount =
     orderMap.get(orderId).map(_.pendingAmountS).getOrElse(0)
+
+  def hasRing(ringId: RingID) = ringMap.contains(ringId)
 
   def addRing(ring: Ring[T]) = {
     ringMap.get(ring.id) match {
@@ -86,6 +84,11 @@ class PendingRingPoolImpl[T]()(
     ringMap -= ringId
     decrementPendingAmountS(ringId, ringInfo.takerId, ringInfo.takerPendingAmountS)
     decrementPendingAmountS(ringId, ringInfo.makerId, ringInfo.makerPendingAmountS)
+  }
+
+  def removeAllRings() {
+    orderMap = Map.empty[ID, OrderInfo]
+    ringMap = Map.empty[RingID, RingInfo]
   }
 
   def removeRingsBefore(timestamp: Long) = ringMap.filter {
