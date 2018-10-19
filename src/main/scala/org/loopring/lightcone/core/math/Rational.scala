@@ -40,8 +40,8 @@ object Rational {
 
   def apply(numerator: Int) =
     new Rational(BigInt(numerator), BigInt(1))
-
 }
+
 class Rational(numerator: BigInt, denominator: BigInt)
   extends ScalaNumber with ScalaNumericConversions with Serializable with Ordered[Rational] {
   require(denominator.signum != 0)
@@ -133,7 +133,7 @@ class Rational(numerator: BigInt, denominator: BigInt)
     this.abs() * Rational(-1)
   }
 
-  override def toString: String = s"${this.num.toString()}/${this.denom.toString()}"
+  override def toString() = s"${this.num.toString()}/${this.denom.toString()}"
 
   def floatString(precisionOpt: Option[Int] = None): String = {
     val mc = precisionOpt match {
