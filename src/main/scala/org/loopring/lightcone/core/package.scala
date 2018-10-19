@@ -20,8 +20,7 @@ package object core {
   type Amount = BigInt
   type Address = String
   type ID = String
-  type Timestamp = Long
-  type ByteArray = Array[Byte]
+  type RingID = Array[Byte]
 
   implicit class RichAmount(this_ : Amount) {
     def ÷(that: Amount): Double = (BigDecimal(this_) / BigDecimal(that)).toDouble

@@ -19,9 +19,9 @@ package org.loopring.lightcone.core
 case class Settlement[T](
     rings: Seq[Ring[T]],
     nonce: Int,
-    createdAt: Timestamp,
+    createdAt: Long,
     txid: Option[ID] = None,
-    committedAt: Option[Timestamp] = None,
+    committedAt: Option[Long] = None,
     confirmedBlock: Option[Long] = None
 ) {
 }

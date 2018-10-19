@@ -16,6 +16,6 @@
 
 package org.loopring.lightcone.core
 
-trait TokenFiatValueEstimator {
+trait TokenValueEstimator {
   def getFiatValue(token: Address, amount: Amount): Double
 }
