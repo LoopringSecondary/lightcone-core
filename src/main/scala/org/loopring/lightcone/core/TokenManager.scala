@@ -55,9 +55,7 @@ private[core] class TokenManager[T](
 
   def size() = reservations.size
 
-  def outOfLength(): Boolean = {
-    size() > maxSize
-  }
+  def outOfLength(): Boolean = size() >= maxSize
 
   def getTokenBalance() =
     TokenBalance(balance, allowance, availableBalance, availableAllowance)

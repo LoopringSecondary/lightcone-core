@@ -44,7 +44,6 @@ final private[core] class OrderStateManagerImpl[T]()(
   }
 
   def submitOrder(order: Order[T]): Boolean = {
-    assert(order.tokenFee != Some(order.tokenS))
     assert(order.amountS > 0)
 
     assert(tokens.contains(order.tokenS))
@@ -52,8 +51,8 @@ final private[core] class OrderStateManagerImpl[T]()(
       assert(tokens.contains(order.tokenFee.get))
     }
 
-    if (order.onTokenS(_.outOfLength()) ||
-      order.onTokenFee(_.outOfLength()).getOrElse(false)) {
+    if (order.onTokenS(_.outOfLength) &&
+      order.onTokenFee(_.outOfLength).getOrElse(false)) {
 
       orderPool += order.as(CANCELLED_TOO_MANY_ORDERS)
       return false
