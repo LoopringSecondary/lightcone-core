@@ -18,7 +18,9 @@ package org.loopring.lightcone.core
 
 import org.slf4j.LoggerFactory
 
-final private[core] class OrderStateManagerImpl[T]()(
+final private[core] class OrderStateManagerImpl[T](
+    maxNumOrders: Int = 1000
+)(
     implicit
     orderPool: OrderPool[T]
 ) extends OrderStateManager[T] {
@@ -52,8 +54,8 @@ final private[core] class OrderStateManagerImpl[T]()(
       assert(tokens.contains(order.tokenFee.get))
     }
 
-    if (order.onTokenS(_.size) <= 1000 &&
-      order.onTokenFee(_.size).getOrElse(0) <= 1000) {
+    if (order.onTokenS(_.size) > maxNumOrders ||
+      order.onTokenFee(_.size).getOrElse(0) > maxNumOrders) {
 
       orderPool += order.as(CANCELLED_TOO_MANY_ORDERS)
       return false
