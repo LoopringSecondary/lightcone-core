@@ -60,6 +60,8 @@ abstract class OrderBookImpl[T](
 )
   extends OrderBook[T] {
 
+  private val log = LoggerFactory.getLogger(getClass.getName)
+
   def addOrder(order: Order[T]): Set[Ring[T]]
   def deleteOrder(orderId: ID): Set[RingID]
 
