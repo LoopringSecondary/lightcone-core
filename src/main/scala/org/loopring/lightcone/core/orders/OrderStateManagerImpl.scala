@@ -19,11 +19,13 @@ package org.loopring.lightcone.core
 import org.slf4j.LoggerFactory
 
 final private[core] class OrderStateManagerImpl[T](
-    maxNumOrders: Int = 1000
+    maxNumOrders: Int
 )(
     implicit
     orderPool: OrderPool[T]
 ) extends OrderStateManager[T] {
+
+  assert(maxNumOrders > 0)
 
   import OrderStatus._
 
