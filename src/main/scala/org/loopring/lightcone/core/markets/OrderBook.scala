@@ -33,7 +33,7 @@ trait OrderBook[T] {
   def submitOrder(order: Order[T]): Set[Ring[T]]
   def cancelOrder(orderId: ID): Set[RingID]
 
-  def trgerMatch(): Set[Ring[T]]
+  def trigerMatch(): Set[Ring[T]]
 
   def getLastPrice(): Option[Rational]
   def getOrderBookInfo(): OrderBookInfo
@@ -50,7 +50,7 @@ abstract class OrderBookImpl[T](config: OrderBookConfig)
   def submitOrder(order: Order[T]): Set[Ring[T]]
   def cancelOrder(orderId: ID): Set[RingID]
 
-  def trgerMatch(): Set[Ring[T]]
+  def trigerMatch(): Set[Ring[T]]
 
   def getLastPrice(): Option[Rational]
   def getOrderBookInfo(): OrderBookInfo
