@@ -69,4 +69,46 @@ class OrderStateValidateSpec extends FlatSpec with Matchers {
     receivedOrders.getOrElse("order1", order).status should be(OrderStatus.PENDING)
   }
 
+  // 测试账户余额不足情况下下单后被取消
+  "testInSufficientFunds" should "cancel order" in {
+    info("[sbt core/'testOnly *OrderStateValidateSpec -- -z testInSufficientFunds']")
+
+    lrcTokenManager.reset(100, 200)
+
+    val order1 = Order(
+      Raw(),
+      "order1",
+      lrc,
+      xyz,
+      None,
+      80,
+      0
+    )
+
+    manager.submitOrder(order1) should be(true)
+
+    val order2 = Order(
+      Raw(),
+      "order2",
+      lrc,
+      xyz,
+      None,
+      18,
+      6
+    )
+
+    manager.submitOrder(order2) should be(true)
+
+    val order3 = Order(
+      Raw(),
+      "order3",
+      lrc,
+      xyz,
+      None,
+      80,
+      0
+    )
+
+    manager.submitOrder(order3) should be(false)
+  }
 }
