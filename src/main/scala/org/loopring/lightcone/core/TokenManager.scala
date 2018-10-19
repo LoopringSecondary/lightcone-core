@@ -149,17 +149,17 @@ private[core] class TokenManager[T](
 
     badOnes.foreach { r ⇒
       val order = orderPool(r.orderId)
-
-      if (availableBalance < order.requestedAmount) {
+      val requestedAmount = order.requestedAmount
+      if (availableBalance < requestedAmount) {
         ordersToDelete += order.id
         // orderPool -= order.id
         idxMap -= order.id
       } else {
         val reserved =
-          if (availableAllowance >= order.requestedAmount) order.requestedAmount
+          if (availableAllowance >= requestedAmount) requestedAmount
           else availableAllowance
 
-        accumulatedBalance += order.requestedAmount
+        accumulatedBalance += requestedAmount
         accumulatedAllowance += reserved
 
         availableBalance = balance - accumulatedBalance
