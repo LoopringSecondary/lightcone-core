@@ -21,11 +21,11 @@ trait PendingRingPool[T] {
   def getOrderPendingAmountS(orderId: ID): Amount
 
   def addRing(ring: Ring[T]): Unit
-  def removeAllRings(): Unit
-  def removeRingsBeforeTimestamp(timestamp: Long): Unit
-  def removeRingsOlderThan(age: Long): Unit
   def removeRing(ringId: RingID): Unit
-  def removeAllRingsWithOrder(orderId: ID): Unit
+  def removeAllRings(): Unit
+  def removeRingsBefore(timestamp: Long): Unit
+  def removeRingsOlderThan(age: Long): Unit
+  def removeRingsContainingOrder(orderId: ID): Unit
 }
 
 class PendingRingPoolImpl[T]()(
@@ -78,26 +78,21 @@ class PendingRingPoolImpl[T]()(
           ring.maker.id, ring.maker.pendingAmountS
         )
 
-        orderMap += ring.taker.id ->
-          (orderMap.getOrElse(ring.taker.id, OrderInfo()) +
-            OrderInfo(ring.taker.pendingAmountS, Set(ring.id)))
-
-        orderMap += ring.maker.id ->
-          (orderMap.getOrElse(ring.maker.id, OrderInfo()) +
-            OrderInfo(ring.maker.pendingAmountS, Set(ring.id)))
+        addToOrderMap(ring.id, ring.taker.id, ring.taker.pendingAmountS)
+        addToOrderMap(ring.id, ring.maker.id, ring.maker.pendingAmountS)
     }
   }
 
-  def removeRingsBeforeTimestamp(timestamp: Long) {
+  def removeRingsBefore(timestamp: Long) {
     ringMap.filter {
       case (_, ringInfo) ⇒ ringInfo.timestamp < timestamp
     }.keys.foreach(removeRing)
   }
 
   def removeRingsOlderThan(age: Long) =
-    removeRingsBeforeTimestamp(time.getCurrentTimeMillis - age)
+    removeRingsBefore(time.getCurrentTimeMillis - age)
 
-  def removeAllRingsWithOrder(orderId: ID) = {
+  def removeRingsContainingOrder(orderId: ID) = {
     ringMap.filter {
       case (_, ringInfo) ⇒
         ringInfo.takerId == orderId || ringInfo.makerId == orderId
@@ -107,24 +102,24 @@ class PendingRingPoolImpl[T]()(
   def removeRing(ringId: RingID) = {
     ringMap.get(ringId) match {
       case None ⇒
-
       case Some(ringInfo) ⇒
-        orderMap.get(ringInfo.takerId) match {
-          case None ⇒
-          case Some(orderInfo) ⇒
-            val updated = orderInfo - OrderInfo(ringInfo.takerPendingAmountS, Set(ringId))
-            if (updated.pendingAmountS <= 0) orderMap -= ringInfo.takerId
-            else orderMap += ringInfo.takerId -> updated
-        }
-
-        orderMap.get(ringInfo.makerId) match {
-          case None ⇒
-          case Some(orderInfo) ⇒
-            val updated = orderInfo - OrderInfo(ringInfo.makerPendingAmountS, Set(ringId))
-            if (updated.pendingAmountS <= 0) orderMap -= ringInfo.makerId
-            else orderMap += ringInfo.makerId -> updated
-        }
+        updateOrderMap(ringInfo.takerId, ringInfo.takerPendingAmountS, ringId)
+        updateOrderMap(ringInfo.makerId, ringInfo.makerPendingAmountS, ringId)
     }
+  }
+
+  private def updateOrderMap(orderId: ID, pendingAmountS: Amount, ringId: RingID) = {
+    orderMap.get(orderId) foreach { orderInfo ⇒
+      val updated = orderInfo - OrderInfo(pendingAmountS, Set(ringId))
+      if (updated.pendingAmountS <= 0) orderMap -= orderId
+      else orderMap += orderId -> updated
+    }
+  }
+
+  def addToOrderMap(ringId: RingID, orderId: ID, pendingAmountS: Amount) = {
+    orderMap += orderId ->
+      (orderMap.getOrElse(orderId, OrderInfo()) +
+        OrderInfo(pendingAmountS, Set(ringId)))
   }
 
 }
