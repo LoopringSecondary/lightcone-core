@@ -18,6 +18,14 @@ package org.loopring.lightcone.core
 
 trait PendingRingPool[T] {
 
+  def getOrderPendingAmountS(orderId: ID): Amount
+
+  def addRing(ring: Ring[T]): Unit
+  def removeAllRings(): Unit
+  def removeRingsBeforeTimestamp(timestamp: Long): Unit
+  def removeRingsOlderThan(age: Long): Unit
+  def removeRing(ringId: RingID): Unit
+  def removeAllRingsWithOrder(orderId: ID): Unit
 }
 
 class PendingRingPoolImpl[T]()(
@@ -52,7 +60,7 @@ class PendingRingPoolImpl[T]()(
   private[core] var orderMap = Map.empty[ID, OrderInfo]
   private[core] var ringMap = Map.empty[RingID, RingInfo]
 
-  def clear() {
+  def removeAllRings() {
     orderMap = Map.empty[ID, OrderInfo]
     ringMap = Map.empty[RingID, RingInfo]
   }
@@ -60,7 +68,7 @@ class PendingRingPoolImpl[T]()(
   def getOrderPendingAmountS(orderId: ID): Amount =
     orderMap.get(orderId).map(_.pendingAmountS).getOrElse(0)
 
-  def addPendingRing(ring: Ring[T]) = {
+  def addRing(ring: Ring[T]) = {
     ringMap.get(ring.id) match {
       case Some(_) ⇒
 
@@ -80,14 +88,21 @@ class PendingRingPoolImpl[T]()(
     }
   }
 
-  def removeRingsAddedBeforeTimestamp(timestamp: Long) {
+  def removeRingsBeforeTimestamp(timestamp: Long) {
     ringMap.filter {
       case (_, ringInfo) ⇒ ringInfo.timestamp < timestamp
     }.keys.foreach(removeRing)
   }
 
   def removeRingsOlderThan(age: Long) =
-    removeRingsAddedBeforeTimestamp(time.getCurrentTimeMillis - age)
+    removeRingsBeforeTimestamp(time.getCurrentTimeMillis - age)
+
+  def removeAllRingsWithOrder(orderId: ID) = {
+    ringMap.filter {
+      case (_, ringInfo) ⇒
+        ringInfo.takerId == orderId || ringInfo.makerId == orderId
+    }.keys.foreach(removeRing)
+  }
 
   def removeRing(ringId: RingID) = {
     ringMap.get(ringId) match {
