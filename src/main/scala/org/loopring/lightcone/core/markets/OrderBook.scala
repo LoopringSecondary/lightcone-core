@@ -18,10 +18,43 @@ package org.loopring.lightcone.core
 
 import org.slf4j.LoggerFactory
 
-trait OrderBook[T] {
+case class OrderBookInfo(
+    numBuys: Int = 0,
+    numSells: Int = 0,
+    numHiddenBuys: Int = 0,
+    numHiddenSells: Int = 0,
+    bestBuyPrice: Option[Rational] = None,
+    bestSellPrice: Option[Rational] = None,
+    lastPrice: Option[Rational] = None,
+    isLastTakerSell: Boolean = false
+)
 
+trait OrderBook[T] {
+  def submitOrder(order: Order[T]): Set[Ring[T]]
+  def cancelOrder(orderId: ID): Set[RingID]
+
+  def trgerMatch(): Set[Ring[T]]
+
+  def getLastPrice(): Option[Rational]
+  def getOrderBookInfo(): OrderBookInfo
+
+  def getTopBuys(num: Int, skip: Int = 0, includingHidden: Boolean = false): Seq[Order[T]]
+  def getTopSells(num: Int, skip: Int = 0, includingHidden: Boolean = false): Seq[Order[T]]
 }
 
-class OrderBookImpl[T] extends OrderBook[T] {
+case class OrderBookConfig()
 
+abstract class OrderBookImpl[T](config: OrderBookConfig)
+  extends OrderBook[T] {
+
+  def submitOrder(order: Order[T]): Set[Ring[T]]
+  def cancelOrder(orderId: ID): Set[RingID]
+
+  def trgerMatch(): Set[Ring[T]]
+
+  def getLastPrice(): Option[Rational]
+  def getOrderBookInfo(): OrderBookInfo
+
+  def getTopBuys(num: Int, skip: Int = 0, includingHidden: Boolean = false): Seq[Order[T]]
+  def getTopSells(num: Int, skip: Int = 0, includingHidden: Boolean = false): Seq[Order[T]]
 }
