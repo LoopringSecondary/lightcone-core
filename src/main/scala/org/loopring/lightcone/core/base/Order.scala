@@ -78,11 +78,15 @@ case class Order[T](
     )
   }
 
-  private def withReservedAmountS(v: Amount) =
+  private def withReservedAmountS(v: Amount) = {
+    assert(v <= amountS)
     copy(reservedAmountS = v).updateActuals()
+  }
 
-  private def withReservedAmountFee(v: Amount) =
+  private def withReservedAmountFee(v: Amount) = {
+    assert(v <= amountFee)
     copy(reservedAmountFee = v).updateActuals()
+  }
 
   private def updateActuals() = {
     var scale = Rational(reservedAmountS, amountS)

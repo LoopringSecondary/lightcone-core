@@ -40,6 +40,9 @@ class PendingRingPoolImpl[T]()(
       pendingAmountS: Amount = 0,
       ringIds: Set[RingID] = Set.empty
   ) {
+
+    assert(pendingAmountS >= 0)
+
     def +(another: OrderInfo) = OrderInfo(
       pendingAmountS + another.pendingAmountS,
       ringIds ++ another.ringIds
