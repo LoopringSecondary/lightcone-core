@@ -85,5 +85,24 @@ abstract class OrderBookImpl[T](
     def isSell = order.tokenS == marketId.secondaryToken
     def isBuy = !isSell
     def price = if (isSell) order.rate else Rational(1) / order.rate
+
+    def realActuals() = {
+      val pendingAmountS = pendingRingPool.getOrderPendingAmountS(order.id)
+      if (pendingAmountS == 0) order.actuals
+      else {
+        val actuals = order.actuals
+        assert(actuals.amountS > 0)
+        val amountS = (actuals.amountS - pendingAmountS).max(0)
+        val r = Rational(amountS, actuals.amountS)
+
+        Actuals(
+          amountS,
+          (Rational(actuals.amountB) * r).bigintValue,
+          (Rational(actuals.amountFee) * r).bigintValue,
+          actuals.scale * r
+        )
+      }
+
+    }
   }
 }
