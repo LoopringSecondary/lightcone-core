@@ -25,6 +25,7 @@ case class Order[T](
     tokenB: Address,
     tokenFee: Option[Address],
     amountS: Amount,
+    amountB: Amount,
     amountFee: Amount,
     reservedAmountS: Amount = 0,
     reservedAmountFee: Amount = 0,
@@ -56,8 +57,10 @@ case class Order[T](
 
       withReservedAmountFee(reservedAmountFee_)
         .withReservedAmountS(reservedAmountS_)
+
     case Some(tokenFee) if token == tokenFee ⇒
       withReservedAmountFee(v)
+
     case _ ⇒
       withReservedAmountS(v)
   }
@@ -73,8 +76,12 @@ case class Order[T](
     )
   }
 
-  private def withReservedAmountS(v: Amount) = copy(reservedAmountS = v).updateScale()
-  private def withReservedAmountFee(v: Amount) = copy(reservedAmountFee = v).updateScale()
+  private def withReservedAmountS(v: Amount) =
+    copy(reservedAmountS = v).updateScale()
+
+  private def withReservedAmountFee(v: Amount) =
+    copy(reservedAmountFee = v).updateScale()
+
   private def updateScale() = {
     var scale = reservedAmountS ÷ amountS
     if (amountFee > 0) {

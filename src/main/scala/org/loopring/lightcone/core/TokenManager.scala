@@ -57,8 +57,12 @@ private[core] class TokenManager[T](
 
   def outOfLength(): Boolean = size() >= maxSize
 
-  def getTokenBalance() =
-    TokenBalance(balance, allowance, availableBalance, availableAllowance)
+  def getTokenBalance() = TokenBalance(
+    balance,
+    allowance,
+    availableBalance,
+    availableAllowance
+  )
 
   def reset(balance_ : Amount, allowance_ : Amount): Set[ID] = {
     val cursor1 =
@@ -87,7 +91,6 @@ private[core] class TokenManager[T](
 
     balance = balance_
     allowance = allowance_
-
     rebalance()
   }
 
@@ -100,7 +103,6 @@ private[core] class TokenManager[T](
         reservations :+= Reservation(orderId, 0, 0)
         rebalance()
     }
-
   }
 
   // returns orders to be deleted
@@ -152,7 +154,6 @@ private[core] class TokenManager[T](
       val requestedAmount = order.requestedAmount
       if (availableBalance < requestedAmount) {
         ordersToDelete += order.id
-        // orderPool -= order.id
         idxMap -= order.id
       } else {
         val reserved =
@@ -167,7 +168,11 @@ private[core] class TokenManager[T](
 
         idxMap += order.id -> reservations.size
         orderPool += order.withReservedAmount(reserved)
-        reservations :+= Reservation(order.id, accumulatedBalance, accumulatedAllowance)
+        reservations :+= Reservation(
+          order.id,
+          accumulatedBalance,
+          accumulatedAllowance
+        )
         cursor += 1
       }
     }
