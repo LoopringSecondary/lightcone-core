@@ -19,15 +19,18 @@ package org.loopring.lightcone.core
 import org.slf4j.LoggerFactory
 
 case class OrderBookInfo(
-    numBuys: Int = 0,
-    numSells: Int = 0,
+    numBuys: Int = 0, // number of visible buy orders
+    numSells: Int = 0, // number of visible sell orders
     numHiddenBuys: Int = 0,
     numHiddenSells: Int = 0,
     bestBuyPrice: Option[Rational] = None,
     bestSellPrice: Option[Rational] = None,
     lastPrice: Option[Rational] = None,
     isLastTakerSell: Boolean = false
-)
+) {
+  def totalNumBuys = numBuys + numHiddenBuys
+  def totalNumSells = numSells + numHiddenSells
+}
 
 trait OrderBook[T] {
   def submitOrder(order: Order[T]): Set[Ring[T]]
