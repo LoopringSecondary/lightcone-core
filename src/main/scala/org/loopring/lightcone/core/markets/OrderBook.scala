@@ -32,6 +32,8 @@ case class OrderBookInfo(
   def totalNumSells = numSells + numHiddenSells
 }
 
+case class MarketId(primaryToken: Address, secondaryToken: Address)
+
 case class OrderBookConfig(
     maxNumBuys: Int,
     maxNumSells: Int,
@@ -40,6 +42,9 @@ case class OrderBookConfig(
 )
 
 trait OrderBook[T] {
+  val marketId: MarketId
+  val config: OrderBookConfig
+
   def addOrder(order: Order[T]): Set[Ring[T]]
   def deleteOrder(orderId: ID): Set[RingID]
 
@@ -53,12 +58,15 @@ trait OrderBook[T] {
 }
 
 abstract class OrderBookImpl[T](
-    config: OrderBookConfig
+    val marketId: MarketId,
+    val config: OrderBookConfig
 )(
     implicit
     pendingRingPool: PendingRingPool[T]
 )
   extends OrderBook[T] {
+
+  var orderMap = Map.empty[ID, Order[T]]
 
   private val log = LoggerFactory.getLogger(getClass.getName)
 
@@ -72,4 +80,10 @@ abstract class OrderBookImpl[T](
 
   def getTopBuys(num: Int, skip: Int = 0, includingHidden: Boolean = false): Seq[Order[T]]
   def getTopSells(num: Int, skip: Int = 0, includingHidden: Boolean = false): Seq[Order[T]]
+
+  implicit private class RichOrder[T](order: Order[T]) {
+    def isSell = order.tokenS == marketId.secondaryToken
+    def isBuy = !isSell
+    def price = if (isSell) order.rate else Rational(1) / order.rate
+  }
 }
