@@ -81,7 +81,8 @@ abstract class OrderBookImpl[T](
   def getTopBuys(num: Int, skip: Int = 0, includingHidden: Boolean = false): Seq[Order[T]]
   def getTopSells(num: Int, skip: Int = 0, includingHidden: Boolean = false): Seq[Order[T]]
 
-  implicit private class RichOrder[T](order: Order[T]) {
+  //
+  implicit private class RichOrderInMarket[T](order: Order[T]) {
     def isSell = order.tokenS == marketId.secondaryToken
     def isBuy = !isSell
     def price = if (isSell) order.rate else Rational(1) / order.rate
