@@ -71,7 +71,6 @@ class PendingRingPoolImpl[T]()(
   def addRing(ring: Ring[T]) = {
     ringMap.get(ring.id) match {
       case Some(_) ⇒
-
       case None ⇒
         ringMap += ring.id -> RingInfo(
           ring.taker.id, ring.taker.pendingAmountS,
@@ -100,11 +99,9 @@ class PendingRingPoolImpl[T]()(
   }
 
   def removeRing(ringId: RingID) = {
-    ringMap.get(ringId) match {
-      case None ⇒
-      case Some(ringInfo) ⇒
-        updateOrderMap(ringInfo.takerId, ringInfo.takerPendingAmountS, ringId)
-        updateOrderMap(ringInfo.makerId, ringInfo.makerPendingAmountS, ringId)
+    ringMap.get(ringId) foreach { ringInfo ⇒
+      updateOrderMap(ringInfo.takerId, ringInfo.takerPendingAmountS, ringId)
+      updateOrderMap(ringInfo.makerId, ringInfo.makerPendingAmountS, ringId)
     }
   }
 
