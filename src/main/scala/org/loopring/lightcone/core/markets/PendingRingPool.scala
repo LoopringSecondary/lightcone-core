@@ -108,6 +108,7 @@ class PendingRingPoolImpl[T]()(
     }
   }
 
+  // Private methods
   private def updateOrderMap(orderId: ID, pendingAmountS: Amount, ringId: RingID) = {
     orderMap.get(orderId) foreach { orderInfo ⇒
       val updated = orderInfo - OrderInfo(pendingAmountS, Set(ringId))
