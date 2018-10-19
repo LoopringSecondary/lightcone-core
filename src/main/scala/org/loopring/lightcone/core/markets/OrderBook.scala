@@ -32,9 +32,16 @@ case class OrderBookInfo(
   def totalNumSells = numSells + numHiddenSells
 }
 
+case class OrderBookConfig(
+    maxNumBuys: Int,
+    maxNumSells: Int,
+    maxNumHiddenBuys: Int,
+    maxNumHiddenSells: Int
+)
+
 trait OrderBook[T] {
-  def submitOrder(order: Order[T]): Set[Ring[T]]
-  def cancelOrder(orderId: ID): Set[RingID]
+  def addOrder(order: Order[T]): Set[Ring[T]]
+  def deleteOrder(orderId: ID): Set[RingID]
 
   def trigerMatch(): Set[Ring[T]]
 
@@ -45,13 +52,16 @@ trait OrderBook[T] {
   def getTopSells(num: Int, skip: Int = 0, includingHidden: Boolean = false): Seq[Order[T]]
 }
 
-case class OrderBookConfig()
-
-abstract class OrderBookImpl[T](config: OrderBookConfig)
+abstract class OrderBookImpl[T](
+    config: OrderBookConfig
+)(
+    implicit
+    pendingRingPool: PendingRingPool[T]
+)
   extends OrderBook[T] {
 
-  def submitOrder(order: Order[T]): Set[Ring[T]]
-  def cancelOrder(orderId: ID): Set[RingID]
+  def addOrder(order: Order[T]): Set[Ring[T]]
+  def deleteOrder(orderId: ID): Set[RingID]
 
   def trigerMatch(): Set[Ring[T]]
 
