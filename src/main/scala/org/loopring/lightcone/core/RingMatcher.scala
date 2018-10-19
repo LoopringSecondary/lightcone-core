@@ -14,19 +14,26 @@
  * limitations under the License.
  */
 
-package org.loopring.lightcone
+package org.loopring.lightcone.core
 
-package object core {
-  type Amount = BigInt
-  type Address = String
-  type ID = String
-  type Timestamp = Long
-  type ByteArray = Array[Byte]
+final object MatchingFailure extends Enumeration {
+  type MatchingFailure = Value
 
-  implicit class RichAmount(this_ : Amount) {
-    def ÷(that: Amount): Double = (BigDecimal(this_) / BigDecimal(that)).toDouble
-    def ×(d: Double): Amount = (BigDecimal(this_) * BigDecimal(d)).toBigInt
-    def min(that: Amount): Amount = if (this_ < that) this_ else that
-    def max(that: Amount): Amount = if (this_ > that) this_ else that
-  }
+  val SOME = Value(0)
+}
+
+trait RingMatcher[T] {
+  def matchOrders(
+    taker: Order[T],
+    maker: Order[T]
+  ): Either[MatchingFailure.Value, Ring[T]]
+}
+
+abstract class SimpleRingMatcher[T](
+    ringFeeValueEvaluator: RingFeeValueEvaluator[T]
+) extends RingMatcher[T] {
+  def matchOrders(
+    taker: Order[T],
+    maker: Order[T]
+  ): Either[MatchingFailure.Value, Ring[T]]
 }
