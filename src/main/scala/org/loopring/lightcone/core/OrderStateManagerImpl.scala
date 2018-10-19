@@ -52,8 +52,8 @@ final private[core] class OrderStateManagerImpl[T]()(
       assert(tokens.contains(order.tokenFee.get))
     }
 
-    if (order.onTokenS(_.size) <= 1000 &&
-      order.onTokenFee(_.size).getOrElse(0) <= 1000) {
+    if (order.onTokenS(_.outOfLength()) ||
+      order.onTokenFee(_.outOfLength()).getOrElse(false)) {
 
       orderPool += order.as(CANCELLED_TOO_MANY_ORDERS)
       return false

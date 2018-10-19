@@ -51,8 +51,13 @@ private[core] class TokenManager[T](
   private[core] var cursor: Int = -1
   private[core] var idxMap = Map.empty[ID, Int]
   private[core] var reservations = Seq.empty[Reservation]
+  private[core] val maxSize = 1000
 
   def size() = reservations.size
+
+  def outOfLength(): Boolean = {
+    size() > maxSize
+  }
 
   def getTokenBalance() =
     TokenBalance(balance, allowance, availableBalance, availableAllowance)
