@@ -70,10 +70,15 @@ abstract class OrderBookImpl[T](
 
   private val log = LoggerFactory.getLogger(getClass.getName)
 
-  def addOrder(order: Order[T]): Set[Ring[T]]
+  def addOrder(order: Order[T]): Set[Ring[T]] = {
+    order.realActuals
+    null
+  }
   def deleteOrder(orderId: ID): Set[RingID]
 
-  def trigerMatch(): Set[Ring[T]]
+  def trigerMatch(): Set[Ring[T]] = {
+    null
+  }
 
   def getLastPrice(): Option[Rational]
   def getOrderBookInfo(): OrderBookInfo
@@ -81,7 +86,6 @@ abstract class OrderBookImpl[T](
   def getTopBuys(num: Int, skip: Int = 0, includingHidden: Boolean = false): Seq[Order[T]]
   def getTopSells(num: Int, skip: Int = 0, includingHidden: Boolean = false): Seq[Order[T]]
 
-  //
   implicit private class RichOrderInMarket[T](order: Order[T]) {
     def isSell = order.tokenS == marketId.secondaryToken
     def isBuy = !isSell
