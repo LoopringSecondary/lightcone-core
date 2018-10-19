@@ -18,6 +18,18 @@ package org.loopring.lightcone.core
 
 import OrderStatus._
 
+case class Actuals(
+    amountS: Amount = 0,
+    amountB: Amount = 0,
+    amountFee: Amount = 0,
+    scale: Rational = Rational(0)
+)
+
+case class Reserved(
+    amountS: Amount = 0,
+    amountFee: Amount = 0
+)
+
 case class Order[T](
     origin: T,
     id: ID,
@@ -27,14 +39,13 @@ case class Order[T](
     amountS: Amount,
     amountB: Amount,
     amountFee: Amount,
-    reservedAmountS: Amount = 0,
-    reservedAmountFee: Amount = 0,
     status: OrderStatus = NEW,
-    actualAmountS: Amount = 0, // updated automatically
-    actualAmountB: Amount = 0, // updated automatically
-    actualAmountFee: Amount = 0, // updated automatically
-    actualScale: Double = 0 // updated automatically
+    reserved: Reserved = Reserved(),
+    actuals: Actuals = Actuals()
 ) {
+
+  lazy val rate = Rational(amountB, amountS)
+
   // Advance methods with implicit contextual arguments
   private[core] def requestedAmount()(implicit token: Address) = tokenFee match {
     case None ⇒ amountS + amountFee
@@ -43,58 +54,52 @@ case class Order[T](
   }
 
   private[core] def reservedAmount()(implicit token: Address) = tokenFee match {
-    case None ⇒ reservedAmountS + reservedAmountFee
-    case Some(tokenFee) if token == tokenFee ⇒ reservedAmountFee
-    case _ ⇒ reservedAmountS
+    case None ⇒ reserved.amountS + reserved.amountFee
+    case Some(tokenFee) if token == tokenFee ⇒ reserved.amountFee
+    case _ ⇒ reserved.amountS
   }
 
   private[core] def withReservedAmount(v: Amount)(implicit token: Address) = tokenFee match {
     case None ⇒
-      val feeRatio = amountFee ÷ (amountFee + amountS)
-      val reservedAmountFee_ = v × feeRatio
-      val reservedAmountS_ = v - reservedAmountFee_
+      val r = Rational(amountS / (amountFee + amountS))
+      val reservedAmountS = (Rational(v) * r).bigintValue
+      val reservedAmountFee = v - reservedAmountS
 
-      withReservedAmountFee(reservedAmountFee_)
-        .withReservedAmountS(reservedAmountS_)
+      copy(reserved = Reserved(reservedAmountS, reservedAmountFee))
+        .updateActuals()
 
     case Some(tokenFee) if token == tokenFee ⇒
-      withReservedAmountFee(v)
+      copy(reserved = reserved.copy(amountFee = v))
+        .updateActuals()
 
     case _ ⇒
-      withReservedAmountS(v)
+      copy(reserved = reserved.copy(amountS = v))
+        .updateActuals()
   }
 
   // Private methods
   private[core] def as(status: OrderStatus) = {
     assert(status != PENDING)
     copy(
-      reservedAmountS = 0,
-      reservedAmountFee = 0,
       status = status,
-      actualAmountS = 0,
-      actualAmountB = 0,
-      actualAmountFee = 0,
-      actualScale = 0
+      reserved = Reserved(),
+      actuals = Actuals()
     )
   }
 
-  private def withReservedAmountS(v: Amount) =
-    copy(reservedAmountS = v).updateActuals()
-
-  private def withReservedAmountFee(v: Amount) =
-    copy(reservedAmountFee = v).updateActuals()
-
   private def updateActuals() = {
-    var scale = Rational(reservedAmountS, amountS)
+    var r = Rational(reserved.amountS, amountS)
     if (amountFee > 0) {
-      scale = scale min Rational(reservedAmountFee, amountFee)
+      r = r min Rational(reserved.amountFee, amountFee)
     }
 
     copy(
-      actualAmountS = (scale * Rational(amountS)).bigintValue,
-      actualAmountB = (scale * Rational(amountB)).bigintValue,
-      actualAmountFee = (scale * Rational(amountFee)).bigintValue,
-      actualScale = scale.doubleValue
+      actuals = Actuals(
+        (r * Rational(amountS)).bigintValue,
+        (r * Rational(amountB)).bigintValue,
+        (r * Rational(amountFee)).bigintValue,
+        r
+      )
     )
   }
 }
