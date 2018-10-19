@@ -16,12 +16,6 @@
 
 package org.loopring.lightcone.core
 
-final object MatchingFailure extends Enumeration {
-  type MatchingFailure = Value
-
-  val SOME = Value(0)
-}
-
 trait RingMatcher[T] {
   def matchOrders(
     taker: Order[T],
@@ -30,10 +24,12 @@ trait RingMatcher[T] {
 }
 
 abstract class SimpleRingMatcher[T](
-    ringFeeValueEvaluator: RingFeeValueEvaluator[T]
+    ringIncomeEstimator: RingIncomeEstimator[T]
 ) extends RingMatcher[T] {
+
   def matchOrders(
     taker: Order[T],
     maker: Order[T]
   ): Either[MatchingFailure.Value, Ring[T]]
+
 }
