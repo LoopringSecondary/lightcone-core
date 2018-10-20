@@ -15,21 +15,18 @@
  */
 
 package org.loopring.lightcone.core
-
-import org.slf4j.LoggerFactory
+import org.slf4s.Logging
 
 final private[core] class OrderStateManagerImpl[T](
     maxNumOrders: Int
 )(
     implicit
     orderPool: OrderPool[T]
-) extends OrderStateManager[T] {
+) extends OrderStateManager[T] with Logging {
 
   assert(maxNumOrders > 0)
 
   import OrderStatus._
-
-  private val log = LoggerFactory.getLogger(getClass.getName)
 
   private[core] implicit var tokens = Map.empty[Address, TokenManager[T]]
 
@@ -48,7 +45,7 @@ final private[core] class OrderStateManagerImpl[T](
   }
 
   def submitOrder(order: Order[T]): Boolean = {
-    assert(order.amountS > 0)
+    assert(order.original.amountS > 0)
 
     assert(tokens.contains(order.tokenS))
     if (order.tokenFee.nonEmpty) {
@@ -83,16 +80,21 @@ final private[core] class OrderStateManagerImpl[T](
     }
   }
 
+  // adjust order's outstanding size
   def adjustOrder(orderId: ID, amountSDelta: Amount): Boolean = {
     orderPool.getOrder(orderId) match {
       case None ⇒ false
       case Some(order) ⇒
 
-        val amountFeeDelta = order.amountFee × (amountSDelta ÷ order.amountS)
+        val amountS = order.outstanding.amountS + amountSDelta
+        val r = Rational(amountS, order.original.amountS)
 
         orderPool += order.copy(
-          amountS = order.amountS + amountSDelta,
-          amountFee = order.amountFee + amountFeeDelta
+          outstanding = Amounts(
+            amountS,
+            (r * Rational(order.original.amountB)).bigintValue,
+            (r * Rational(order.original.amountFee)).bigintValue
+          )
         )
 
         order.callTokenSThenRemoveOrders(_.adjust(orderId))

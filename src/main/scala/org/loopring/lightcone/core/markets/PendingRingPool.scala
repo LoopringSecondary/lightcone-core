@@ -15,8 +15,7 @@
  */
 
 package org.loopring.lightcone.core
-
-import org.slf4j.LoggerFactory
+import org.slf4s.Logging
 
 trait PendingRingPool[T] {
 
@@ -34,7 +33,7 @@ trait PendingRingPool[T] {
 class PendingRingPoolImpl[T]()(
     implicit
     time: TimeProvider
-) extends PendingRingPool[T] {
+) extends PendingRingPool[T] with Logging {
 
   case class OrderInfo(
       pendingAmountS: Amount = 0,
@@ -63,8 +62,6 @@ class PendingRingPoolImpl[T]()(
       timestamp: Long = time.getCurrentTimeMillis()
   )
 
-  private val log = LoggerFactory.getLogger(getClass.getName)
-
   private[core] var orderMap = Map.empty[ID, OrderInfo]
   private[core] var ringMap = Map.empty[RingID, RingInfo]
 
@@ -78,12 +75,12 @@ class PendingRingPoolImpl[T]()(
       case Some(_) ⇒
       case None ⇒
         ringMap += ring.id -> RingInfo(
-          ring.taker.id, ring.taker.pendingAmountS,
-          ring.maker.id, ring.maker.pendingAmountS
+          ring.taker.id, ring.taker.pending.amountS,
+          ring.maker.id, ring.maker.pending.amountS
         )
 
-        incrementPendingAmountS(ring.id, ring.taker.id, ring.taker.pendingAmountS)
-        incrementPendingAmountS(ring.id, ring.maker.id, ring.maker.pendingAmountS)
+        incrementPendingAmountS(ring.id, ring.taker.id, ring.taker.pending.amountS)
+        incrementPendingAmountS(ring.id, ring.maker.id, ring.maker.pending.amountS)
 
         log.debug("pending_orders: " + orderMap.mkString("\n\t"))
     }

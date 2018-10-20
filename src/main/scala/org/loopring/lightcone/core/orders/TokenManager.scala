@@ -15,8 +15,7 @@
  */
 
 package org.loopring.lightcone.core
-
-import org.slf4j.LoggerFactory
+import org.slf4s.Logging
 import OrderStatus._
 
 case class TokenBalance(
@@ -38,11 +37,9 @@ private[core] class TokenManager[T](
 )(
     implicit
     orderPool: OrderPool[T]
-) {
+) extends Object with Logging {
   implicit private val _t = token
   import OrderStatus._
-
-  private val log = LoggerFactory.getLogger(getClass.getName)
 
   private[core] var balance: Amount = 0
   private[core] var allowance: Amount = 0
@@ -153,6 +150,7 @@ private[core] class TokenManager[T](
     badOnes.foreach { r ⇒
       val order = orderPool(r.orderId)
       val requestedAmount = order.requestedAmount
+
       if (availableBalance < requestedAmount) {
         ordersToDelete += order.id
         idxMap -= order.id

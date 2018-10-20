@@ -20,13 +20,9 @@ import java.security.MessageDigest
 
 case class ExpectedFill[T](
     order: Order[T],
-    pendingAmountS: Amount = 0,
-    pendingAmountB: Amount = 0,
-    pendingAmountFee: Amount = 0,
-    pendingAmountMargin: Amount = 0
+    pending: Amounts,
+    amountMargin: Amount = 0
 ) {
-
-  assert(pendingAmountS <= order.amountS)
 
   def id = order.id
 }

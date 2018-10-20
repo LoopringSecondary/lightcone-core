@@ -20,11 +20,7 @@ import org.scalatest._
 
 class OrderStateManagerSpec extends FlatSpec with Matchers {
 
-  case class Raw()
-
-  type MyOrder = Order[Raw]
-  type MyTokenManager = TokenManager[Raw]
-  type MyOrderPool = OrderPool[Raw]
+  import Helper._
 
   "OrderStateManager" should "add new TokenManager" in {
     implicit val orderPool = new MyOrderPool()
@@ -51,8 +47,7 @@ class OrderStateManagerSpec extends FlatSpec with Matchers {
     val gto = manager.addTokenManager(new TokenManager("GTO"))
     gto.init(5000, 4000)
 
-    manager.submitOrder(Order(
-      Raw(),
+    manager.submitOrder(newOrder(
       "order1",
       "LRC",
       "XYZ",
@@ -62,8 +57,7 @@ class OrderStateManagerSpec extends FlatSpec with Matchers {
       0
     ))
 
-    manager.submitOrder(Order(
-      Raw(),
+    manager.submitOrder(newOrder(
       "order2",
       "LRC",
       "XYZ",
@@ -73,8 +67,7 @@ class OrderStateManagerSpec extends FlatSpec with Matchers {
       1
     ))
 
-    manager.submitOrder(Order(
-      Raw(),
+    manager.submitOrder(newOrder(
       "order3",
       "LRC",
       "XYZ",
@@ -84,8 +77,7 @@ class OrderStateManagerSpec extends FlatSpec with Matchers {
       10
     ))
 
-    manager.submitOrder(Order(
-      Raw(),
+    manager.submitOrder(newOrder(
       "order4",
       "GTO",
       "LRC",

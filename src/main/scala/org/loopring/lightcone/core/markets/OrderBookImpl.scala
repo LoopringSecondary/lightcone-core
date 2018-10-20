@@ -16,11 +16,11 @@
 
 package org.loopring.lightcone.core
 
-import org.slf4j.LoggerFactory
+import org.slf4s.Logging
 
 case class MarketId(
-    primaryToken: Address,
-    secondaryToken: Address
+    primary: Address,
+    secondary: Address
 )
 
 case class OrderBookConfig(
@@ -35,16 +35,19 @@ abstract class OrderBookImpl[T](
     config: OrderBookConfig
 )(
     implicit
-    pendingRingPool: PendingRingPool[T]
-)
-  extends OrderBook[T] {
+    pendingRingPool: PendingRingPool[T],
+    orderPool: OrderPool[T]
+) extends OrderBook[T] with Logging {
 
-  var orderMap = Map.empty[ID, Order[T]]
+  private val sides = Map(
+    marketId.primary -> new OrderBookSide[T](marketId.primary),
+    marketId.secondary -> new OrderBookSide[T](marketId.secondary)
+  )
 
-  private val log = LoggerFactory.getLogger(getClass.getName)
+  private var lastPrice: Option[Rational] = None
 
   def addOrder(order: Order[T]): Set[Ring[T]] = {
-    order.realActuals
+    order.matchable
     null
   }
   def deleteOrder(orderId: ID): Set[RingID]
@@ -53,31 +56,30 @@ abstract class OrderBookImpl[T](
     null
   }
 
-  def getLastPrice(): Option[Rational]
+  def getLastPrice(): Option[Rational] = lastPrice
   def getMetadata(): OrderBookMetadata
 
-  def getTopBuys(num: Int, skip: Int = 0, includingHidden: Boolean = false): Seq[Order[T]]
-  def getTopSells(num: Int, skip: Int = 0, includingHidden: Boolean = false): Seq[Order[T]]
+  def getTops(isPrimary: Boolean, num: Int, skip: Int = 0, includingHidden: Boolean = false) = {
+    val side = if (isPrimary) sides(marketId.primary) else sides(marketId.secondary)
+    side.getTops(num, skip, includingHidden)
+  }
 
+  // Implicit class
   implicit private class RichOrderInMarket[T](order: Order[T]) {
-    def isSell = order.tokenS == marketId.secondaryToken
-    def isBuy = !isSell
-    def price = if (isSell) order.rate else Rational(1) / order.rate
-
-    def realActuals() = {
+    def matchable() = {
       val pendingAmountS = pendingRingPool.getOrderPendingAmountS(order.id)
-      if (pendingAmountS == 0) order.actuals
+      if (pendingAmountS == 0) order.actual
       else {
-        val actuals = order.actuals
-        assert(actuals.amountS > 0)
-        val amountS = (actuals.amountS - pendingAmountS).max(0)
-        val r = Rational(amountS, actuals.amountS)
+        val actual = order.actual
+        val original = order.original
+        assert(actual.amountS > 0)
+        val amountS = (actual.amountS - pendingAmountS).max(0)
+        val r = Rational(amountS, original.amountS)
 
-        Actuals(
+        Amounts(
           amountS,
-          (Rational(actuals.amountB) * r).bigintValue,
-          (Rational(actuals.amountFee) * r).bigintValue,
-          actuals.scale * r
+          (r * Rational(original.amountB)).bigintValue,
+          (r * Rational(original.amountFee)).bigintValue,
         )
       }
 
