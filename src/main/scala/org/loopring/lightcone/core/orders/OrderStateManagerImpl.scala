@@ -48,7 +48,6 @@ final private[core] class OrderStateManagerImpl[T](
   }
 
   def submitOrder(order: Order[T]): Boolean = {
-    assert(order.tokenFee != Some(order.tokenS))
     assert(order.amountS > 0)
 
     assert(tokens.contains(order.tokenS))
@@ -56,9 +55,8 @@ final private[core] class OrderStateManagerImpl[T](
       assert(tokens.contains(order.tokenFee.get))
     }
 
-    if (order.onTokenS(_.size) > maxNumOrders ||
-      order.onTokenFee(_.size).getOrElse(0) > maxNumOrders) {
-
+    if (order.onTokenS(_.hasTooManyOrders) &&
+      order.onTokenFee(_.hasTooManyOrders).getOrElse(false)) {
       orderPool += order.as(CANCELLED_TOO_MANY_ORDERS)
       return false
     }
@@ -120,9 +118,7 @@ final private[core] class OrderStateManagerImpl[T](
       method(tokens(order.tokenS))
 
     def onTokenFee[R](method: TM ⇒ R): Option[R] =
-      order.tokenFee
-        .filter(_ != order.tokenB) // Do nothing if tokenB == tokenFee
-        .map(tokens(_)).map(method)
+      order.tokenFee.map(tokens(_)).map(method)
 
     def callTokenSThenRemoveOrders(
       method: TM ⇒ Set[ID],

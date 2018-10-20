@@ -33,7 +33,8 @@ private[core] case class Reservation(
 )
 
 private[core] class TokenManager[T](
-    val token: Address
+    val token: Address,
+    val maxNumOrders: Int = 1000
 )(
     implicit
     orderPool: OrderPool[T]
@@ -51,8 +52,11 @@ private[core] class TokenManager[T](
   private[core] var cursor: Int = -1
   private[core] var idxMap = Map.empty[ID, Int]
   private[core] var reservations = Seq.empty[Reservation]
+  private[core] val maxSize = 1000
 
   def size() = reservations.size
+
+  def hasTooManyOrders(): Boolean = size() >= maxNumOrders
 
   def getTokenBalance() = TokenBalance(
     balance,
@@ -61,7 +65,7 @@ private[core] class TokenManager[T](
     availableAllowance
   )
 
-  def reset(balance_ : Amount, allowance_ : Amount): Set[ID] = {
+  def init(balance_ : Amount, allowance_ : Amount): Set[ID] = {
     val cursor1 =
       if (balance_ >= balance) cursor
       else {
@@ -148,16 +152,16 @@ private[core] class TokenManager[T](
 
     badOnes.foreach { r ⇒
       val order = orderPool(r.orderId)
-
-      if (availableBalance < order.requestedAmount) {
+      val requestedAmount = order.requestedAmount
+      if (availableBalance < requestedAmount) {
         ordersToDelete += order.id
         idxMap -= order.id
       } else {
         val reserved =
-          if (availableAllowance >= order.requestedAmount) order.requestedAmount
+          if (availableAllowance >= requestedAmount) requestedAmount
           else availableAllowance
 
-        accumulatedBalance += order.requestedAmount
+        accumulatedBalance += requestedAmount
         accumulatedAllowance += reserved
 
         availableBalance = balance - accumulatedBalance
