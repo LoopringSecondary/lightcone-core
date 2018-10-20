@@ -16,11 +16,9 @@
 
 package org.loopring.lightcone.core
 
-import org.slf4j.LoggerFactory
+import org.slf4s.Logging
 
-class OrderPool[T] {
-
-  private val log = LoggerFactory.getLogger(getClass.getName)
+class OrderPool[T] extends Object with Logging {
 
   type Callback = Order[T] ⇒ Unit
 

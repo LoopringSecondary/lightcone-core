@@ -15,21 +15,18 @@
  */
 
 package org.loopring.lightcone.core
-
-import org.slf4j.LoggerFactory
+import org.slf4s.Logging
 
 final private[core] class OrderStateManagerImpl[T](
     maxNumOrders: Int
 )(
     implicit
     orderPool: OrderPool[T]
-) extends OrderStateManager[T] {
+) extends OrderStateManager[T] with Logging {
 
   assert(maxNumOrders > 0)
 
   import OrderStatus._
-
-  private val log = LoggerFactory.getLogger(getClass.getName)
 
   private[core] implicit var tokens = Map.empty[Address, TokenManager[T]]
 

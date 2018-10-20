@@ -15,8 +15,7 @@
  */
 
 package org.loopring.lightcone.core
-
-import org.slf4j.LoggerFactory
+import org.slf4s.Logging
 
 case class MarketId(
     primary: Address,
@@ -44,8 +43,7 @@ abstract class OrderBookImpl[T](
     implicit
     pendingRingPool: PendingRingPool[T],
     orderPool: OrderPool[T]
-) extends OrderBook[T] {
-  private val log = LoggerFactory.getLogger(getClass.getName)
+) extends OrderBook[T] with Logging {
 
   private val sides = Map(
     marketId.primary -> new OneSide[T](marketId.primary),
