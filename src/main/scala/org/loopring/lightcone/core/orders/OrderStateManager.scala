@@ -27,6 +27,11 @@ trait OrderStateManager[T] {
 }
 
 object OrderStateManager {
-  def default[T](maxNumOrders: Int = 1000)(implicit orderPool: OrderPool[T]): OrderStateManager[T] =
-    new OrderStateManagerImpl[T](maxNumOrders)(orderPool)
+  def default[T](
+    maxNumOrders: Int = 1000
+  )(
+    implicit
+    orderPool: OrderPool[T]
+  ): OrderStateManager[T] =
+    new OrderStateManagerImpl[T](maxNumOrders)
 }

@@ -47,10 +47,17 @@ case class Order[T](
   lazy val rate = Rational(amountB, amountS)
 
   // Advance methods with implicit contextual arguments
-  private[core] def requestedAmount()(implicit token: Address) = tokenFee match {
-    case None ⇒ amountS + amountFee
-    case Some(tokenFee) if token == tokenFee ⇒ amountFee
-    case _ ⇒ amountS
+  private[core] def requestedAmount()(implicit token: Address): Amount = {
+    if (token == tokenS) tokenFee match {
+      case None ⇒ amountS + amountFee
+      case Some(t) if t == tokenS ⇒ amountS + amountFee
+      case _ ⇒ amountS
+    }
+    else if (token == tokenB) tokenFee match {
+      case Some(t) if t == tokenB && amountFee > amountB ⇒ amountFee - amountB
+      case _ ⇒ 0
+    }
+    else amountFee
   }
 
   private[core] def reservedAmount()(implicit token: Address) = tokenFee match {
