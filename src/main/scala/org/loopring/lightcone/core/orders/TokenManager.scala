@@ -33,7 +33,8 @@ private[core] case class Reservation(
 )
 
 private[core] class TokenManager[T](
-    val token: Address
+    val token: Address,
+    val maxNumOrders: Int = 1000
 )(
     implicit
     orderPool: OrderPool[T]
@@ -55,7 +56,7 @@ private[core] class TokenManager[T](
 
   def size() = reservations.size
 
-  def outOfLength(): Boolean = size() >= maxSize
+  def hasTooManyOrders(): Boolean = size() >= maxNumOrders
 
   def getTokenBalance() = TokenBalance(
     balance,
@@ -64,7 +65,7 @@ private[core] class TokenManager[T](
     availableAllowance
   )
 
-  def reset(balance_ : Amount, allowance_ : Amount): Set[ID] = {
+  def init(balance_ : Amount, allowance_ : Amount): Set[ID] = {
     val cursor1 =
       if (balance_ >= balance) cursor
       else {

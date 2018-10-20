@@ -18,10 +18,14 @@ package org.loopring.lightcone.core
 
 import org.slf4j.LoggerFactory
 
-final private[core] class OrderStateManagerImpl[T]()(
+final private[core] class OrderStateManagerImpl[T](
+    maxNumOrders: Int
+)(
     implicit
     orderPool: OrderPool[T]
 ) extends OrderStateManager[T] {
+
+  assert(maxNumOrders > 0)
 
   import OrderStatus._
 
@@ -51,9 +55,8 @@ final private[core] class OrderStateManagerImpl[T]()(
       assert(tokens.contains(order.tokenFee.get))
     }
 
-    if (order.onTokenS(_.outOfLength) &&
-      order.onTokenFee(_.outOfLength).getOrElse(false)) {
-
+    if (order.onTokenS(_.hasTooManyOrders) &&
+      order.onTokenFee(_.hasTooManyOrders).getOrElse(false)) {
       orderPool += order.as(CANCELLED_TOO_MANY_ORDERS)
       return false
     }
@@ -115,9 +118,7 @@ final private[core] class OrderStateManagerImpl[T]()(
       method(tokens(order.tokenS))
 
     def onTokenFee[R](method: TM ⇒ R): Option[R] =
-      order.tokenFee
-        //.filter(_ != order.tokenB) // Do nothing if tokenB == tokenFee
-        .map(tokens(_)).map(method)
+      order.tokenFee.map(tokens(_)).map(method)
 
     def callTokenSThenRemoveOrders(
       method: TM ⇒ Set[ID],

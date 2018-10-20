@@ -16,14 +16,20 @@
 
 package org.loopring.lightcone.core
 
-object TimestampProvider {
-  val default = new SystemTimestampProvider()
+trait RingMatcher[T] {
+  def matchOrders(
+    taker: Order[T],
+    maker: Order[T]
+  ): Either[MatchingFailure.Value, Ring[T]]
 }
 
-trait TimestampProvider {
-  def getTimestamp(): Timestamp
-}
+abstract class SimpleRingMatcher[T](
+    ringIncomeEstimator: RingIncomeEstimator[T]
+) extends RingMatcher[T] {
 
-final class SystemTimestampProvider extends TimestampProvider {
-  def getTimestamp() = System.currentTimeMillis
+  def matchOrders(
+    taker: Order[T],
+    maker: Order[T]
+  ): Either[MatchingFailure.Value, Ring[T]]
+
 }

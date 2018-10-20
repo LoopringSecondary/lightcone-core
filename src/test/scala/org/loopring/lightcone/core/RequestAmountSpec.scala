@@ -38,7 +38,7 @@ class RequestAmountSpec extends FlatSpec with Matchers {
     }
   )
 
-  val manager = OrderStateManager.default[Raw]
+  val manager = OrderStateManager.default[Raw]()
   val lrc = "LRC"
   val xyz = "XYZ"
   val gto = "GTO"
@@ -54,9 +54,9 @@ class RequestAmountSpec extends FlatSpec with Matchers {
   // 多种情况测试orderRequest
   // 注意: tokenManager在判断requestedAmount时,允许等于
   "testRequestAmount" should "cancel order" in {
-    lrcTokenManager.reset(100, 200)
-    xyzTokenManager.reset(100, 200)
-    gtoTokenManager.reset(100, 200)
+    lrcTokenManager.init(100, 200)
+    xyzTokenManager.init(100, 200)
+    gtoTokenManager.init(100, 200)
 
     // 情况1:tokenFee == None, balance/allowance充足
     manager.submitOrder(Order(

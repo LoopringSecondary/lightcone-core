@@ -37,7 +37,7 @@ class OrderStateManagerSpec extends FlatSpec with Matchers {
       }
     )
 
-    val manager = OrderStateManager.default[Raw]
+    val manager = OrderStateManager.default[Raw](maxNumOrders = 1000)
 
     manager.hasTokenManager("LRC") should be(false)
 
@@ -45,11 +45,11 @@ class OrderStateManagerSpec extends FlatSpec with Matchers {
     manager.hasTokenManager("LRC") should be(true)
 
     val lrc = manager.getTokenManager("LRC")
-    lrc.reset(100, 200)
+    lrc.init(100, 200)
 
     val xyz = manager.addTokenManager(new TokenManager("XYZ"))
     val gto = manager.addTokenManager(new TokenManager("GTO"))
-    gto.reset(5000, 4000)
+    gto.init(5000, 4000)
 
     manager.submitOrder(Order(
       Raw(),

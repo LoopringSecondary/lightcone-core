@@ -36,7 +36,7 @@ class TokenSizeSpec extends FlatSpec with Matchers {
     }
   )
 
-  val manager = OrderStateManager.default[Raw]
+  val manager = OrderStateManager.default[Raw]()
   val lrc = "LRC"
   val xyz = "XYZ"
   val gto = "GTO"
@@ -53,7 +53,7 @@ class TokenSizeSpec extends FlatSpec with Matchers {
   "testTokenSize" should "add new TokenManager" in {
     info("[sbt core/'testOnly *TokenSizeSpec -- -z testTokenSize']")
 
-    lrcTokenManager.reset(100, 200)
+    lrcTokenManager.init(100, 200)
 
     val order = Order(
       Raw(),

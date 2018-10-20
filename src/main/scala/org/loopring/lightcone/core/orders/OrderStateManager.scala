@@ -16,15 +16,22 @@
 
 package org.loopring.lightcone.core
 
-final object OrderStatus extends Enumeration {
-  type OrderStatus = Value
+trait OrderStateManager[T] {
+  def hasTokenManager(token: Address): Boolean
+  def addTokenManager(tm: TokenManager[T]): TokenManager[T]
+  def getTokenManager(token: Address): TokenManager[T]
 
-  val NEW = Value(0)
-  val PENDING = Value(1)
-  val EXPIRED = Value(2)
-  val CANCELLED_BY_USER = Value(3)
-  val CANCELLED_LOW_BALANCE = Value(4)
-  val CANCELLED_LOW_FEE_BALANCE = Value(5)
-  val CANCELLED_TOO_MANY_ORDERS = Value(6)
+  def submitOrder(order: Order[T]): Boolean
+  def cancelOrder(orderId: ID): Boolean
+  def adjustOrder(orderId: ID, amountSDelta: Amount): Boolean
+}
 
+object OrderStateManager {
+  def default[T](
+    maxNumOrders: Int = 1000
+  )(
+    implicit
+    orderPool: OrderPool[T]
+  ): OrderStateManager[T] =
+    new OrderStateManagerImpl[T](maxNumOrders)
 }

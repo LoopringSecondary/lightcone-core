@@ -16,26 +16,14 @@
 
 package org.loopring.lightcone.core
 
-trait RingFeeValueEvaluator[T] {
-  def getFeeFiatValue(ring: Ring[T]): Double
-  def isProfitable(ring: Ring[T]): Boolean
+object TimeProvider {
+  val default = new SystemTimeProvider()
 }
 
-final class DefaultRingFeeValueEvaluator[T](
-    threshold: Double,
-    estimator: TokenFiatValueEstimator
-) extends RingFeeValueEvaluator[T] {
+trait TimeProvider {
+  def getCurrentTimeMillis(): Long
+}
 
-  def getFeeFiatValue(ring: Ring[T]) = {
-    ring.expectedFills.map { fill ⇒
-      val order = fill.order
-      estimator.getEstimatedValue(
-        order.tokenFee.getOrElse(order.tokenS),
-        fill.pendingAmountFee
-      )
-    }.sum
-  }
-
-  def isProfitable(ring: Ring[T]) =
-    threshold <= getFeeFiatValue(ring)
+final class SystemTimeProvider extends TimeProvider {
+  def getCurrentTimeMillis() = System.currentTimeMillis
 }
