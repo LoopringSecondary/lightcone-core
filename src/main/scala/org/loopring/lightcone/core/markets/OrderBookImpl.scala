@@ -67,8 +67,10 @@ abstract class OrderBookImpl[T](
   def getLastPrice(): Option[Rational] = lastPrice
   def getMetadata(): OrderBookMetadata
 
-  def getTops(token: Address, num: Int, skip: Int = 0, includingHidden: Boolean = false) =
-    sides(token).getTops(num, skip, includingHidden)
+  def getTops(isPrimary: Boolean, num: Int, skip: Int = 0, includingHidden: Boolean = false) = {
+    val side = if (isPrimary) sides(marketId.primary) else sides(marketId.secondary)
+    side.getTops(num, skip, includingHidden)
+  }
 
   // Implicit class
   implicit private class RichOrderInMarket[T](order: Order[T]) {
