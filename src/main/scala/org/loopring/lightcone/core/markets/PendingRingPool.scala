@@ -75,12 +75,12 @@ class PendingRingPoolImpl[T]()(
       case Some(_) ⇒
       case None ⇒
         ringMap += ring.id -> RingInfo(
-          ring.taker.id, ring.taker.pendingAmountS,
-          ring.maker.id, ring.maker.pendingAmountS
+          ring.taker.id, ring.taker.pending.amountS,
+          ring.maker.id, ring.maker.pending.amountS
         )
 
-        incrementPendingAmountS(ring.id, ring.taker.id, ring.taker.pendingAmountS)
-        incrementPendingAmountS(ring.id, ring.maker.id, ring.maker.pendingAmountS)
+        incrementPendingAmountS(ring.id, ring.taker.id, ring.taker.pending.amountS)
+        incrementPendingAmountS(ring.id, ring.maker.id, ring.maker.pending.amountS)
 
         log.debug("pending_orders: " + orderMap.mkString("\n\t"))
     }

@@ -22,12 +22,6 @@ case class Amounts(
     amountS: Amount = 0,
     amountB: Amount = 0,
     amountFee: Amount = 0,
-    scale: Rational = Rational(0)
-)
-
-case class Reserved(
-    amountS: Amount = 0,
-    amountFee: Amount = 0
 )
 
 case class Order[T](
@@ -36,29 +30,29 @@ case class Order[T](
     tokenS: Address,
     tokenB: Address,
     tokenFee: Option[Address],
-    amountS: Amount,
-    amountB: Amount,
-    amountFee: Amount,
+    original: Amounts,
     createdAt: Long = -1,
     status: OrderStatus = NEW,
-    reserved: Reserved = Reserved(),
-    actuals: Amounts = Amounts()
+    outstanding: Amounts = Amounts(),
+    reserved: Amounts = Amounts(),
+    actual: Amounts = Amounts()
 ) {
 
-  lazy val rate = Rational(amountB, amountS)
+  lazy val rate = Rational(original.amountB, original.amountS)
 
   // Advance methods with implicit contextual arguments
   private[core] def requestedAmount()(implicit token: Address): Amount = {
     if (token == tokenS) tokenFee match {
-      case None ⇒ amountS + amountFee
-      case Some(t) if t == tokenS ⇒ amountS + amountFee
-      case _ ⇒ amountS
+      case None ⇒ outstanding.amountS + outstanding.amountFee
+      case Some(t) if t == tokenS ⇒ outstanding.amountS + outstanding.amountFee
+      case _ ⇒ outstanding.amountS
     }
     else if (token == tokenB) tokenFee match {
-      case Some(t) if t == tokenB && amountFee > amountB ⇒ amountFee - amountB
+      case Some(t) if t == tokenB && outstanding.amountFee > outstanding.amountB ⇒ 
+      outstanding.amountFee - outstanding.amountB
       case _ ⇒ 0
     }
-    else amountFee
+    else outstanding.amountFee
   }
 
   private[core] def reservedAmount()(implicit token: Address) = tokenFee match {
@@ -69,11 +63,11 @@ case class Order[T](
 
   private[core] def withReservedAmount(v: Amount)(implicit token: Address) = tokenFee match {
     case None ⇒
-      val r = Rational(amountS / (amountFee + amountS))
+      val r = Rational(original.amountS / (original.amountFee + original.amountS))
       val reservedAmountS = (Rational(v) * r).bigintValue
       val reservedAmountFee = v - reservedAmountS
 
-      copy(reserved = Reserved(reservedAmountS, reservedAmountFee))
+      copy(reserved = Amounts(reservedAmountS, 0, reservedAmountFee))
         .updateAmounts()
 
     case Some(tokenFee) if token == tokenFee ⇒
@@ -90,23 +84,22 @@ case class Order[T](
     assert(status != PENDING)
     copy(
       status = status,
-      reserved = Reserved(),
-      actuals = Amounts()
+      reserved = Amounts(),
+      actual = Amounts()
     )
   }
 
   private def updateAmounts() = {
-    var r = Rational(reserved.amountS, amountS)
-    if (amountFee > 0) {
-      r = r min Rational(reserved.amountFee, amountFee)
+    var r = Rational(reserved.amountS, original.amountS)
+    if (original.amountFee > 0) {
+      r = r min Rational(reserved.amountFee, original.amountFee)
     }
 
     copy(
-      actuals = Amounts(
-        (r * Rational(amountS)).bigintValue,
-        (r * Rational(amountB)).bigintValue,
-        (r * Rational(amountFee)).bigintValue,
-        r
+      actual = Amounts(
+        (r * Rational(original.amountS)).bigintValue,
+        (r * Rational(original.amountB)).bigintValue,
+        (r * Rational(original.amountFee)).bigintValue
       )
     )
   }
