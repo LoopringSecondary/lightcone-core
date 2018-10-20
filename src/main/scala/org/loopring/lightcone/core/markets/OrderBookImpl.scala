@@ -19,8 +19,8 @@ package org.loopring.lightcone.core
 import org.slf4j.LoggerFactory
 
 case class MarketId(
-    primaryToken: Address,
-    secondaryToken: Address
+    primary: Address,
+    secondary: Address
 )
 
 case class OrderBookConfig(
@@ -30,18 +30,29 @@ case class OrderBookConfig(
     maxNumHiddenSells: Int
 )
 
+class OneSide[T](tokenS: Address)(implicit orderPool: OrderPool[T]) {
+  var bestPrice: Option[Rational] = None
+
+  def getTops(num: Int, skip: Int = 0, includingHidden: Boolean = false): Seq[Order[T]] = ???
+
+}
+
 abstract class OrderBookImpl[T](
     marketId: MarketId,
     config: OrderBookConfig
 )(
     implicit
-    pendingRingPool: PendingRingPool[T]
-)
-  extends OrderBook[T] {
-
-  var orderMap = Map.empty[ID, Order[T]]
-
+    pendingRingPool: PendingRingPool[T],
+    orderPool: OrderPool[T]
+) extends OrderBook[T] {
   private val log = LoggerFactory.getLogger(getClass.getName)
+
+  private val sides = Map(
+    marketId.primary -> new OneSide[T](marketId.primary),
+    marketId.secondary -> new OneSide[T](marketId.secondary)
+  )
+
+  private var lastPrice: Option[Rational] = None
 
   def addOrder(order: Order[T]): Set[Ring[T]] = {
     order.realActuals
@@ -53,17 +64,14 @@ abstract class OrderBookImpl[T](
     null
   }
 
-  def getLastPrice(): Option[Rational]
+  def getLastPrice(): Option[Rational] = lastPrice
   def getMetadata(): OrderBookMetadata
 
-  def getTopBuys(num: Int, skip: Int = 0, includingHidden: Boolean = false): Seq[Order[T]]
-  def getTopSells(num: Int, skip: Int = 0, includingHidden: Boolean = false): Seq[Order[T]]
+  def getTops(token: Address, num: Int, skip: Int = 0, includingHidden: Boolean = false) =
+    sides(token).getTops(num, skip, includingHidden)
 
+  // Implicit class
   implicit private class RichOrderInMarket[T](order: Order[T]) {
-    def isSell = order.tokenS == marketId.secondaryToken
-    def isBuy = !isSell
-    def price = if (isSell) order.rate else Rational(1) / order.rate
-
     def realActuals() = {
       val pendingAmountS = pendingRingPool.getOrderPendingAmountS(order.id)
       if (pendingAmountS == 0) order.actuals
