@@ -62,6 +62,7 @@ class OrderStateValidateSpec extends FlatSpec with Matchers {
       xyz,
       None,
       10,
+      2,
       0
     )
     manager.submitOrder(order)
@@ -75,40 +76,48 @@ class OrderStateValidateSpec extends FlatSpec with Matchers {
 
     lrcTokenManager.reset(100, 200)
 
-    val order1 = Order(
+    manager.submitOrder(Order(
       Raw(),
       "order1",
       lrc,
       xyz,
       None,
       80,
+      2,
       0
-    )
+    )) should be(true)
 
-    manager.submitOrder(order1) should be(true)
-
-    val order2 = Order(
+    manager.submitOrder(Order(
       Raw(),
       "order2",
       lrc,
       xyz,
       None,
       18,
+      2,
       6
-    )
+    )) should be(true)
 
-    manager.submitOrder(order2) should be(true)
-
-    val order3 = Order(
+    manager.submitOrder(Order(
       Raw(),
       "order3",
       lrc,
       xyz,
       None,
       80,
+      2,
       0
-    )
+    )) should be(false)
 
-    manager.submitOrder(order3) should be(false)
+    manager.submitOrder(Order(
+      Raw(),
+      "order4",
+      lrc,
+      xyz,
+      Option(xyz),
+      80,
+      20,
+      10
+    )) should be(true)
   }
 }
