@@ -18,7 +18,7 @@ package org.loopring.lightcone.core
 
 import org.scalatest._
 
-class OrderStateValidateSpec extends FlatSpec with Matchers {
+class TokenSizeSpec extends FlatSpec with Matchers {
 
   case class Raw()
 
@@ -51,7 +51,7 @@ class OrderStateValidateSpec extends FlatSpec with Matchers {
 
   // tokenManager订单size测试
   "testTokenSize" should "add new TokenManager" in {
-    info("[sbt core/'testOnly *OrderStateValidateSpec -- -z testTokenSize']")
+    info("[sbt core/'testOnly *TokenSizeSpec -- -z testTokenSize']")
 
     lrcTokenManager.reset(100, 200)
 
@@ -70,54 +70,4 @@ class OrderStateValidateSpec extends FlatSpec with Matchers {
     receivedOrders.getOrElse("order1", order).status should be(OrderStatus.PENDING)
   }
 
-  // 测试账户余额不足情况下下单后被取消
-  "testInSufficientFunds" should "cancel order" in {
-    info("[sbt core/'testOnly *OrderStateValidateSpec -- -z testInSufficientFunds']")
-
-    lrcTokenManager.reset(100, 200)
-
-    manager.submitOrder(Order(
-      Raw(),
-      "order1",
-      lrc,
-      xyz,
-      None,
-      80,
-      2,
-      0
-    )) should be(true)
-
-    manager.submitOrder(Order(
-      Raw(),
-      "order2",
-      lrc,
-      xyz,
-      None,
-      18,
-      2,
-      6
-    )) should be(true)
-
-    manager.submitOrder(Order(
-      Raw(),
-      "order3",
-      lrc,
-      xyz,
-      None,
-      80,
-      2,
-      0
-    )) should be(false)
-
-    manager.submitOrder(Order(
-      Raw(),
-      "order4",
-      lrc,
-      xyz,
-      Option(xyz),
-      80,
-      20,
-      10
-    )) should be(true)
-  }
 }

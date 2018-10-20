@@ -34,9 +34,13 @@ case class Order[T](
 ) {
 
   // Advance methods with implicit contextual arguments
-  private[core] def requestedAmount()(implicit token: Address): Amount = {
+  private[core] def requestedAmount()(implicit token: Address): Amount =
     if (token == tokenS) {
-      amountS
+      if (tokenFee.isEmpty || (tokenFee.nonEmpty && tokenFee.get == tokenS)) {
+        amountS + amountFee
+      } else {
+        amountS
+      }
     } else if (token == tokenB) {
       if (tokenFee.nonEmpty && tokenFee.get == tokenB && amountFee > amountB) {
         amountFee - amountB
@@ -46,7 +50,6 @@ case class Order[T](
     } else {
       amountFee
     }
-  }
 
   private[core] def reservedAmount()(implicit token: Address) = tokenFee match {
     case None ⇒ reservedAmountS + reservedAmountFee

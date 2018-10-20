@@ -116,7 +116,7 @@ final private[core] class OrderStateManagerImpl[T]()(
 
     def onTokenFee[R](method: TM ⇒ R): Option[R] =
       order.tokenFee
-        .filter(_ != order.tokenB) // Do nothing if tokenB == tokenFee
+        //.filter(_ != order.tokenB) // Do nothing if tokenB == tokenFee
         .map(tokens(_)).map(method)
 
     def callTokenSThenRemoveOrders(
