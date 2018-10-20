@@ -18,7 +18,7 @@ package org.loopring.lightcone.core
 
 import OrderStatus._
 
-case class Actuals(
+case class Amounts(
     amountS: Amount = 0,
     amountB: Amount = 0,
     amountFee: Amount = 0,
@@ -42,7 +42,7 @@ case class Order[T](
     createdAt: Long = -1,
     status: OrderStatus = NEW,
     reserved: Reserved = Reserved(),
-    actuals: Actuals = Actuals()
+    actuals: Amounts = Amounts()
 ) {
 
   lazy val rate = Rational(amountB, amountS)
@@ -74,15 +74,15 @@ case class Order[T](
       val reservedAmountFee = v - reservedAmountS
 
       copy(reserved = Reserved(reservedAmountS, reservedAmountFee))
-        .updateActuals()
+        .updateAmounts()
 
     case Some(tokenFee) if token == tokenFee ⇒
       copy(reserved = reserved.copy(amountFee = v))
-        .updateActuals()
+        .updateAmounts()
 
     case _ ⇒
       copy(reserved = reserved.copy(amountS = v))
-        .updateActuals()
+        .updateAmounts()
   }
 
   // Private methods
@@ -91,18 +91,18 @@ case class Order[T](
     copy(
       status = status,
       reserved = Reserved(),
-      actuals = Actuals()
+      actuals = Amounts()
     )
   }
 
-  private def updateActuals() = {
+  private def updateAmounts() = {
     var r = Rational(reserved.amountS, amountS)
     if (amountFee > 0) {
       r = r min Rational(reserved.amountFee, amountFee)
     }
 
     copy(
-      actuals = Actuals(
+      actuals = Amounts(
         (r * Rational(amountS)).bigintValue,
         (r * Rational(amountB)).bigintValue,
         (r * Rational(amountFee)).bigintValue,

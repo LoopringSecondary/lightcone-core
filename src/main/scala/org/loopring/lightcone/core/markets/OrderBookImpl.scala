@@ -47,7 +47,7 @@ abstract class OrderBookImpl[T](
   private var lastPrice: Option[Rational] = None
 
   def addOrder(order: Order[T]): Set[Ring[T]] = {
-    order.realActuals
+    order.realAmounts
     null
   }
   def deleteOrder(orderId: ID): Set[RingID]
@@ -66,7 +66,7 @@ abstract class OrderBookImpl[T](
 
   // Implicit class
   implicit private class RichOrderInMarket[T](order: Order[T]) {
-    def realActuals() = {
+    def realAmounts() = {
       val pendingAmountS = pendingRingPool.getOrderPendingAmountS(order.id)
       if (pendingAmountS == 0) order.actuals
       else {
@@ -75,7 +75,7 @@ abstract class OrderBookImpl[T](
         val amountS = (actuals.amountS - pendingAmountS).max(0)
         val r = Rational(amountS, actuals.amountS)
 
-        Actuals(
+        Amounts(
           amountS,
           (Rational(actuals.amountB) * r).bigintValue,
           (Rational(actuals.amountFee) * r).bigintValue,
