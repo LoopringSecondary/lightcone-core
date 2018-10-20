@@ -15,6 +15,7 @@
  */
 
 package org.loopring.lightcone.core
+
 import org.slf4s.Logging
 
 case class MarketId(
@@ -29,13 +30,6 @@ case class OrderBookConfig(
     maxNumHiddenSells: Int
 )
 
-class OneSide[T](tokenS: Address)(implicit orderPool: OrderPool[T]) {
-  var bestPrice: Option[Rational] = None
-
-  def getTops(num: Int, skip: Int = 0, includingHidden: Boolean = false): Seq[Order[T]] = ???
-
-}
-
 abstract class OrderBookImpl[T](
     marketId: MarketId,
     config: OrderBookConfig
@@ -46,8 +40,8 @@ abstract class OrderBookImpl[T](
 ) extends OrderBook[T] with Logging {
 
   private val sides = Map(
-    marketId.primary -> new OneSide[T](marketId.primary),
-    marketId.secondary -> new OneSide[T](marketId.secondary)
+    marketId.primary -> new OrderBookSide[T](marketId.primary),
+    marketId.secondary -> new OrderBookSide[T](marketId.secondary)
   )
 
   private var lastPrice: Option[Rational] = None

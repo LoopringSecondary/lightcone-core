@@ -39,6 +39,7 @@ case class Order[T](
     amountS: Amount,
     amountB: Amount,
     amountFee: Amount,
+    createdAt: Long = -1,
     status: OrderStatus = NEW,
     reserved: Reserved = Reserved(),
     actuals: Actuals = Actuals()
