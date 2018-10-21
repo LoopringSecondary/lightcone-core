@@ -16,14 +16,22 @@
 
 package org.loopring.lightcone.core
 
-object TimestampProvider {
-  val default = new SystemTimestampProvider()
+trait OrderStateManager[T] {
+  def hasTokenManager(token: Address): Boolean
+  def addTokenManager(tm: TokenManager[T]): TokenManager[T]
+  def getTokenManager(token: Address): TokenManager[T]
+
+  def submitOrder(order: Order[T]): Boolean
+  def cancelOrder(orderId: ID): Boolean
+  def adjustOrder(orderId: ID, amountSDelta: Amount): Boolean
 }
 
-trait TimestampProvider {
-  def getTimestamp(): Timestamp
-}
-
-final class SystemTimestampProvider extends TimestampProvider {
-  def getTimestamp() = System.currentTimeMillis
+object OrderStateManager {
+  def default[T](
+    maxNumOrders: Int = 1000
+  )(
+    implicit
+    orderPool: OrderPool[T]
+  ): OrderStateManager[T] =
+    new OrderStateManagerImpl[T](maxNumOrders)
 }

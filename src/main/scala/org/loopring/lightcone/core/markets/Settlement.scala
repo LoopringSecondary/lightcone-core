@@ -16,15 +16,12 @@
 
 package org.loopring.lightcone.core
 
-final object OrderStatus extends Enumeration {
-  type OrderStatus = Value
-
-  val NEW = Value(0)
-  val PENDING = Value(1)
-  val EXPIRED = Value(2)
-  val CANCELLED_BY_USER = Value(3)
-  val CANCELLED_LOW_BALANCE = Value(4)
-  val CANCELLED_LOW_FEE_BALANCE = Value(5)
-  val CANCELLED_TOO_MANY_ORDERS = Value(6)
-
+case class Settlement[T](
+    rings: Seq[Ring[T]],
+    nonce: Int,
+    createdAt: Long,
+    txid: Option[ID] = None,
+    committedAt: Option[Long] = None,
+    confirmedBlock: Option[Long] = None
+) {
 }

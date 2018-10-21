@@ -16,24 +16,14 @@
 
 package org.loopring.lightcone.core
 
-final object MatchingFailure extends Enumeration {
-  type MatchingFailure = Value
-
-  val SOME = Value(0)
+object TimeProvider {
+  val default = new SystemTimeProvider()
 }
 
-trait RingMatcher[T] {
-  def matchOrders(
-    taker: Order[T],
-    maker: Order[T]
-  ): Either[MatchingFailure.Value, Ring[T]]
+trait TimeProvider {
+  def getCurrentTimeMillis(): Long
 }
 
-abstract class SimpleRingMatcher[T](
-    ringFeeValueEvaluator: RingFeeValueEvaluator[T]
-) extends RingMatcher[T] {
-  def matchOrders(
-    taker: Order[T],
-    maker: Order[T]
-  ): Either[MatchingFailure.Value, Ring[T]]
+final class SystemTimeProvider extends TimeProvider {
+  def getCurrentTimeMillis() = System.currentTimeMillis
 }

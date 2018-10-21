@@ -15,22 +15,18 @@
  */
 
 package org.loopring.lightcone.core
+import org.slf4s.Logging
 
-import org.slf4j.LoggerFactory
-
-
-/*
-初始化
-下单时间排序
- */
-final private[core] class OrderStateManagerImpl[T]()(
+final private[core] class OrderStateManagerImpl[T](
+    maxNumOrders: Int
+)(
     implicit
     orderPool: OrderPool[T]
-) extends OrderStateManager[T] {
+) extends OrderStateManager[T] with Logging {
+
+  assert(maxNumOrders > 0)
 
   import OrderStatus._
-
-  private val log = LoggerFactory.getLogger(getClass.getName)
 
   private[core] implicit var tokens = Map.empty[Address, TokenManager[T]]
 
@@ -49,17 +45,15 @@ final private[core] class OrderStateManagerImpl[T]()(
   }
 
   def submitOrder(order: Order[T]): Boolean = {
-    assert(order.tokenFee != Some(order.tokenS))
-    assert(order.amountS > 0)
+    assert(order.original.amountS > 0)
 
     assert(tokens.contains(order.tokenS))
     if (order.tokenFee.nonEmpty) {
       assert(tokens.contains(order.tokenFee.get))
     }
 
-    if (order.onTokenS(_.size) <= 1000 &&
-      order.onTokenFee(_.size).getOrElse(0) <= 1000) {
-
+    if (order.onTokenS(_.hasTooManyOrders) &&
+      order.onTokenFee(_.hasTooManyOrders).getOrElse(false)) {
       orderPool += order.as(CANCELLED_TOO_MANY_ORDERS)
       return false
     }
@@ -86,16 +80,21 @@ final private[core] class OrderStateManagerImpl[T]()(
     }
   }
 
+  // adjust order's outstanding size
   def adjustOrder(orderId: ID, amountSDelta: Amount): Boolean = {
     orderPool.getOrder(orderId) match {
       case None ⇒ false
       case Some(order) ⇒
 
-        val amountFeeDelta = order.amountFee × (amountSDelta ÷ order.amountS)
+        val amountS = order.outstanding.amountS + amountSDelta
+        val r = Rational(amountS, order.original.amountS)
 
         orderPool += order.copy(
-          amountS = order.amountS + amountSDelta,
-          amountFee = order.amountFee + amountFeeDelta
+          outstanding = Amounts(
+            amountS,
+            (r * Rational(order.original.amountB)).bigintValue,
+            (r * Rational(order.original.amountFee)).bigintValue
+          )
         )
 
         order.callTokenSThenRemoveOrders(_.adjust(orderId))
@@ -121,9 +120,7 @@ final private[core] class OrderStateManagerImpl[T]()(
       method(tokens(order.tokenS))
 
     def onTokenFee[R](method: TM ⇒ R): Option[R] =
-      order.tokenFee
-        .filter(_ != order.tokenB) // Do nothing if tokenB == tokenFee
-        .map(tokens(_)).map(method)
+      order.tokenFee.map(tokens(_)).map(method)
 
     def callTokenSThenRemoveOrders(
       method: TM ⇒ Set[ID],

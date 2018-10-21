@@ -16,26 +16,20 @@
 
 package org.loopring.lightcone.core
 
-trait RingFeeValueEvaluator[T] {
-  def getFeeFiatValue(ring: Ring[T]): Double
-  def isProfitable(ring: Ring[T]): Boolean
+trait RingMatcher[T] {
+  def matchOrders(
+    taker: Order[T],
+    maker: Order[T]
+  ): Either[MatchingFailure.Value, Ring[T]]
 }
 
-final class DefaultRingFeeValueEvaluator[T](
-    threshold: Double,
-    estimator: TokenFiatValueEstimator
-) extends RingFeeValueEvaluator[T] {
+abstract class SimpleRingMatcher[T](
+    ringIncomeEstimator: RingIncomeEstimator[T]
+) extends RingMatcher[T] {
 
-  def getFeeFiatValue(ring: Ring[T]) = {
-    ring.expectedFills.map { fill ⇒
-      val order = fill.order
-      estimator.getEstimatedValue(
-        order.tokenFee.getOrElse(order.tokenS),
-        fill.pendingAmountFee
-      )
-    }.sum
-  }
+  def matchOrders(
+    taker: Order[T],
+    maker: Order[T]
+  ): Either[MatchingFailure.Value, Ring[T]]
 
-  def isProfitable(ring: Ring[T]) =
-    threshold <= getFeeFiatValue(ring)
 }

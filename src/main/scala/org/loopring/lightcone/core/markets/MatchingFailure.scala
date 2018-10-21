@@ -16,17 +16,8 @@
 
 package org.loopring.lightcone.core
 
-trait OrderStateManager[T] {
-  def hasTokenManager(token: Address): Boolean
-  def addTokenManager(tm: TokenManager[T]): TokenManager[T]
-  def getTokenManager(token: Address): TokenManager[T]
+final object MatchingFailure extends Enumeration {
+  type MatchingFailure = Value
 
-  def submitOrder(order: Order[T]): Boolean
-  def cancelOrder(orderId: ID): Boolean
-  def adjustOrder(orderId: ID, amountSDelta: Amount): Boolean
-}
-
-object OrderStateManager {
-  def default[T]()(implicit orderPool: OrderPool[T]): OrderStateManager[T] =
-    new OrderStateManagerImpl[T]()(orderPool)
+  val SOME = Value(0)
 }

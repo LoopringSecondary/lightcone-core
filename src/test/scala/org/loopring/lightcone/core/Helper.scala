@@ -16,12 +16,31 @@
 
 package org.loopring.lightcone.core
 
-case class Settlement[T](
-    rings: Seq[Ring[T]],
-    nonce: Int,
-    createdAt: Timestamp,
-    txid: Option[ID] = None,
-    committedAt: Option[Timestamp] = None,
-    confirmedBlock: Option[Long] = None
-) {
+object Helper {
+
+  case class Raw()
+
+  type MyOrder = Order[Raw]
+  type MyTokenManager = TokenManager[Raw]
+  type MyOrderPool = OrderPool[Raw]
+
+  def newOrder(
+    id: ID,
+    tokenS: Address,
+    tokenB: Address,
+    tokenFee: Option[Address],
+    amountS: Amount,
+    amountB: Amount,
+    amountFee: Amount
+  ) = Order[Raw](
+    Raw(),
+    id,
+    tokenS,
+    tokenB,
+    tokenFee,
+    Amounts(amountS, amountB, amountFee),
+    System.currentTimeMillis,
+    OrderStatus.NEW,
+    Amounts(amountS, amountB, amountFee)
+  )
 }
