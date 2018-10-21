@@ -40,7 +40,4 @@ class OrderBookSide[T](tokenS: Address)(implicit orderPool: OrderPool[T])
   private[core] val orders = SortedSet.empty[Order[T]]
 
   var bestPrice: Option[Rational] = None
-
-  def getTops(num: Int, skip: Int = 0, includingHidden: Boolean = false): Seq[Order[T]] = ???
-
 }

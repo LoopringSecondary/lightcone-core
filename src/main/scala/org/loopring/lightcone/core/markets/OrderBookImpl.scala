@@ -47,27 +47,18 @@ abstract class OrderBookImpl[T](
 
   private var lastPrice: Option[Rational] = None
 
-
-
-
   def addOrder(order: Order[T]): Seq[Ring[T]] = {
-  
- var rings = Seq.empty[Ring[T]]
+    var rings = Seq.empty[Ring[T]]
 
+    case class State[T](taker: Order[T], pending: OrderState = OrderState())
 
-   case class TakerState[T](
-    taker: Order[T],
-    pending: OrderState = OrderState())
+    def recursivelyMatchOrder(state: State[T]): State[T] = {
+      recursivelyMatchOrder(state)
+    }
 
-   def recursivelyMatchOrder(state: TakerState[T]): TakerState[T] = {
-    recursivelyMatchOrder(state)
- }
+    val State(updatedOrder, pending) = recursivelyMatchOrder(State[T](order))
 
-
-
-val TakerState(updatedOrder, pending) = recursivelyMatchOrder(TakerState[T](order))
-
-     rings
+    rings
   }
 
   def deleteOrder(orderId: ID): Set[RingID]
@@ -78,31 +69,4 @@ val TakerState(updatedOrder, pending) = recursivelyMatchOrder(TakerState[T](orde
 
   def getLastPrice(): Option[Rational] = lastPrice
   def getMetadata(): OrderBookMetadata
-
-  def getTops(isPrimary: Boolean, num: Int, skip: Int = 0, includingHidden: Boolean = false) = {
-    val side = if (isPrimary) sides(marketId.primary) else sides(marketId.secondary)
-    side.getTops(num, skip, includingHidden)
-  }
-
-  // Implicit class
-  implicit private class RichOrderInMarket[T](order: Order[T]) {
-    def matchable() = {
-      val pendingAmountS = pendingRingPool.getOrderPendingAmountS(order.id)
-      if (pendingAmountS == 0) order.actual
-      else {
-        val actual = order.actual
-        val original = order.original
-        assert(actual.amountS > 0)
-        val amountS = (actual.amountS - pendingAmountS).max(0)
-        val r = Rational(amountS, original.amountS)
-
-        OrderState(
-          amountS,
-          (r * Rational(original.amountB)).bigintValue,
-          (r * Rational(original.amountFee)).bigintValue,
-        )
-      }
-
-    }
-  }
 }
