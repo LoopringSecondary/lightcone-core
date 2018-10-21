@@ -30,15 +30,10 @@ case class OrderBookMetadata(
   def totalNumSells = numSells + numHiddenSells
 }
 
-trait OrderBook[T] {
+trait MarketManager[T] {
   def addOrder(order: Order[T]): Seq[Ring[T]]
-  def deleteOrder(orderId: ID): Set[RingID]
+  // def deleteOrder(orderId: ID): Set[RingID]
 
-  def trigerMatch(): Set[Ring[T]]
-
-  def getLastPrice(): Option[Rational]
-  def getMetadata(): OrderBookMetadata
-
-  def getTopBuys(num: Int, skip: Int = 0, includingHidden: Boolean = false): Seq[Order[T]]
-  def getTopSells(num: Int, skip: Int = 0, includingHidden: Boolean = false): Seq[Order[T]]
+  // def trigerMatch(): Set[Ring[T]]
+  // def getMetadata(): OrderBookMetadata
 }

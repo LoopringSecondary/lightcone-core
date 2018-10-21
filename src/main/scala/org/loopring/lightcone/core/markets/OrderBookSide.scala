@@ -23,10 +23,10 @@ object OrderBookSide {
 
   private def defaultOrdering[T]() = new Ordering[Order[T]] {
     def compare(a: Order[T], b: Order[T]) = {
-      if (a.rate < b.rate) 1
-      else if (a.rate > b.rate) -1
-      else if (a.createdAt < b.createdAt) 1
-      else if (a.createdAt > b.createdAt) -1
+      if (a.rate < b.rate) -1
+      else if (a.rate > b.rate) 1
+      else if (a.createdAt < b.createdAt) -1
+      else if (a.createdAt > b.createdAt) 1
       else 0
     }
   }

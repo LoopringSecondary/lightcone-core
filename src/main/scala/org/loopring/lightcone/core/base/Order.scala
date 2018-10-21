@@ -35,7 +35,8 @@ case class Order[T](
     status: OrderStatus = NEW,
     outstanding: OrderState = OrderState(),
     reserved: OrderState = OrderState(),
-    actual: OrderState = OrderState()
+    actual: OrderState = OrderState(),
+    matchable: OrderState = OrderState()
 ) {
 
   lazy val rate = Rational(original.amountB, original.amountS)
@@ -85,7 +86,8 @@ case class Order[T](
     copy(
       status = status,
       reserved = OrderState(),
-      actual = OrderState()
+      actual = OrderState(),
+      matchable = OrderState()
     )
   }
 
