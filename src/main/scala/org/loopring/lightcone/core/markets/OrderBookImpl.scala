@@ -17,6 +17,7 @@
 package org.loopring.lightcone.core
 
 import org.slf4s.Logging
+import scala.annotation.tailrec
 
 case class MarketId(
     primary: Address,
@@ -46,10 +47,29 @@ abstract class OrderBookImpl[T](
 
   private var lastPrice: Option[Rational] = None
 
-  def addOrder(order: Order[T]): Set[Ring[T]] = {
-    order.matchable
-    null
+
+
+
+  def addOrder(order: Order[T]): Seq[Ring[T]] = {
+  
+ var rings = Seq.empty[Ring[T]]
+
+
+   case class TakerState[T](
+    taker: Order[T],
+    pending: OrderState = OrderState())
+
+   def recursivelyMatchOrder(state: TakerState[T]): TakerState[T] = {
+    recursivelyMatchOrder(state)
+ }
+
+
+
+val TakerState(updatedOrder, pending) = recursivelyMatchOrder(TakerState[T](order))
+
+     rings
   }
+
   def deleteOrder(orderId: ID): Set[RingID]
 
   def trigerMatch(): Set[Ring[T]] = {
@@ -76,7 +96,7 @@ abstract class OrderBookImpl[T](
         val amountS = (actual.amountS - pendingAmountS).max(0)
         val r = Rational(amountS, original.amountS)
 
-        Amounts(
+        OrderState(
           amountS,
           (r * Rational(original.amountB)).bigintValue,
           (r * Rational(original.amountFee)).bigintValue,

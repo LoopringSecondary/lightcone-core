@@ -90,7 +90,7 @@ final private[core] class OrderStateManagerImpl[T](
         val r = Rational(amountS, order.original.amountS)
 
         orderPool += order.copy(
-          outstanding = Amounts(
+          outstanding = OrderState(
             amountS,
             (r * Rational(order.original.amountB)).bigintValue,
             (r * Rational(order.original.amountFee)).bigintValue

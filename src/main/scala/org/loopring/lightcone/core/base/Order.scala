@@ -18,7 +18,7 @@ package org.loopring.lightcone.core
 
 import OrderStatus._
 
-case class Amounts(
+case class OrderState(
     amountS: Amount = 0,
     amountB: Amount = 0,
     amountFee: Amount = 0,
@@ -30,12 +30,12 @@ case class Order[T](
     tokenS: Address,
     tokenB: Address,
     tokenFee: Option[Address],
-    original: Amounts,
+    original: OrderState,
     createdAt: Long = -1,
     status: OrderStatus = NEW,
-    outstanding: Amounts = Amounts(),
-    reserved: Amounts = Amounts(),
-    actual: Amounts = Amounts()
+    outstanding: OrderState = OrderState(),
+    reserved: OrderState = OrderState(),
+    actual: OrderState = OrderState()
 ) {
 
   lazy val rate = Rational(original.amountB, original.amountS)
@@ -67,16 +67,16 @@ case class Order[T](
       val reservedAmountS = (Rational(v) * r).bigintValue
       val reservedAmountFee = v - reservedAmountS
 
-      copy(reserved = Amounts(reservedAmountS, 0, reservedAmountFee))
-        .updateAmounts()
+      copy(reserved = OrderState(reservedAmountS, 0, reservedAmountFee))
+        .updateOrderState()
 
     case Some(tokenFee) if token == tokenFee ⇒
       copy(reserved = reserved.copy(amountFee = v))
-        .updateAmounts()
+        .updateOrderState()
 
     case _ ⇒
       copy(reserved = reserved.copy(amountS = v))
-        .updateAmounts()
+        .updateOrderState()
   }
 
   // Private methods
@@ -84,19 +84,19 @@ case class Order[T](
     assert(status != PENDING)
     copy(
       status = status,
-      reserved = Amounts(),
-      actual = Amounts()
+      reserved = OrderState(),
+      actual = OrderState()
     )
   }
 
-  private def updateAmounts() = {
+  private def updateOrderState() = {
     var r = Rational(reserved.amountS, original.amountS)
     if (original.amountFee > 0) {
       r = r min Rational(reserved.amountFee, original.amountFee)
     }
 
     copy(
-      actual = Amounts(
+      actual = OrderState(
         (r * Rational(original.amountS)).bigintValue,
         (r * Rational(original.amountB)).bigintValue,
         (r * Rational(original.amountFee)).bigintValue

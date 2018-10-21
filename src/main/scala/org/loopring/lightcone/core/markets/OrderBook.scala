@@ -31,7 +31,7 @@ case class OrderBookMetadata(
 }
 
 trait OrderBook[T] {
-  def addOrder(order: Order[T]): Set[Ring[T]]
+  def addOrder(order: Order[T]): Seq[Ring[T]]
   def deleteOrder(orderId: ID): Set[RingID]
 
   def trigerMatch(): Set[Ring[T]]
