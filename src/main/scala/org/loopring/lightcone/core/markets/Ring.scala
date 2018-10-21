@@ -17,6 +17,8 @@
 package org.loopring.lightcone.core
 
 import java.security.MessageDigest
+import org.web3j.crypto.{ Hash ⇒ web3Hash}
+import org.web3j.utils.Numeric
 
 case class ExpectedFill[T](
     order: Order[T],
@@ -32,15 +34,38 @@ case class Ring[T](
     taker: ExpectedFill[T]
 ) {
   lazy val id: RingID = {
-    def sha256(id_ : ID): RingID = MessageDigest.getInstance("MD-5")
-      .digest(id_.getBytes("UTF-8"))
-
-    sha256(maker.order.id)
-      .zip(sha256(taker.order.id))
-      .map(p ⇒ p._1 ^ p._2)
-      .map(_.toByte)
+    val data = Array[Byte]()
+      .addHex(maker.id)
+//      .addUint16(BigInt(maker.waiveFeePercentage).bigInteger)
+      .addHex(taker.id)
+//      .addUint16(BigInt(maker.waiveFeePercentage).bigInteger)
+    web3Hash.sha3(data)
   }
 
-  def expectedFills() = Seq(maker, taker)
+  def expectedFills() = {
+
+    //todo:可用金额，如何获取
+    val makerAvailableAmounts = Amounts()
+    val takerAvailableAmounts = Amounts()
+    if (makerAvailableAmounts.amountS > takerAvailableAmounts.amountB) {
+      var makerFee = makerAvailableAmounts.amountFee
+
+      val makerFeeTmp = makerFee * takerAvailableAmounts.amountB / makerAvailableAmounts.amountS
+      if (makerFeeTmp < makerFee) {
+        makerFee = makerFeeTmp
+      }
+      //todo:收益需要放在哪里
+      Seq(maker, taker)
+    } else {
+      var takerFee = takerAvailableAmounts.amountFee
+      val takerFeeTmp = takerFee * makerAvailableAmounts.amountB / takerAvailableAmounts.amountS
+      if (takerFeeTmp < takerFee) {
+        takerFee = takerFeeTmp
+      }
+      //todo:收益需要放在哪里
+      Seq(maker, taker)
+    }
+  }
+
   def orders() = Seq(maker.order, taker.order)
 }

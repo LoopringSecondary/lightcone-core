@@ -33,7 +33,7 @@ package object core {
     def max(that: Amount): Amount = if (this_ > that) this_ else that
   }
 
-  implicit class RichByteArray(this_ : ByteArray) {
+  implicit class RichByteArray(this_ : Array[Byte]) {
     def addAddress(address: String): Array[Byte] = this_ ++ Numeric.toBytesPadded(Numeric.toBigInt(address), 20)
 
     def addUint256(num: BigInteger): Array[Byte] = this_ ++ Numeric.toBytesPadded(num, 32)
