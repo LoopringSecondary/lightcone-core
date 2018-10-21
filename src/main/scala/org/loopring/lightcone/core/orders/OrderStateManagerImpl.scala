@@ -81,22 +81,11 @@ final private[core] class OrderStateManagerImpl[T](
   }
 
   // adjust order's outstanding size
-  def adjustOrder(orderId: ID, amountSDelta: Amount): Boolean = {
+  def adjustOrder(orderId: ID, outstandingAmountS: Amount): Boolean = {
     orderPool.getOrder(orderId) match {
       case None ⇒ false
       case Some(order) ⇒
-
-        val amountS = order.outstanding.amountS + amountSDelta
-        val r = Rational(amountS, order.original.amountS)
-
-        orderPool += order.copy(
-          outstanding = Amounts(
-            amountS,
-            (r * Rational(order.original.amountB)).bigintValue,
-            (r * Rational(order.original.amountFee)).bigintValue
-          )
-        )
-
+        orderPool += order.withOutstandingAmountS(outstandingAmountS)
         order.callTokenSThenRemoveOrders(_.adjust(orderId))
         order.callTokenFeeThenRemoveOrders(_.adjust(orderId))
         true

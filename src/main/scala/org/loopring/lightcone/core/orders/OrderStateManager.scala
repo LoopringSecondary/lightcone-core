@@ -23,7 +23,7 @@ trait OrderStateManager[T] {
 
   def submitOrder(order: Order[T]): Boolean
   def cancelOrder(orderId: ID): Boolean
-  def adjustOrder(orderId: ID, amountSDelta: Amount): Boolean
+  def adjustOrder(orderId: ID, outstandingAmountS: Amount): Boolean
 }
 
 object OrderStateManager {

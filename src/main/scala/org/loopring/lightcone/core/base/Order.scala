@@ -18,10 +18,10 @@ package org.loopring.lightcone.core
 
 import OrderStatus._
 
-case class Amounts(
+case class OrderState(
     amountS: Amount = 0,
     amountB: Amount = 0,
-    amountFee: Amount = 0,
+    amountFee: Amount = 0
 )
 
 case class Order[T](
@@ -30,15 +30,32 @@ case class Order[T](
     tokenS: Address,
     tokenB: Address,
     tokenFee: Option[Address],
-    original: Amounts,
+    original: OrderState,
     createdAt: Long = -1,
     status: OrderStatus = NEW,
-    outstanding: Amounts = Amounts(),
-    reserved: Amounts = Amounts(),
-    actual: Amounts = Amounts()
+    private[core] val _outstanding: Option[OrderState] = None,
+    private[core] val _reserved: Option[OrderState] = None,
+    private[core] val _actual: Option[OrderState] = None,
+    private[core] val _matchable: Option[OrderState] = None
 ) {
 
+  lazy val outstanding = _outstanding.getOrElse(original)
+  lazy val reserved = _reserved.getOrElse(OrderState())
+  lazy val actual = _actual.getOrElse(OrderState())
+  lazy val matchable = _matchable.getOrElse(OrderState())
+
   lazy val rate = Rational(original.amountB, original.amountS)
+
+  def withOutstandingAmountS(v: Amount) = {
+    var r = Rational(v, original.amountS)
+    copy(
+      _outstanding = Some(OrderState(
+        (r * Rational(original.amountS)).bigintValue,
+        (r * Rational(original.amountB)).bigintValue,
+        (r * Rational(original.amountFee)).bigintValue
+      ))
+    )
+  }
 
   // Advance methods with implicit contextual arguments
   private[core] def requestedAmount()(implicit token: Address): Amount = {
@@ -48,8 +65,8 @@ case class Order[T](
       case _ ⇒ outstanding.amountS
     }
     else if (token == tokenB) tokenFee match {
-      case Some(t) if t == tokenB && outstanding.amountFee > outstanding.amountB ⇒ 
-      outstanding.amountFee - outstanding.amountB
+      case Some(t) if t == tokenB && outstanding.amountFee > outstanding.amountB ⇒
+        outstanding.amountFee - outstanding.amountB
       case _ ⇒ 0
     }
     else outstanding.amountFee
@@ -61,46 +78,54 @@ case class Order[T](
     case _ ⇒ reserved.amountS
   }
 
-  private[core] def withReservedAmount(v: Amount)(implicit token: Address) = tokenFee match {
-    case None ⇒
-      val r = Rational(original.amountS / (original.amountFee + original.amountS))
-      val reservedAmountS = (Rational(v) * r).bigintValue
-      val reservedAmountFee = v - reservedAmountS
+  private[core] def withReservedAmount(v: Amount)(implicit token: Address) =
+    tokenFee match {
+      case None ⇒
+        val r = Rational(original.amountS / (original.amountFee + original.amountS))
+        val reservedAmountS = (Rational(v) * r).bigintValue
+        val reservedAmountFee = v - reservedAmountS
 
-      copy(reserved = Amounts(reservedAmountS, 0, reservedAmountFee))
-        .updateAmounts()
+        copy(
+          _reserved = Some(OrderState(
+            reservedAmountS,
+            0,
+            reservedAmountFee
+          ))
+        )
+          .updateActual()
 
-    case Some(tokenFee) if token == tokenFee ⇒
-      copy(reserved = reserved.copy(amountFee = v))
-        .updateAmounts()
+      case Some(tokenFee) if token == tokenFee ⇒
+        copy(_reserved = _reserved.map(_.copy(amountFee = v)))
+          .updateActual()
 
-    case _ ⇒
-      copy(reserved = reserved.copy(amountS = v))
-        .updateAmounts()
-  }
+      case _ ⇒
+        copy(_reserved = _reserved.map(_.copy(amountS = v)))
+          .updateActual()
+    }
 
   // Private methods
   private[core] def as(status: OrderStatus) = {
     assert(status != PENDING)
     copy(
       status = status,
-      reserved = Amounts(),
-      actual = Amounts()
+      _reserved = None,
+      _actual = None,
+      _matchable = None
     )
   }
 
-  private def updateAmounts() = {
+  private def updateActual() = {
     var r = Rational(reserved.amountS, original.amountS)
     if (original.amountFee > 0) {
       r = r min Rational(reserved.amountFee, original.amountFee)
     }
 
     copy(
-      actual = Amounts(
+      _actual = Some(OrderState(
         (r * Rational(original.amountS)).bigintValue,
         (r * Rational(original.amountB)).bigintValue,
         (r * Rational(original.amountFee)).bigintValue
-      )
+      ))
     )
   }
 }

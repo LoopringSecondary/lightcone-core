@@ -38,9 +38,9 @@ object Helper {
     tokenS,
     tokenB,
     tokenFee,
-    Amounts(amountS, amountB, amountFee),
+    OrderState(amountS, amountB, amountFee),
     System.currentTimeMillis,
-    OrderStatus.NEW,
-    Amounts(amountS, amountB, amountFee)
+    OrderStatus.NEW
   )
+
 }

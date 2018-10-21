@@ -20,7 +20,7 @@ import java.security.MessageDigest
 
 case class ExpectedFill[T](
     order: Order[T],
-    pending: Amounts,
+    pending: OrderState,
     amountMargin: Amount = 0
 ) {
 
