@@ -21,7 +21,7 @@ import OrderStatus._
 case class OrderState(
     amountS: Amount = 0,
     amountB: Amount = 0,
-    amountFee: Amount = 0,
+    amountFee: Amount = 0
 )
 
 case class Order[T](
@@ -33,16 +33,16 @@ case class Order[T](
     original: OrderState,
     createdAt: Long = -1,
     status: OrderStatus = NEW,
-     outstanding_ : Option[OrderState] = None,
-    reserved_ : Option[OrderState] = None,
-   actual_ : Option[OrderState] = None,
-    matchable_ : Option[OrderState] = None
+    private[core] val _outstanding: Option[OrderState] = None,
+    private[core] val _reserved: Option[OrderState] = None,
+    private[core] val _actual: Option[OrderState] = None,
+    private[core] val _matchable: Option[OrderState] = None
 ) {
 
-  val outstanding = outstanding_.getOrElse(original)
-   val reserved  = reserved_.getOrElse(OrderState())
-  val actual = actual_.getOrElse(OrderState())
-  val matchable = matchable_.getOrElse(OrderState())
+  lazy val outstanding = _outstanding.getOrElse(original)
+  lazy val reserved = _reserved.getOrElse(OrderState())
+  lazy val actual = _actual.getOrElse(OrderState())
+  lazy val matchable = _matchable.getOrElse(OrderState())
 
   lazy val rate = Rational(original.amountB, original.amountS)
 
@@ -54,8 +54,8 @@ case class Order[T](
       case _ ⇒ outstanding.amountS
     }
     else if (token == tokenB) tokenFee match {
-      case Some(t) if t == tokenB && outstanding.amountFee > outstanding.amountB ⇒ 
-      outstanding.amountFee - outstanding.amountB
+      case Some(t) if t == tokenB && outstanding.amountFee > outstanding.amountB ⇒
+        outstanding.amountFee - outstanding.amountB
       case _ ⇒ 0
     }
     else outstanding.amountFee
@@ -67,22 +67,33 @@ case class Order[T](
     case _ ⇒ reserved.amountS
   }
 
-  private[core] def withReservedAmount(v: Amount)(implicit token: Address) = tokenFee match {
-    case None ⇒
-      val r = Rational(original.amountS / (original.amountFee + original.amountS))
-      val reservedAmountS = (Rational(v) * r).bigintValue
-      val reservedAmountFee = v - reservedAmountS
+  private[core] def withReservedAmount(v: Amount)(implicit token: Address) =
+    tokenFee match {
+      case None ⇒
+        val r = Rational(original.amountS / (original.amountFee + original.amountS))
+        val reservedAmountS = (Rational(v) * r).bigintValue
+        val reservedAmountFee = v - reservedAmountS
 
-      copy(reserved_ = Some(OrderState(reservedAmountS, 0, reservedAmountFee)))
-        .updateOrderState()
+        copy(
+          _reserved = Some(OrderState(
+            reservedAmountS,
+            0,
+            reservedAmountFee
+          ))
+        )
+          .updateActual()
 
-    case Some(tokenFee) if token == tokenFee ⇒
-      copy(reserved_ = reserved_.map(_.copy(amountFee = v)))
-        .updateOrderState()
+      case Some(tokenFee) if token == tokenFee ⇒
+        copy(_reserved = _reserved.map(_.copy(amountFee = v)))
+          .updateActual()
 
-    case _ ⇒
-      copy(reserved_ = reserved_.map(_.copy(amountS = v)))
-        .updateOrderState()
+      case _ ⇒
+        copy(_reserved = _reserved.map(_.copy(amountS = v)))
+          .updateActual()
+    }
+
+  private[core] def withOutstanding(state: OrderState) = {
+    copy(_outstanding = Some(state))
   }
 
   // Private methods
@@ -90,24 +101,24 @@ case class Order[T](
     assert(status != PENDING)
     copy(
       status = status,
-      reserved_ =None,
-      actual_ =None,
-      matchable_ = None
+      _reserved = None,
+      _actual = None,
+      _matchable = None
     )
   }
 
-  private def updateOrderState() = {
+  private def updateActual() = {
     var r = Rational(reserved.amountS, original.amountS)
     if (original.amountFee > 0) {
       r = r min Rational(reserved.amountFee, original.amountFee)
     }
 
     copy(
-      actual_ = Some(OrderState(
+      _actual = Some(OrderState(
         (r * Rational(original.amountS)).bigintValue,
         (r * Rational(original.amountB)).bigintValue,
         (r * Rational(original.amountFee)).bigintValue
-      )
-    ))
+      ))
+    )
   }
 }

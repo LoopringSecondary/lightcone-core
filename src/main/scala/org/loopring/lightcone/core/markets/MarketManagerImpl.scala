@@ -90,7 +90,7 @@ class MarketManagerImpl[T](
         val original = order.original
         val r = Rational(matchableAmountS, original.amountS)
 
-        val updatedOrder = order.copy(matchable_ = Some(OrderState(
+        val updatedOrder = order.copy(_matchable = Some(OrderState(
           matchableAmountS,
           (r * Rational(original.amountB)).bigintValue,
           (r * Rational(original.amountFee)).bigintValue
