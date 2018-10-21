@@ -46,6 +46,17 @@ case class Order[T](
 
   lazy val rate = Rational(original.amountB, original.amountS)
 
+  def withOutstandingAmountS(v: Amount) = {
+    var r = Rational(v, original.amountS)
+    copy(
+      _outstanding = Some(OrderState(
+        (r * Rational(original.amountS)).bigintValue,
+        (r * Rational(original.amountB)).bigintValue,
+        (r * Rational(original.amountFee)).bigintValue
+      ))
+    )
+  }
+
   // Advance methods with implicit contextual arguments
   private[core] def requestedAmount()(implicit token: Address): Amount = {
     if (token == tokenS) tokenFee match {
@@ -91,10 +102,6 @@ case class Order[T](
         copy(_reserved = _reserved.map(_.copy(amountS = v)))
           .updateActual()
     }
-
-  private[core] def withOutstanding(state: OrderState) = {
-    copy(_outstanding = Some(state))
-  }
 
   // Private methods
   private[core] def as(status: OrderStatus) = {
