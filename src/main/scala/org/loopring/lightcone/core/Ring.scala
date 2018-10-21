@@ -16,8 +16,9 @@
 
 package org.loopring.lightcone.core
 
-import java.security.MessageDigest
-
+import org.loopring.lightcone.core._
+import org.web3j.utils.Numeric
+import org.web3j.crypto.{ Hash ⇒ web3Hash }
 case class ExpectedFill[T](
     order: Order[T],
     pendingAmountS: Amount = 0,
@@ -33,13 +34,13 @@ case class Ring[T](
     taker: ExpectedFill[T]
 ) {
   lazy val id: ByteArray = {
-    def sha256(id_ : ID): ByteArray = MessageDigest.getInstance("MD-5")
-      .digest(id_.getBytes("UTF-8"))
-
-    sha256(maker.order.id)
-      .zip(sha256(taker.order.id))
-      .map(p ⇒ p._1 ^ p._2)
-      .map(_.toByte)
+    //todo: 需要确定订单结构后才能获取waiveFeePercentage
+    val data = Array[Byte]()
+      .addHex(maker.order.id)
+//      .addUint16(BigInt(maker.order.waiveFeePercentage).bigInteger)
+      .addHex(taker.order.id)
+//      .addUint16(BigInt(taker.order.waiveFeePercentage).bigInteger)
+    web3Hash.sha3(data)
   }
 
   def expectedFills() = Seq(maker, taker)

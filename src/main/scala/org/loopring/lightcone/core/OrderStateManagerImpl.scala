@@ -18,6 +18,11 @@ package org.loopring.lightcone.core
 
 import org.slf4j.LoggerFactory
 
+
+/*
+初始化
+下单时间排序
+ */
 final private[core] class OrderStateManagerImpl[T]()(
     implicit
     orderPool: OrderPool[T]
