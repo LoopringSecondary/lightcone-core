@@ -47,24 +47,31 @@ case class Ring[T](
     //todo:可用金额，如何获取
     val makerAvailableAmounts = Amounts()
     val takerAvailableAmounts = Amounts()
-    if (makerAvailableAmounts.amountS > takerAvailableAmounts.amountB) {
-      var makerFee = makerAvailableAmounts.amountFee
+    val makerSVolume = makerAvailableAmounts.amountS.min(takerAvailableAmounts.amountB)
+    val takerSVolume = takerAvailableAmounts.amountS.min(makerAvailableAmounts.amountB)
 
-      val makerFeeTmp = makerFee * takerAvailableAmounts.amountB / makerAvailableAmounts.amountS
-      if (makerFeeTmp < makerFee) {
-        makerFee = makerFeeTmp
-      }
-      //todo:收益需要放在哪里
-      Seq(maker, taker)
-    } else {
-      var takerFee = takerAvailableAmounts.amountFee
-      val takerFeeTmp = takerFee * makerAvailableAmounts.amountB / takerAvailableAmounts.amountS
-      if (takerFeeTmp < takerFee) {
-        takerFee = takerFeeTmp
-      }
-      //todo:收益需要放在哪里
-      Seq(maker, taker)
-    }
+    val makerMargin = (makerAvailableAmounts.amountS - makerSVolume).min(BigInt(0))
+    val takerMargin = (takerAvailableAmounts.amountS - takerSVolume).min(BigInt(0))
+    val makerFee = makerAvailableAmounts.amountFee * makerSVolume / makerAvailableAmounts.amountS
+    val takerFee = takerAvailableAmounts.amountFee * takerSVolume / takerAvailableAmounts.amountS
+
+    Seq(
+      maker.copy(
+        pending = Amounts(
+          amountS = makerSVolume,
+          amountB = takerSVolume,
+          amountFee = makerFee
+        ),
+        amountMargin = makerMargin),
+      taker.copy(
+        pending = Amounts(
+          amountS = takerSVolume,
+          amountB = makerSVolume,
+          amountFee = takerFee
+        ),
+        amountMargin = takerMargin)
+    )
+
   }
 
   def orders() = Seq(maker.order, taker.order)
