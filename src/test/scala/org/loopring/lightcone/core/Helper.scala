@@ -40,7 +40,7 @@ object Helper {
     tokenFee,
     OrderState(amountS, amountB, amountFee),
     System.currentTimeMillis,
-    OrderStatus.NEW,
-    OrderState(amountS, amountB, amountFee)
+    OrderStatus.NEW
   )
 }
+

@@ -90,11 +90,11 @@ class MarketManagerImpl[T](
         val original = order.original
         val r = Rational(matchableAmountS, original.amountS)
 
-        val updatedOrder = order.copy(matchable = OrderState(
+        val updatedOrder = order.copy(matchable_ = Some(OrderState(
           matchableAmountS,
           (r * Rational(original.amountB)).bigintValue,
           (r * Rational(original.amountFee)).bigintValue
-        ))
+        )))
 
         log.debug(s"top maker order: $updatedOrder")
         updatedOrder

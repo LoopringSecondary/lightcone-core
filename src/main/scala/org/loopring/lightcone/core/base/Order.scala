@@ -33,11 +33,16 @@ case class Order[T](
     original: OrderState,
     createdAt: Long = -1,
     status: OrderStatus = NEW,
-    outstanding: OrderState = OrderState(),
-    reserved: OrderState = OrderState(),
-    actual: OrderState = OrderState(),
-    matchable: OrderState = OrderState()
+     outstanding_ : Option[OrderState] = None,
+    reserved_ : Option[OrderState] = None,
+   actual_ : Option[OrderState] = None,
+    matchable_ : Option[OrderState] = None
 ) {
+
+  val outstanding = outstanding_.getOrElse(original)
+   val reserved  = reserved_.getOrElse(OrderState())
+  val actual = actual_.getOrElse(OrderState())
+  val matchable = matchable_.getOrElse(OrderState())
 
   lazy val rate = Rational(original.amountB, original.amountS)
 
@@ -68,15 +73,15 @@ case class Order[T](
       val reservedAmountS = (Rational(v) * r).bigintValue
       val reservedAmountFee = v - reservedAmountS
 
-      copy(reserved = OrderState(reservedAmountS, 0, reservedAmountFee))
+      copy(reserved_ = Some(OrderState(reservedAmountS, 0, reservedAmountFee)))
         .updateOrderState()
 
     case Some(tokenFee) if token == tokenFee ⇒
-      copy(reserved = reserved.copy(amountFee = v))
+      copy(reserved_ = reserved_.map(_.copy(amountFee = v)))
         .updateOrderState()
 
     case _ ⇒
-      copy(reserved = reserved.copy(amountS = v))
+      copy(reserved_ = reserved_.map(_.copy(amountS = v)))
         .updateOrderState()
   }
 
@@ -85,9 +90,9 @@ case class Order[T](
     assert(status != PENDING)
     copy(
       status = status,
-      reserved = OrderState(),
-      actual = OrderState(),
-      matchable = OrderState()
+      reserved_ =None,
+      actual_ =None,
+      matchable_ = None
     )
   }
 
@@ -98,11 +103,11 @@ case class Order[T](
     }
 
     copy(
-      actual = OrderState(
+      actual_ = Some(OrderState(
         (r * Rational(original.amountS)).bigintValue,
         (r * Rational(original.amountB)).bigintValue,
         (r * Rational(original.amountFee)).bigintValue
       )
-    )
+    ))
   }
 }
