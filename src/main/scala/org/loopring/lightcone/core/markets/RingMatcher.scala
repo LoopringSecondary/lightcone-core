@@ -21,15 +21,18 @@ import MatchingFailure._
 trait RingMatcher {
   def matchOrders(
     taker: Order,
-    maker: Order): Either[MatchingFailure, Ring]
+    maker: Order
+  ): Either[MatchingFailure, Ring]
 }
 
 class SimpleRingMatcher(
-  ringIncomeEstimator: RingIncomeEstimator) extends RingMatcher {
+    ringIncomeEstimator: RingIncomeEstimator
+) extends RingMatcher {
 
   def matchOrders(
     taker: Order,
-    maker: Order): Either[MatchingFailure, Ring] = {
+    maker: Order
+  ): Either[MatchingFailure, Ring] = {
     makeRing(maker, taker) match {
       case Some(ring) if ringIncomeEstimator.isProfitable(ring) ⇒ Right(ring)
       case Some(ring) ⇒ Left(ORDERS_NOT_TRADABLE)
@@ -51,20 +54,26 @@ class SimpleRingMatcher(
         (
           OrderState(
             amountS = maker.matchable.amountS,
-            amountB = maker.matchable.amountB),
-            OrderState(
-              amountS = maker.matchable.amountB,
-              amountB = (Rational(maker.matchable.amountB) *
-                Rational(taker.amountB, taker.amountS)).bigintValue))
+            amountB = maker.matchable.amountB
+          ),
+          OrderState(
+            amountS = maker.matchable.amountB,
+            amountB = (Rational(maker.matchable.amountB) *
+              Rational(taker.amountB, taker.amountS)).bigintValue
+          )
+        )
       } else {
         (
           OrderState(
             amountS = taker.matchable.amountB,
             amountB = (Rational(taker.matchable.amountB) *
-              Rational(maker.amountB, maker.amountS)).bigintValue),
+              Rational(maker.amountB, maker.amountS)).bigintValue
+          ),
             OrderState(
               amountS = taker.matchable.amountS,
-              amountB = taker.matchable.amountB))
+              amountB = taker.matchable.amountB
+            )
+        )
       }
 
     //fee 按照卖出的比例计算
@@ -78,11 +87,14 @@ class SimpleRingMatcher(
       maker = ExpectedFill(
         order = maker,
         pending = makerVolume.copy(amountFee = makerFee),
-        amountMargin = makerMargin),
+        amountMargin = makerMargin
+      ),
       taker = ExpectedFill(
         order = taker,
         pending = takerVolume.copy(amountFee = takerFee),
-        amountMargin = takerMargin))
+        amountMargin = takerMargin
+      )
+    )
 
     Some(ring)
   }

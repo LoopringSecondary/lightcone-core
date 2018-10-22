@@ -32,10 +32,9 @@ case class Order(
     amountS: Amount = 0,
     amountB: Amount = 0,
     amountFee: Amount = 0,
-    // original: OrderState,
     createdAt: Long = -1,
     status: OrderStatus = NEW,
-    walletSplitPercentage: Double = 0.2,
+    walletSplitPercentage: Double = 0,
     private[core] val _outstanding: Option[OrderState] = None,
     private[core] val _reserved: Option[OrderState] = None,
     private[core] val _actual: Option[OrderState] = None,
@@ -50,14 +49,12 @@ case class Order(
   lazy val rate = Rational(amountB, amountS)
 
   def withOutstandingAmountS(v: Amount) = {
-    var r = Rational(v, amountS)
-    copy(
-      _outstanding = Some(OrderState(
-        (r * Rational(amountS)).bigintValue,
-        (r * Rational(amountB)).bigintValue,
-        (r * Rational(amountFee)).bigintValue
-      ))
-    )
+    val r = Rational(v, amountS)
+    copy(_outstanding = Some(OrderState(
+      (r * Rational(amountS)).bigintValue,
+      (r * Rational(amountB)).bigintValue,
+      (r * Rational(amountFee)).bigintValue
+    )))
   }
 
   // Advance methods with implicit contextual arguments
