@@ -37,9 +37,17 @@ class ReserveAmountSpec extends FlatSpec with Matchers {
   val xyz = "XYZ"
   val gto = "GTO"
 
-  //  xyzTokenManager.init(1000, 200)
-  //  gtoTokenManager.init(1000, 200)
-  //  lrcTokenManager.init(1000, 200)
+  manager.addTokenManager(new TokenManager(lrc))
+  manager.addTokenManager(new TokenManager(xyz))
+  manager.addTokenManager(new TokenManager(gto))
+
+  val lrcTokenManager = manager.getTokenManager(lrc)
+  val xyzTokenManager = manager.getTokenManager(xyz)
+  val gtoTokenManager = manager.getTokenManager(gto)
+
+  lrcTokenManager.init(1000, 200)
+  xyzTokenManager.init(1000, 200)
+  gtoTokenManager.init(1000, 200)
 
   // 情况1:tokenFee == None, allowance充足
   "simpleTest1" should "calculate reserve amount" in {
@@ -52,6 +60,8 @@ class ReserveAmountSpec extends FlatSpec with Matchers {
       20,
       100
     )
+    manager.submitOrder(order)
+
     val state = order.withReservedAmount(200)(lrc)
 
     state.reserved.amountS should be(100)
@@ -70,6 +80,8 @@ class ReserveAmountSpec extends FlatSpec with Matchers {
       20,
       100
     )
+    manager.submitOrder(order)
+
     val state = order.withReservedAmount(100)(lrc)
 
     state.reserved.amountS should be(50)
@@ -88,15 +100,13 @@ class ReserveAmountSpec extends FlatSpec with Matchers {
       20,
       100
     )
+    manager.submitOrder(order)
+
     val state = order.withReservedAmount(200)(lrc)
 
-    info(state.reserved.amountS.toString())
-    info(state.reserved.amountFee.toString())
-    info(state.reservedAmount()(lrc).toString())
-
-    //    state.reserved.amountS should be(100)
-    //    state.reserved.amountFee should be(100)
-    //    state.reservedAmount()(lrc) should be(200)
+    state.reserved.amountS should be(100)
+    state.reserved.amountFee should be(100)
+    state.reservedAmount()(lrc) should be(200)
   }
 
   // 情况4: tokenFee == tokenS, allowance不足

@@ -28,3 +28,11 @@ final object OrderStatus extends Enumeration {
   val CANCELLED_TOO_MANY_ORDERS = Value
   val CANCELLED_TOO_MANY_FAILED_SETTLEMENTS = Value
 }
+
+final object LrcAddress {
+
+  val lrc = ""
+
+  def eq(token: Address): Boolean = token.equals(lrc)
+
+}

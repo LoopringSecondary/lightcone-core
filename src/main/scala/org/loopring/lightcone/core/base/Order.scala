@@ -74,36 +74,34 @@ case class Order(
     else outstanding.amountFee
   }
 
-  private[core] def reservedAmount()(implicit token: Address) = tokenFee match {
-    case None ⇒ reserved.amountS + reserved.amountFee
-    case Some(tokenFee) if token == tokenFee ⇒ reserved.amountFee
-    case _ ⇒ reserved.amountS
+  private[core] def reservedAmount()(implicit token: Address) = {
+    val feeIsTokenS = feeSameWithTokenS()
+
+    if ((token == tokenS) && feeIsTokenS) {
+      reserved.amountS + reserved.amountFee
+    } else if (token == tokenS && !feeIsTokenS) {
+      reserved.amountS
+    } else {
+      reserved.amountFee
+    }
   }
 
-  private[core] def withReservedAmount(v: Amount)(implicit token: Address) =
-    tokenFee match {
-      case None ⇒
-        val r = Rational(amountS) / Rational(amountFee + amountS)
-        val reservedAmountS = (Rational(v) * r).bigintValue
-        val reservedAmountFee = v - reservedAmountS
+  private[core] def withReservedAmount(v: Amount)(implicit token: Address) = {
+    val feeIsTokenS = feeSameWithTokenS()
 
-        copy(
-          _reserved = Some(OrderState(
-            reservedAmountS,
-            0,
-            reservedAmountFee
-          ))
-        )
-          .updateActual()
+    val state =
+      if ((token == tokenS) && feeIsTokenS) {
+        val r = Rational(amountS, amountFee + amountS)
+        val reservedAmountS = (Rational(v) * r).bigintValue()
+        OrderState(reservedAmountS, 0, v - reservedAmountS)
+      } else if (token == tokenS && !feeIsTokenS) {
+        OrderState(v, 0, reserved.amountFee)
+      } else {
+        OrderState(reserved.amountS, 0, v)
+      }
 
-      case Some(tokenFee) if token == tokenFee ⇒
-        copy(_reserved = _reserved.map(_.copy(amountFee = v)))
-          .updateActual()
-
-      case _ ⇒
-        copy(_reserved = _reserved.map(_.copy(amountS = v)))
-          .updateActual()
-    }
+    copy(_reserved = Some(state)).updateActual()
+  }
 
   // Private methods
   private[core] def as(status: OrderStatus) = {
@@ -129,5 +127,17 @@ case class Order(
         (r * Rational(amountFee)).bigintValue
       ))
     )
+  }
+
+  private def feeSameWithTokenS(): Boolean = tokenFee match {
+    case None ⇒ LrcAddress.eq(tokenS)
+    case Some(t) if t == tokenS ⇒ true
+    case _ ⇒ false
+  }
+
+  private def feeSameWithTokenB(): Boolean = tokenFee match {
+    case None ⇒ LrcAddress.eq(tokenB)
+    case Some(t) if t == tokenB ⇒ true
+    case _ ⇒ false
   }
 }
