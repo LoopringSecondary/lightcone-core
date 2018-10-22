@@ -16,8 +16,7 @@
 
 package org.loopring.lightcone.core
 
-import java.security.MessageDigest
-import org.web3j.crypto.{ Hash ⇒ web3Hash}
+import org.web3j.crypto.{Hash ⇒ web3Hash}
 import org.web3j.utils.Numeric
 
 case class ExpectedFill(
@@ -34,19 +33,23 @@ case class Ring(
     taker: ExpectedFill
 ) {
   lazy val id: RingID = {
-    val data = Array[Byte]()
-      .addHex(maker.id)
-//      .addUint16(BigInt(maker.waiveFeePercentage).bigInteger)
-      .addHex(taker.id)
-//      .addUint16(BigInt(maker.waiveFeePercentage).bigInteger)
+    val data = Numeric.hexStringToByteArray(maker.id) ++
+      Numeric.hexStringToByteArray(taker.id)
     web3Hash.sha3(data)
   }
 
   def expectedFills() = {
 
     //todo:可用金额，如何获取
-    val makerAvailableAmounts = Amounts()
-    val takerAvailableAmounts = Amounts()
+    val makerAvailableAmounts = maker.order._matchable match {
+      case None ⇒ OrderState()
+      case Some(matchable) ⇒ matchable
+    }
+    val takerAvailableAmounts = maker.order._matchable match {
+      case None ⇒ OrderState()
+      case Some(matchable) ⇒ matchable
+    }
+
     val makerSVolume = makerAvailableAmounts.amountS.min(takerAvailableAmounts.amountB)
     val takerSVolume = takerAvailableAmounts.amountS.min(makerAvailableAmounts.amountB)
 
@@ -57,14 +60,14 @@ case class Ring(
 
     Seq(
       maker.copy(
-        pending = Amounts(
+        pending = OrderState(
           amountS = makerSVolume,
           amountB = takerSVolume,
           amountFee = makerFee
         ),
         amountMargin = makerMargin),
       taker.copy(
-        pending = Amounts(
+        pending = OrderState(
           amountS = takerSVolume,
           amountB = makerSVolume,
           amountFee = takerFee
@@ -74,6 +77,7 @@ case class Ring(
 
   }
 
+  //中间价格，可以在显示深度价格时使用,简单的中间价
   def centralRate() = {
     (maker.order.rate + taker.order.rate)/Rational(2)
   }

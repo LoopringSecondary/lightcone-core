@@ -32,18 +32,4 @@ package object core {
     def min(that: Amount): Amount = if (this_ < that) this_ else that
     def max(that: Amount): Amount = if (this_ > that) this_ else that
   }
-
-  implicit class RichByteArray(this_ : Array[Byte]) {
-    def addAddress(address: String): Array[Byte] = this_ ++ Numeric.toBytesPadded(Numeric.toBigInt(address), 20)
-
-    def addUint256(num: BigInteger): Array[Byte] = this_ ++ Numeric.toBytesPadded(num, 32)
-
-    def addUint16(num: BigInteger): Array[Byte] = this_ ++ Numeric.toBytesPadded(num, 2)
-
-    def addBoolean(b: Boolean): Array[Byte] = this_ :+ (if (b) 1 else 0).toByte
-
-    def addRawBytes(otherBytes: Array[Byte]): Array[Byte] = this_ ++ otherBytes
-
-    def addHex(hex: String): Array[Byte] = this_ ++ Numeric.hexStringToByteArray(hex)
-  }
 }

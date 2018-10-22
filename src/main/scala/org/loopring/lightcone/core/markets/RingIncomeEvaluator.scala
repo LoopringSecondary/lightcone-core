@@ -29,8 +29,10 @@ final class RingIncomeEstimatorImpl(
   def getFiatValue(ring: Ring) = {
     ring.expectedFills.map { fill ⇒
       val order = fill.order
-      tve.getFiatValue(
-        order.tokenFee.getOrElse(order.tokenS),
+      val tokenFee = order.tokenFee.getOrElse(order.tokenS)
+      val rate = 0.8 * (1 - tve.getBurnRate(tokenFee))
+      rate * tve.getFiatValue(
+        tokenFee,
         fill.pending.amountFee
       ) +
         tve.getFiatValue(
