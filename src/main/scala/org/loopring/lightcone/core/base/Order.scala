@@ -81,25 +81,19 @@ case class Order(
   private[core] def withReservedAmount(v: Amount)(implicit token: Address) =
     tokenFee match {
       case None ⇒
-        val r = Rational(amountS / (amountFee + amountS))
+        val r = Rational(amountS, amountFee + amountS)
         val reservedAmountS = (Rational(v) * r).bigintValue
         val reservedAmountFee = v - reservedAmountS
 
-        copy(
-          _reserved = Some(OrderState(
-            reservedAmountS,
-            0,
-            reservedAmountFee
-          ))
-        )
+        copy(_reserved = Some(OrderState(reservedAmountS, 0, reservedAmountFee)))
           .updateActual()
 
       case Some(tokenFee) if token == tokenFee ⇒
-        copy(_reserved = _reserved.map(_.copy(amountFee = v)))
+        copy(_reserved = Some(reserved.copy(amountFee = v)))
           .updateActual()
 
       case _ ⇒
-        copy(_reserved = _reserved.map(_.copy(amountS = v)))
+        copy(_reserved = Some(reserved.copy(amountS = v)))
           .updateActual()
     }
 
@@ -120,12 +114,10 @@ case class Order(
       r = r min Rational(reserved.amountFee, amountFee)
     }
 
-    copy(
-      _actual = Some(OrderState(
-        (r * Rational(amountS)).bigintValue,
-        (r * Rational(amountB)).bigintValue,
-        (r * Rational(amountFee)).bigintValue
-      ))
-    )
+    copy(_actual = Some(OrderState(
+      (r * Rational(amountS)).bigintValue,
+      (r * Rational(amountB)).bigintValue,
+      (r * Rational(amountFee)).bigintValue
+    )))
   }
 }
