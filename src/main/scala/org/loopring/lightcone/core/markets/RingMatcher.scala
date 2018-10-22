@@ -41,22 +41,22 @@ class SimpleRingMatcher(
 
   def createRing(maker: Order, taker: Order): Ring = {
 
-    val makerAvailableAmounts = maker._matchable match {
+    val makerMatchableAmounts = maker._matchable match {
       case None            ⇒ OrderState()
       case Some(matchable) ⇒ matchable
     }
-    val takerAvailableAmounts = maker._matchable match {
+    val takerMatchableAmounts = maker._matchable match {
       case None            ⇒ OrderState()
       case Some(matchable) ⇒ matchable
     }
 
-    val makerSVolume = makerAvailableAmounts.amountS.min(takerAvailableAmounts.amountB)
-    val takerSVolume = takerAvailableAmounts.amountS.min(makerAvailableAmounts.amountB)
+    val makerSVolume = makerMatchableAmounts.amountS.min(takerMatchableAmounts.amountB)
+    val takerSVolume = takerMatchableAmounts.amountS.min(makerMatchableAmounts.amountB)
 
-    val makerMargin = (makerAvailableAmounts.amountS - makerSVolume).min(BigInt(0))
-    val takerMargin = (takerAvailableAmounts.amountS - takerSVolume).min(BigInt(0))
-    val makerFee = makerAvailableAmounts.amountFee * makerSVolume / makerAvailableAmounts.amountS
-    val takerFee = takerAvailableAmounts.amountFee * takerSVolume / takerAvailableAmounts.amountS
+    val makerMargin = (makerMatchableAmounts.amountS - makerSVolume).min(BigInt(0))
+    val takerMargin = (takerMatchableAmounts.amountS - takerSVolume).min(BigInt(0))
+    val makerFee = makerMatchableAmounts.amountFee * makerSVolume / makerMatchableAmounts.amountS
+    val takerFee = takerMatchableAmounts.amountFee * takerSVolume / takerMatchableAmounts.amountS
 
     Ring(
       maker = ExpectedFill(
