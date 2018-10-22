@@ -74,5 +74,9 @@ case class Ring[T](
 
   }
 
+  def centralRate() = {
+    (maker.order.rate + taker.order.rate)/Rational(2)
+  }
+
   def orders() = Seq(maker.order, taker.order)
 }
