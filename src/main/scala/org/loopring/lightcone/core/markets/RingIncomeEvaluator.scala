@@ -25,10 +25,7 @@ final class RingIncomeEstimatorImpl(
     threshold: Double
 )(implicit tve: TokenValueEstimator) extends RingIncomeEstimator {
 
-  def getFiatValue(ring: Ring) = {
-    ring.maker.getFiatValue() +
-      ring.taker.getFiatValue()
-  }
+  def getFiatValue(ring: Ring) = ring.maker.getFiatValue() + ring.taker.getFiatValue()
 
   def isProfitable(ring: Ring) = getFiatValue(ring) >= threshold
 }
