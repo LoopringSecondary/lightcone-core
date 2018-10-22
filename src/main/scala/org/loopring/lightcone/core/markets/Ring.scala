@@ -20,10 +20,9 @@ import org.web3j.crypto.Hash
 import org.web3j.utils.Numeric
 
 case class ExpectedFill(
-    order: Order,
-    pending: OrderState,
-    amountMargin: Amount = 0
-) {
+  order: Order,
+  pending: OrderState,
+  amountMargin: Amount = 0) {
 
   def id = order.id
 
@@ -32,19 +31,17 @@ case class ExpectedFill(
     val rate = (1 - order.walletSplitPercentage) * (1 - tve.getBurnRate(tokenFee))
     rate * tve.getFiatValue(
       tokenFee,
-      pending.amountFee
-    ) +
+      pending.amountFee) +
       tve.getFiatValue(
         order.tokenS,
-        amountMargin
-      )
+        amountMargin)
   }
 }
 
 case class Ring(
-    maker: ExpectedFill,
-    taker: ExpectedFill
-) {
+  maker: ExpectedFill,
+  taker: ExpectedFill) {
+  // Switching maker and taker should have the same id.
   lazy val id: RingID = {
     Hash.sha3(maker.id)
       .zip(Hash.sha3(taker.id))
