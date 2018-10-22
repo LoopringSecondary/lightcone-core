@@ -18,7 +18,7 @@ package org.loopring.lightcone.core
 
 final object LrcAddress {
 
-  val lrc = "LRC"
+  val lrc: Address = "LRC"
 
   def eq(token: Address): Boolean = token.equals(lrc)
 

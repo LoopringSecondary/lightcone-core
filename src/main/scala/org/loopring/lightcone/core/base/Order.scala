@@ -128,6 +128,13 @@ case class Order(
     )
   }
 
+  private[core] def nonEmptyTokenFee: Address = {
+    tokenFee match {
+      case None    ⇒ LrcAddress.lrc
+      case Some(t) ⇒ t
+    }
+  }
+
   private def updateActual() = {
     var r = Rational(reserved.amountS, amountS)
     if (amountFee > 0) {

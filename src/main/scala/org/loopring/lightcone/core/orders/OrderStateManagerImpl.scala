@@ -54,7 +54,7 @@ final private[core] class OrderStateManagerImpl(
     }
 
     if (order.onTokenS(_.hasTooManyOrders) &&
-      order.onTokenFee(_.hasTooManyOrders).getOrElse(false)) {
+      order.onTokenFee(_.hasTooManyOrders)) {
       orderPool += order.as(CANCELLED_TOO_MANY_ORDERS)
       return false
     }
@@ -109,8 +109,8 @@ final private[core] class OrderStateManagerImpl(
     def onTokenS[R](method: TM ⇒ R): R =
       method(tokens(order.tokenS))
 
-    def onTokenFee[R](method: TM ⇒ R): Option[R] =
-      order.tokenFee.map(tokens(_)).map(method)
+    def onTokenFee[R](method: TM ⇒ R): R =
+      method(tokens(order.nonEmptyTokenFee))
 
     def callTokenSThenRemoveOrders(
       method: TM ⇒ Set[ID],
@@ -140,7 +140,7 @@ final private[core] class OrderStateManagerImpl(
       onTokenS[Set[ID]](method)
 
     private def callTokenFee_(method: TM ⇒ Set[ID]) =
-      onTokenFee[Set[ID]](method).getOrElse(Set.empty)
+      onTokenFee[Set[ID]](method)
 
   }
 
