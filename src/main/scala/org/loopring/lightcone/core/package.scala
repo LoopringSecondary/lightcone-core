@@ -16,10 +16,6 @@
 
 package org.loopring.lightcone
 
-import java.math.BigInteger
-
-import org.web3j.utils.Numeric
-
 package object core {
   type Amount = BigInt
   type Address = String
