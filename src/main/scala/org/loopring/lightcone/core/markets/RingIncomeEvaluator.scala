@@ -22,24 +22,12 @@ trait RingIncomeEstimator {
 }
 
 final class RingIncomeEstimatorImpl(
-    threshold: Double,
-    tve: TokenValueEstimator
-) extends RingIncomeEstimator {
+    threshold: Double
+)(implicit tve: TokenValueEstimator) extends RingIncomeEstimator {
 
   def getFiatValue(ring: Ring) = {
-    ring.expectedFills.map { fill ⇒
-      val order = fill.order
-      val tokenFee = order.tokenFee.getOrElse(order.tokenS)
-      val rate = 0.8 * (1 - tve.getBurnRate(tokenFee))
-      rate * tve.getFiatValue(
-        tokenFee,
-        fill.pending.amountFee
-      ) +
-        tve.getFiatValue(
-          order.tokenS,
-          fill.amountMargin
-        )
-    }.sum
+    ring.maker.getFiatValue() +
+      ring.taker.getFiatValue()
   }
 
   def isProfitable(ring: Ring) = getFiatValue(ring) >= threshold

@@ -99,4 +99,45 @@ class MarketManagerImpl(
         updatedOrder
     }
   }
+
+  def generateRing(maker: Order, taker: Order): Ring = {
+
+    val makerAvailableAmounts = maker._matchable match {
+      case None            ⇒ OrderState()
+      case Some(matchable) ⇒ matchable
+    }
+    val takerAvailableAmounts = maker._matchable match {
+      case None            ⇒ OrderState()
+      case Some(matchable) ⇒ matchable
+    }
+
+    val makerSVolume = makerAvailableAmounts.amountS.min(takerAvailableAmounts.amountB)
+    val takerSVolume = takerAvailableAmounts.amountS.min(makerAvailableAmounts.amountB)
+
+    val makerMargin = (makerAvailableAmounts.amountS - makerSVolume).min(BigInt(0))
+    val takerMargin = (takerAvailableAmounts.amountS - takerSVolume).min(BigInt(0))
+    val makerFee = makerAvailableAmounts.amountFee * makerSVolume / makerAvailableAmounts.amountS
+    val takerFee = takerAvailableAmounts.amountFee * takerSVolume / takerAvailableAmounts.amountS
+
+    Ring(
+      maker = ExpectedFill(
+        order = maker,
+        pending = OrderState(
+          amountS = makerSVolume,
+          amountB = takerSVolume,
+          amountFee = makerFee
+        ),
+        amountMargin = makerMargin
+      ),
+      taker = ExpectedFill(
+        order = taker,
+        pending = OrderState(
+          amountS = takerSVolume,
+          amountB = makerSVolume,
+          amountFee = takerFee
+        ),
+        amountMargin = takerMargin
+      )
+    )
+  }
 }
