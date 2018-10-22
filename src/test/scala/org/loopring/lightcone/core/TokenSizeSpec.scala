@@ -20,8 +20,6 @@ import org.scalatest._
 
 class TokenSizeSpec extends FlatSpec with Matchers {
 
-  import Helper._
-
   implicit val orderPool = new OrderPool()
 
   var receivedOrders = Map.empty[String, Order]
@@ -51,7 +49,7 @@ class TokenSizeSpec extends FlatSpec with Matchers {
 
     lrcTokenManager.init(100, 200)
 
-    val order = newOrder(
+    val order = Order(
       "order1",
       lrc,
       xyz,

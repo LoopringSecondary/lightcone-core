@@ -20,8 +20,6 @@ import org.scalatest._
 
 class RequestAmountSpec extends FlatSpec with Matchers {
 
-  import Helper._
-
   info("[sbt core/'testOnly *RequestAmountSpec']")
 
   implicit val orderPool = new OrderPool()
@@ -55,7 +53,7 @@ class RequestAmountSpec extends FlatSpec with Matchers {
     gtoTokenManager.init(100, 200)
 
     // 情况1:tokenFee == None, balance/allowance充足
-    manager.submitOrder(newOrder(
+    manager.submitOrder(Order(
       "order",
       lrc,
       xyz,
@@ -67,7 +65,7 @@ class RequestAmountSpec extends FlatSpec with Matchers {
     manager.cancelOrder("order")
 
     // 情况2: tokenFee == None, balance/allowance不足
-    manager.submitOrder(newOrder(
+    manager.submitOrder(Order(
       "order",
       lrc,
       xyz,
@@ -78,7 +76,7 @@ class RequestAmountSpec extends FlatSpec with Matchers {
     )) should be(false)
 
     // 情况3: tokenFee == tokenS, balance/allowance充足
-    manager.submitOrder(newOrder(
+    manager.submitOrder(Order(
       "order",
       lrc,
       xyz,
@@ -90,7 +88,7 @@ class RequestAmountSpec extends FlatSpec with Matchers {
     manager.cancelOrder("order")
 
     // 情况4: tokenFee == tokenS, balance/allowance不足
-    manager.submitOrder(newOrder(
+    manager.submitOrder(Order(
       "order",
       lrc,
       xyz,
@@ -101,7 +99,7 @@ class RequestAmountSpec extends FlatSpec with Matchers {
     )) should be(false)
 
     // 情况5: tokenFee == tokenB, balance/allowance充足
-    manager.submitOrder(newOrder(
+    manager.submitOrder(Order(
       "order",
       lrc,
       xyz,
@@ -113,7 +111,7 @@ class RequestAmountSpec extends FlatSpec with Matchers {
     manager.cancelOrder("order")
 
     // 情况6: tokenFee == tokenB, balance/allowance不足
-    manager.submitOrder(newOrder(
+    manager.submitOrder(Order(
       "order",
       lrc,
       xyz,

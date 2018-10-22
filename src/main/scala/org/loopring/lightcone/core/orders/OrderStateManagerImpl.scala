@@ -46,7 +46,7 @@ final private[core] class OrderStateManagerImpl(
   }
 
   def submitOrder(order: Order): Boolean = {
-    assert(order.original.amountS > 0)
+    assert(order.amountS > 0)
 
     assert(tokens.contains(order.tokenS))
     if (order.tokenFee.nonEmpty) {

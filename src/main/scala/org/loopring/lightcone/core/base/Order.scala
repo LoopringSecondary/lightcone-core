@@ -29,7 +29,10 @@ case class Order(
     tokenS: Address,
     tokenB: Address,
     tokenFee: Option[Address],
-    original: OrderState,
+    amountS: Amount = 0,
+    amountB: Amount = 0,
+    amountFee: Amount = 0,
+    // original: OrderState,
     createdAt: Long = -1,
     status: OrderStatus = NEW,
     private[core] val _outstanding: Option[OrderState] = None,
@@ -38,20 +41,20 @@ case class Order(
     private[core] val _matchable: Option[OrderState] = None
 ) {
 
-  lazy val outstanding = _outstanding.getOrElse(original)
+  lazy val outstanding = _outstanding.getOrElse(OrderState(amountS, amountB, amountFee))
   lazy val reserved = _reserved.getOrElse(OrderState())
   lazy val actual = _actual.getOrElse(OrderState())
   lazy val matchable = _matchable.getOrElse(OrderState())
 
-  lazy val rate = Rational(original.amountB, original.amountS)
+  lazy val rate = Rational(amountB, amountS)
 
   def withOutstandingAmountS(v: Amount) = {
-    var r = Rational(v, original.amountS)
+    var r = Rational(v, amountS)
     copy(
       _outstanding = Some(OrderState(
-        (r * Rational(original.amountS)).bigintValue,
-        (r * Rational(original.amountB)).bigintValue,
-        (r * Rational(original.amountFee)).bigintValue
+        (r * Rational(amountS)).bigintValue,
+        (r * Rational(amountB)).bigintValue,
+        (r * Rational(amountFee)).bigintValue
       ))
     )
   }
@@ -80,7 +83,7 @@ case class Order(
   private[core] def withReservedAmount(v: Amount)(implicit token: Address) =
     tokenFee match {
       case None ⇒
-        val r = Rational(original.amountS / (original.amountFee + original.amountS))
+        val r = Rational(amountS / (amountFee + amountS))
         val reservedAmountS = (Rational(v) * r).bigintValue
         val reservedAmountFee = v - reservedAmountS
 
@@ -114,16 +117,16 @@ case class Order(
   }
 
   private def updateActual() = {
-    var r = Rational(reserved.amountS, original.amountS)
-    if (original.amountFee > 0) {
-      r = r min Rational(reserved.amountFee, original.amountFee)
+    var r = Rational(reserved.amountS, amountS)
+    if (amountFee > 0) {
+      r = r min Rational(reserved.amountFee, amountFee)
     }
 
     copy(
       _actual = Some(OrderState(
-        (r * Rational(original.amountS)).bigintValue,
-        (r * Rational(original.amountB)).bigintValue,
-        (r * Rational(original.amountFee)).bigintValue
+        (r * Rational(amountS)).bigintValue,
+        (r * Rational(amountB)).bigintValue,
+        (r * Rational(amountFee)).bigintValue
       ))
     )
   }

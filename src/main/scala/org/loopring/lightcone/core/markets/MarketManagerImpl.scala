@@ -87,13 +87,12 @@ class MarketManagerImpl(
 
     orders.collectFirst {
       case order: Order if filterMethod(order) ⇒
-        val original = order.original
-        val r = Rational(matchableAmountS, original.amountS)
+        val r = Rational(matchableAmountS, order.amountS)
 
         val updatedOrder = order.copy(_matchable = Some(OrderState(
           matchableAmountS,
-          (r * Rational(original.amountB)).bigintValue,
-          (r * Rational(original.amountFee)).bigintValue
+          (r * Rational(order.amountB)).bigintValue,
+          (r * Rational(order.amountFee)).bigintValue
         )))
 
         log.debug(s"top maker order: $updatedOrder")
