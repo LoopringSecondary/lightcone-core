@@ -38,20 +38,12 @@ class ReserveAmountSpec extends FlatSpec with Matchers {
   val xyz = "XYZ"
   val gto = "GTO"
 
-  manager.addTokenManager(new MyTokenManager(lrc))
-  manager.addTokenManager(new MyTokenManager(xyz))
-  manager.addTokenManager(new MyTokenManager(gto))
-
-  val lrcTokenManager = manager.getTokenManager(lrc)
-  val xyzTokenManager = manager.getTokenManager(xyz)
-  val gtoTokenManager = manager.getTokenManager(gto)
-
-  xyzTokenManager.init(1000, 200)
-  gtoTokenManager.init(1000, 200)
-  lrcTokenManager.init(1000, 200)
+  //  xyzTokenManager.init(1000, 200)
+  //  gtoTokenManager.init(1000, 200)
+  //  lrcTokenManager.init(1000, 200)
 
   // 情况1:tokenFee == None, allowance充足
-  "testReserveAmount1" should "calculate reserve amount" in {
+  "simpleTest1" should "calculate reserve amount" in {
     val order = newOrder(
       "order",
       lrc,
@@ -69,7 +61,7 @@ class ReserveAmountSpec extends FlatSpec with Matchers {
   }
 
   // 情况2: tokenFee == None, allowance不足
-  "testReserveAmount2" should "calculate reserve amount" in {
+  "simpleTest2" should "calculate reserve amount" in {
     val order = newOrder(
       "order",
       lrc,
@@ -87,8 +79,44 @@ class ReserveAmountSpec extends FlatSpec with Matchers {
   }
 
   // 情况3: tokenFee == tokenS, allowance充足
+  "simpleTest3" should "calculate reserve amount" in {
+    val order = newOrder(
+      "order",
+      lrc,
+      xyz,
+      Option(lrc),
+      100,
+      20,
+      100
+    )
+    val state = order.withReservedAmount(200)(lrc)
+
+    info(state.reserved.amountS.toString())
+    info(state.reserved.amountFee.toString())
+    info(state.reservedAmount()(lrc).toString())
+
+    //    state.reserved.amountS should be(100)
+    //    state.reserved.amountFee should be(100)
+    //    state.reservedAmount()(lrc) should be(200)
+  }
 
   // 情况4: tokenFee == tokenS, allowance不足
+  //  "testReserveAmount4" should "calculate reserve amount" in {
+  //    val order = newOrder(
+  //      "order",
+  //      lrc,
+  //      xyz,
+  //      Option(lrc),
+  //      100,
+  //      20,
+  //      100
+  //    )
+  //    val state = order.withReservedAmount(100)(lrc)
+  //
+  //    state.reserved.amountS should be(50)
+  //    state.reserved.amountFee should be(50)
+  //    state.reservedAmount()(lrc) should be(100)
+  //  }
 
   // 情况5: tokenFee == tokenB, allowance充足
 
