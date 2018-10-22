@@ -16,7 +16,7 @@
 
 package org.loopring.lightcone.core
 
-import org.web3j.crypto.{Hash ⇒ web3Hash}
+import org.web3j.crypto.{ Hash ⇒ web3Hash }
 import org.web3j.utils.Numeric
 
 case class ExpectedFill(
@@ -42,11 +42,11 @@ case class Ring(
 
     //todo:可用金额，如何获取
     val makerAvailableAmounts = maker.order._matchable match {
-      case None ⇒ OrderState()
+      case None            ⇒ OrderState()
       case Some(matchable) ⇒ matchable
     }
     val takerAvailableAmounts = maker.order._matchable match {
-      case None ⇒ OrderState()
+      case None            ⇒ OrderState()
       case Some(matchable) ⇒ matchable
     }
 
@@ -65,21 +65,23 @@ case class Ring(
           amountB = takerSVolume,
           amountFee = makerFee
         ),
-        amountMargin = makerMargin),
+        amountMargin = makerMargin
+      ),
       taker.copy(
         pending = OrderState(
           amountS = takerSVolume,
           amountB = makerSVolume,
           amountFee = takerFee
         ),
-        amountMargin = takerMargin)
+        amountMargin = takerMargin
+      )
     )
 
   }
 
   //中间价格，可以在显示深度价格时使用,简单的中间价
   def centralRate() = {
-    (maker.order.rate + taker.order.rate)/Rational(2)
+    (maker.order.rate + taker.order.rate) / Rational(2)
   }
 
   def orders() = Seq(maker.order, taker.order)
