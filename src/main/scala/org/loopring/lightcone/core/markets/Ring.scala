@@ -20,18 +20,18 @@ import java.security.MessageDigest
 import org.web3j.crypto.{ Hash ⇒ web3Hash}
 import org.web3j.utils.Numeric
 
-case class ExpectedFill[T](
-    order: Order[T],
-    pending: Amounts,
+case class ExpectedFill(
+    order: Order,
+    pending: OrderState,
     amountMargin: Amount = 0
 ) {
 
   def id = order.id
 }
 
-case class Ring[T](
-    maker: ExpectedFill[T],
-    taker: ExpectedFill[T]
+case class Ring(
+    maker: ExpectedFill,
+    taker: ExpectedFill
 ) {
   lazy val id: RingID = {
     val data = Array[Byte]()

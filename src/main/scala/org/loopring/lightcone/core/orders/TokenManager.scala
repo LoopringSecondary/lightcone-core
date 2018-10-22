@@ -15,6 +15,7 @@
  */
 
 package org.loopring.lightcone.core
+
 import org.slf4s.Logging
 import OrderStatus._
 
@@ -31,12 +32,12 @@ private[core] case class Reservation(
     accumulatedAllowance: Amount
 )
 
-private[core] class TokenManager[T](
+private[core] class TokenManager(
     val token: Address,
     val maxNumOrders: Int = 1000
 )(
     implicit
-    orderPool: OrderPool[T]
+    orderPool: OrderPool
 ) extends Object with Logging {
   implicit private val _t = token
   import OrderStatus._

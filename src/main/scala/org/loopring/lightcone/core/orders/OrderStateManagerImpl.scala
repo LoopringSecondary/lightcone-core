@@ -15,37 +15,38 @@
  */
 
 package org.loopring.lightcone.core
+
 import org.slf4s.Logging
 
-final private[core] class OrderStateManagerImpl[T](
+final private[core] class OrderStateManagerImpl(
     maxNumOrders: Int
 )(
     implicit
-    orderPool: OrderPool[T]
-) extends OrderStateManager[T] with Logging {
+    orderPool: OrderPool
+) extends OrderStateManager with Logging {
 
   assert(maxNumOrders > 0)
 
   import OrderStatus._
 
-  private[core] implicit var tokens = Map.empty[Address, TokenManager[T]]
+  private[core] implicit var tokens = Map.empty[Address, TokenManager]
 
   def hasTokenManager(token: Address): Boolean = {
     tokens.contains(token)
   }
-  def addTokenManager(tm: TokenManager[T]) = {
+  def addTokenManager(tm: TokenManager) = {
     assert(!hasTokenManager(tm.token))
     tokens += tm.token -> tm
     tm
   }
 
-  def getTokenManager(token: Address): TokenManager[T] = {
+  def getTokenManager(token: Address): TokenManager = {
     assert(hasTokenManager(token))
     tokens(token)
   }
 
-  def submitOrder(order: Order[T]): Boolean = {
-    assert(order.original.amountS > 0)
+  def submitOrder(order: Order): Boolean = {
+    assert(order.amountS > 0)
 
     assert(tokens.contains(order.tokenS))
     if (order.tokenFee.nonEmpty) {
@@ -81,30 +82,19 @@ final private[core] class OrderStateManagerImpl[T](
   }
 
   // adjust order's outstanding size
-  def adjustOrder(orderId: ID, amountSDelta: Amount): Boolean = {
+  def adjustOrder(orderId: ID, outstandingAmountS: Amount): Boolean = {
     orderPool.getOrder(orderId) match {
       case None ⇒ false
       case Some(order) ⇒
-
-        val amountS = order.outstanding.amountS + amountSDelta
-        val r = Rational(amountS, order.original.amountS)
-
-        orderPool += order.copy(
-          outstanding = Amounts(
-            amountS,
-            (r * Rational(order.original.amountB)).bigintValue,
-            (r * Rational(order.original.amountFee)).bigintValue
-          )
-        )
-
+        orderPool += order.withOutstandingAmountS(outstandingAmountS)
         order.callTokenSThenRemoveOrders(_.adjust(orderId))
         order.callTokenFeeThenRemoveOrders(_.adjust(orderId))
         true
     }
   }
 
-  private type TM = TokenManager[T]
-  private type ORDER = Order[T]
+  private type TM = TokenManager
+  private type ORDER = Order
 
   private def tryRemoveOrder(orderId: ID, status: OrderStatus) = {
     orderPool.getOrder(orderId) map { order ⇒
@@ -114,7 +104,7 @@ final private[core] class OrderStateManagerImpl[T](
     }
   }
 
-  implicit private class MagicOrder[T](order: ORDER) {
+  implicit private class MagicOrder(order: ORDER) {
 
     def onTokenS[R](method: TM ⇒ R): R =
       method(tokens(order.tokenS))

@@ -16,8 +16,8 @@
 
 package org.loopring.lightcone.core
 
-case class Settlement[T](
-    rings: Seq[Ring[T]],
+case class Settlement(
+    rings: Seq[Ring],
     nonce: Int,
     createdAt: Long,
     txid: Option[ID] = None,

@@ -16,20 +16,20 @@
 
 package org.loopring.lightcone.core
 
-trait RingMatcher[T] {
+trait RingMatcher {
   def matchOrders(
-    taker: Order[T],
-    maker: Order[T]
-  ): Either[MatchingFailure.Value, Ring[T]]
+    taker: Order,
+    maker: Order
+  ): Either[MatchingFailure.Value, Ring]
 }
 
-abstract class SimpleRingMatcher[T](
-    ringIncomeEstimator: RingIncomeEstimator[T]
-) extends RingMatcher[T] {
+abstract class SimpleRingMatcher(
+    ringIncomeEstimator: RingIncomeEstimator
+) extends RingMatcher {
 
   def matchOrders(
-    taker: Order[T],
-    maker: Order[T]
-  ): Either[MatchingFailure.Value, Ring[T]]
+    taker: Order,
+    maker: Order
+  ): Either[MatchingFailure.Value, Ring]
 
 }
