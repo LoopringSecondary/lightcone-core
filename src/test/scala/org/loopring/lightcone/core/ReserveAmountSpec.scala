@@ -17,23 +17,22 @@
 package org.loopring.lightcone.core
 
 import org.scalatest._
-import Helper._
 
 class ReserveAmountSpec extends FlatSpec with Matchers {
 
   info("[sbt core/'testOnly *ReserveAmountSpec']")
 
-  implicit val orderPool = new MyOrderPool()
+  implicit val orderPool = new OrderPool()
 
-  var receivedOrders = Map.empty[String, MyOrder]
+  var receivedOrders = Map.empty[String, Order]
 
   orderPool.addCallback(
-    (order: MyOrder) ⇒ {
+    (order: Order) ⇒ {
       receivedOrders += order.id -> order
     }
   )
 
-  val manager = OrderStateManager.default[Raw]()
+  val manager = OrderStateManager.default()
   val lrc = "LRC"
   val xyz = "XYZ"
   val gto = "GTO"
@@ -44,7 +43,7 @@ class ReserveAmountSpec extends FlatSpec with Matchers {
 
   // 情况1:tokenFee == None, allowance充足
   "simpleTest1" should "calculate reserve amount" in {
-    val order = newOrder(
+    val order = Order(
       "order",
       lrc,
       xyz,
@@ -62,7 +61,7 @@ class ReserveAmountSpec extends FlatSpec with Matchers {
 
   // 情况2: tokenFee == None, allowance不足
   "simpleTest2" should "calculate reserve amount" in {
-    val order = newOrder(
+    val order = Order(
       "order",
       lrc,
       xyz,
@@ -80,7 +79,7 @@ class ReserveAmountSpec extends FlatSpec with Matchers {
 
   // 情况3: tokenFee == tokenS, allowance充足
   "simpleTest3" should "calculate reserve amount" in {
-    val order = newOrder(
+    val order = Order(
       "order",
       lrc,
       xyz,

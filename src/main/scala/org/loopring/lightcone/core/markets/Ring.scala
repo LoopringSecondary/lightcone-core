@@ -18,8 +18,8 @@ package org.loopring.lightcone.core
 
 import java.security.MessageDigest
 
-case class ExpectedFill[T](
-    order: Order[T],
+case class ExpectedFill(
+    order: Order,
     pending: OrderState,
     amountMargin: Amount = 0
 ) {
@@ -27,9 +27,9 @@ case class ExpectedFill[T](
   def id = order.id
 }
 
-case class Ring[T](
-    maker: ExpectedFill[T],
-    taker: ExpectedFill[T]
+case class Ring(
+    maker: ExpectedFill,
+    taker: ExpectedFill
 ) {
   lazy val id: RingID = {
     def sha256(id_ : ID): RingID = MessageDigest.getInstance("MD-5")

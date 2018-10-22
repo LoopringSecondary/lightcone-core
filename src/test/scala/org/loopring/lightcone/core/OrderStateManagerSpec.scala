@@ -20,24 +20,22 @@ import org.scalatest._
 
 class OrderStateManagerSpec extends FlatSpec with Matchers {
 
-  import Helper._
-
   "OrderStateManager" should "add new TokenManager" in {
-    implicit val orderPool = new MyOrderPool()
+    implicit val orderPool = new OrderPool()
 
-    var receivedOrders = Map.empty[String, MyOrder]
+    var receivedOrders = Map.empty[String, Order]
 
     orderPool.addCallback(
-      (order: MyOrder) ⇒ {
+      (order: Order) ⇒ {
         receivedOrders += order.id -> order
       }
     )
 
-    val manager = OrderStateManager.default[Raw](maxNumOrders = 1000)
+    val manager = OrderStateManager.default(maxNumOrders = 1000)
 
     manager.hasTokenManager("LRC") should be(false)
 
-    manager.addTokenManager(new MyTokenManager("LRC"))
+    manager.addTokenManager(new TokenManager("LRC"))
     manager.hasTokenManager("LRC") should be(true)
 
     val lrc = manager.getTokenManager("LRC")
@@ -47,7 +45,7 @@ class OrderStateManagerSpec extends FlatSpec with Matchers {
     val gto = manager.addTokenManager(new TokenManager("GTO"))
     gto.init(5000, 4000)
 
-    manager.submitOrder(newOrder(
+    manager.submitOrder(Order(
       "order1",
       "LRC",
       "XYZ",
@@ -57,7 +55,7 @@ class OrderStateManagerSpec extends FlatSpec with Matchers {
       0
     ))
 
-    manager.submitOrder(newOrder(
+    manager.submitOrder(Order(
       "order2",
       "LRC",
       "XYZ",
@@ -67,7 +65,7 @@ class OrderStateManagerSpec extends FlatSpec with Matchers {
       1
     ))
 
-    manager.submitOrder(newOrder(
+    manager.submitOrder(Order(
       "order3",
       "LRC",
       "XYZ",
@@ -77,7 +75,7 @@ class OrderStateManagerSpec extends FlatSpec with Matchers {
       10
     ))
 
-    manager.submitOrder(newOrder(
+    manager.submitOrder(Order(
       "order4",
       "GTO",
       "LRC",

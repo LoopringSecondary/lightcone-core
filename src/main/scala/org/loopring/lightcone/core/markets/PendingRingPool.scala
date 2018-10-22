@@ -15,14 +15,15 @@
  */
 
 package org.loopring.lightcone.core
+
 import org.slf4s.Logging
 
-trait PendingRingPool[T] {
+trait PendingRingPool {
 
   def getOrderPendingAmountS(orderId: ID): Amount
   def hasRing(ringId: RingID): Boolean
 
-  def addRing(ring: Ring[T]): Unit
+  def addRing(ring: Ring): Unit
   def removeRing(ringId: RingID): Unit
   def removeAllRings(): Unit
   def removeRingsBefore(timestamp: Long): Unit
@@ -30,10 +31,10 @@ trait PendingRingPool[T] {
   def removeRingsContainingOrder(orderId: ID): Unit
 }
 
-class PendingRingPoolImpl[T]()(
+class PendingRingPoolImpl()(
     implicit
     time: TimeProvider
-) extends PendingRingPool[T] with Logging {
+) extends PendingRingPool with Logging {
 
   case class OrderInfo(
       pendingAmountS: Amount = 0,
@@ -70,7 +71,7 @@ class PendingRingPoolImpl[T]()(
 
   def hasRing(ringId: RingID) = ringMap.contains(ringId)
 
-  def addRing(ring: Ring[T]) = {
+  def addRing(ring: Ring) = {
     ringMap.get(ring.id) match {
       case Some(_) ⇒
       case None ⇒

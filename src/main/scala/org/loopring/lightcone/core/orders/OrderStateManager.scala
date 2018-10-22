@@ -16,22 +16,22 @@
 
 package org.loopring.lightcone.core
 
-trait OrderStateManager[T] {
+trait OrderStateManager {
   def hasTokenManager(token: Address): Boolean
-  def addTokenManager(tm: TokenManager[T]): TokenManager[T]
-  def getTokenManager(token: Address): TokenManager[T]
+  def addTokenManager(tm: TokenManager): TokenManager
+  def getTokenManager(token: Address): TokenManager
 
-  def submitOrder(order: Order[T]): Boolean
+  def submitOrder(order: Order): Boolean
   def cancelOrder(orderId: ID): Boolean
   def adjustOrder(orderId: ID, outstandingAmountS: Amount): Boolean
 }
 
 object OrderStateManager {
-  def default[T](
+  def default(
     maxNumOrders: Int = 1000
   )(
     implicit
-    orderPool: OrderPool[T]
-  ): OrderStateManager[T] =
-    new OrderStateManagerImpl[T](maxNumOrders)
+    orderPool: OrderPool
+  ): OrderStateManager =
+    new OrderStateManagerImpl(maxNumOrders)
 }

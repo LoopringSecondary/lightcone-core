@@ -20,28 +20,26 @@ import org.scalatest._
 
 class AccumulatedAmountSpec extends FlatSpec with Matchers {
 
-  import Helper._
-
   info("[sbt core/'testOnly *AccumulatedAmountSpec']")
 
-  implicit val orderPool = new MyOrderPool()
+  implicit val orderPool = new OrderPool()
 
-  var receivedOrders = Map.empty[String, MyOrder]
+  var receivedOrders = Map.empty[String, Order]
 
   orderPool.addCallback(
-    (order: MyOrder) ⇒ {
+    (order: Order) ⇒ {
       receivedOrders += order.id -> order
     }
   )
 
-  val manager = OrderStateManager.default[Raw]()
+  val manager = OrderStateManager.default()
   val lrc = "LRC"
   val xyz = "XYZ"
   val gto = "GTO"
 
-  manager.addTokenManager(new MyTokenManager(lrc))
-  manager.addTokenManager(new MyTokenManager(xyz))
-  manager.addTokenManager(new MyTokenManager(gto))
+  manager.addTokenManager(new TokenManager(lrc))
+  manager.addTokenManager(new TokenManager(xyz))
+  manager.addTokenManager(new TokenManager(gto))
 
   val lrcTokenManager = manager.getTokenManager(lrc)
   val xyzTokenManager = manager.getTokenManager(xyz)
@@ -55,7 +53,7 @@ class AccumulatedAmountSpec extends FlatSpec with Matchers {
   "simpleTest1" should "with the same amount" in {
     lrcTokenManager.init(100, 100)
 
-    manager.submitOrder(newOrder(
+    manager.submitOrder(Order(
       "order1",
       lrc,
       xyz,
@@ -65,7 +63,7 @@ class AccumulatedAmountSpec extends FlatSpec with Matchers {
       10
     ))
 
-    manager.submitOrder(newOrder(
+    manager.submitOrder(Order(
       "order2",
       lrc,
       xyz,
@@ -84,7 +82,7 @@ class AccumulatedAmountSpec extends FlatSpec with Matchers {
   "simpleTest2" should "validate reservation size and item balance/allowance" in {
     lrcTokenManager.init(100, 100)
 
-    manager.submitOrder(newOrder(
+    manager.submitOrder(Order(
       "order1",
       lrc,
       xyz,
@@ -94,7 +92,7 @@ class AccumulatedAmountSpec extends FlatSpec with Matchers {
       10
     ))
 
-    manager.submitOrder(newOrder(
+    manager.submitOrder(Order(
       "order2",
       lrc,
       xyz,
@@ -116,7 +114,7 @@ class AccumulatedAmountSpec extends FlatSpec with Matchers {
   "simpleTest3" should "validate reservation size and item balance/allowance" in {
     lrcTokenManager.init(100, 100)
 
-    manager.submitOrder(newOrder(
+    manager.submitOrder(Order(
       "order1",
       lrc,
       xyz,
@@ -126,7 +124,7 @@ class AccumulatedAmountSpec extends FlatSpec with Matchers {
       10
     ))
 
-    manager.submitOrder(newOrder(
+    manager.submitOrder(Order(
       "order2",
       lrc,
       xyz,
