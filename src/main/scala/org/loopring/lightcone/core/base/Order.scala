@@ -35,6 +35,7 @@ case class Order(
     // original: OrderState,
     createdAt: Long = -1,
     status: OrderStatus = NEW,
+    walletSplitPercentage: Double = 0.2,
     private[core] val _outstanding: Option[OrderState] = None,
     private[core] val _reserved: Option[OrderState] = None,
     private[core] val _actual: Option[OrderState] = None,
