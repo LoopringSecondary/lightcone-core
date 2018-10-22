@@ -81,7 +81,7 @@ case class Order[T](
   private[core] def withReservedAmount(v: Amount)(implicit token: Address) =
     tokenFee match {
       case None ⇒
-        val r = Rational(original.amountS / (original.amountFee + original.amountS))
+        val r = Rational(original.amountS) / Rational(original.amountFee + original.amountS)
         val reservedAmountS = (Rational(v) * r).bigintValue
         val reservedAmountFee = v - reservedAmountS
 
