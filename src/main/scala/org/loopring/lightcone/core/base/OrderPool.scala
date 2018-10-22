@@ -18,15 +18,15 @@ package org.loopring.lightcone.core
 
 import org.slf4s.Logging
 
-class OrderPool[T] extends Object with Logging {
+class OrderPool extends Object with Logging {
 
-  type Callback = Order[T] ⇒ Unit
+  type Callback = Order ⇒ Unit
 
   private var callbacks = Seq.empty[Callback]
-  private var orderMap = Map.empty[ID, Order[T]]
+  private var orderMap = Map.empty[ID, Order]
 
-  def apply(id: ID): Order[T] = orderMap(id)
-  def getOrder(id: ID): Option[Order[T]] = orderMap.get(id)
+  def apply(id: ID): Order = orderMap(id)
+  def getOrder(id: ID): Option[Order] = orderMap.get(id)
   def contains(id: ID): Boolean = orderMap.contains(id)
   def orders() = orderMap.values
 
@@ -40,7 +40,7 @@ class OrderPool[T] extends Object with Logging {
     callbacks
   }
 
-  private[core] def +=(order: Order[T]) = {
+  private[core] def +=(order: Order) = {
     orderMap.get(order.id) match {
       case Some(existing) if existing == order ⇒
 

@@ -34,8 +34,8 @@ case class MarketManagerConfig(
 )
 
 object MarketManagerImpl {
-  private def defaultOrdering[T]() = new Ordering[Order[T]] {
-    def compare(a: Order[T], b: Order[T]) = {
+  private def defaultOrdering() = new Ordering[Order] {
+    def compare(a: Order, b: Order) = {
       if (a.rate < b.rate) -1
       else if (a.rate > b.rate) 1
       else if (a.createdAt < b.createdAt) -1
@@ -45,48 +45,48 @@ object MarketManagerImpl {
   }
 }
 
-class MarketManagerImpl[T](
+class MarketManagerImpl(
     marketId: MarketId,
     config: MarketManagerConfig
 )(
     implicit
-    pendingRingPool: PendingRingPool[T],
-    orderPool: OrderPool[T]
-) extends MarketManager[T] with Logging {
+    pendingRingPool: PendingRingPool,
+    orderPool: OrderPool
+) extends MarketManager with Logging {
   import MarketManagerImpl._
 
-  private implicit val ordering = defaultOrdering[T]()
-  private[core] val bids = SortedSet.empty[Order[T]]
-  private[core] val asks = SortedSet.empty[Order[T]]
+  private implicit val ordering = defaultOrdering()
+  private[core] val bids = SortedSet.empty[Order]
+  private[core] val asks = SortedSet.empty[Order]
 
   private val sides = Map(marketId.primary -> bids, marketId.secondary -> asks)
 
-  def addOrder(order: Order[T]): Seq[Ring[T]] = {
+  def addOrder(order: Order): Seq[Ring] = {
     log.debug(s"taker order: $order")
-    var rings = Seq.empty[Ring[T]]
+    var rings = Seq.empty[Ring]
 
-    case class State[T](taker: Order[T], pending: OrderState = OrderState())
+    case class State(taker: Order, pending: OrderState = OrderState())
 
-    def recursivelyMatchOrder(state: State[T]): State[T] = {
+    def recursivelyMatchOrder(state: State): State = {
       recursivelyMatchOrder(state)
     }
 
-    val State(updatedOrder, pending) = recursivelyMatchOrder(State[T](order))
+    val State(updatedOrder, pending) = recursivelyMatchOrder(State(order))
 
     rings
   }
 
-  private def getFirstOrder(orders: SortedSet[Order[T]]): Option[Order[T]] = {
+  private def getFirstOrder(orders: SortedSet[Order]): Option[Order] = {
     var matchableAmountS: Amount = 0
 
-    def filterMethod(order: Order[T]) = {
+    def filterMethod(order: Order) = {
       val pendingAmountS = pendingRingPool.getOrderPendingAmountS(order.id)
       matchableAmountS = order.actual.amountS - pendingAmountS
       matchableAmountS > 0
     }
 
     orders.collectFirst {
-      case order: Order[T] if filterMethod(order) ⇒
+      case order: Order if filterMethod(order) ⇒
         val original = order.original
         val r = Rational(matchableAmountS, original.amountS)
 

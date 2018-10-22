@@ -16,17 +16,17 @@
 
 package org.loopring.lightcone.core
 
-trait RingIncomeEstimator[T] {
-  def getFiatValue(ring: Ring[T]): Double
-  def isProfitable(ring: Ring[T]): Boolean
+trait RingIncomeEstimator {
+  def getFiatValue(ring: Ring): Double
+  def isProfitable(ring: Ring): Boolean
 }
 
-final class RingIncomeEstimatorImpl[T](
+final class RingIncomeEstimatorImpl(
     threshold: Double,
     tve: TokenValueEstimator
-) extends RingIncomeEstimator[T] {
+) extends RingIncomeEstimator {
 
-  def getFiatValue(ring: Ring[T]) = {
+  def getFiatValue(ring: Ring) = {
     ring.expectedFills.map { fill ⇒
       val order = fill.order
       tve.getFiatValue(
@@ -40,5 +40,5 @@ final class RingIncomeEstimatorImpl[T](
     }.sum
   }
 
-  def isProfitable(ring: Ring[T]) = getFiatValue(ring) >= threshold
+  def isProfitable(ring: Ring) = getFiatValue(ring) >= threshold
 }

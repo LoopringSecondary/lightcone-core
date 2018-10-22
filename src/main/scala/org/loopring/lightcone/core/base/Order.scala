@@ -24,8 +24,7 @@ case class OrderState(
     amountFee: Amount = 0
 )
 
-case class Order[T](
-    origin: T,
+case class Order(
     id: ID,
     tokenS: Address,
     tokenB: Address,

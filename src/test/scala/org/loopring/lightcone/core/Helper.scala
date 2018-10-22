@@ -18,12 +18,6 @@ package org.loopring.lightcone.core
 
 object Helper {
 
-  case class Raw()
-
-  type MyOrder = Order[Raw]
-  type MyTokenManager = TokenManager[Raw]
-  type MyOrderPool = OrderPool[Raw]
-
   def newOrder(
     id: ID,
     tokenS: Address,
@@ -32,8 +26,7 @@ object Helper {
     amountS: Amount,
     amountB: Amount,
     amountFee: Amount
-  ) = Order[Raw](
-    Raw(),
+  ) = Order(
     id,
     tokenS,
     tokenB,
