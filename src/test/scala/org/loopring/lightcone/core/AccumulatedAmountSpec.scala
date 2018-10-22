@@ -47,12 +47,13 @@ class AccumulatedAmountSpec extends FlatSpec with Matchers {
   val xyzTokenManager = manager.getTokenManager(xyz)
   val gtoTokenManager = manager.getTokenManager(gto)
 
-  // 简单的测试: 下两个订单,总金额不超过账户总金额
+  xyzTokenManager.init(1000, 1000)
+  gtoTokenManager.init(1000, 1000)
+
+  // 简单的测试1: 下两个订单,总金额不超过账户总金额
   // reservation应该是两个订单balance/allowance之和
-  "simpleTest" should "with the same amount" in {
+  "simpleTest1" should "with the same amount" in {
     lrcTokenManager.init(100, 100)
-    xyzTokenManager.init(100, 100)
-    gtoTokenManager.init(100, 100)
 
     manager.submitOrder(newOrder(
       "order1",
@@ -77,4 +78,36 @@ class AccumulatedAmountSpec extends FlatSpec with Matchers {
     lrcTokenManager.reservations.head.accumulatedBalance should be(30)
     lrcTokenManager.reservations.last.accumulatedBalance should be(80)
   }
+
+  // 简单的测试2: 下两个订单后重置账户,账户总金额不够
+  // reservations 应该是一个订单
+  "simpleTest2" should "with the same amount" in {
+    lrcTokenManager.init(100, 100)
+
+    manager.submitOrder(newOrder(
+      "order1",
+      lrc,
+      xyz,
+      None,
+      20,
+      10,
+      10
+    ))
+
+    manager.submitOrder(newOrder(
+      "order2",
+      lrc,
+      xyz,
+      None,
+      30,
+      10,
+      20
+    ))
+
+    lrcTokenManager.init(40, 100)
+    lrcTokenManager.reservations.size should be(1)
+    lrcTokenManager.reservations.head.accumulatedBalance should be(30)
+    lrcTokenManager.reservations.head.accumulatedAllowance should be(30)
+  }
+
 }
