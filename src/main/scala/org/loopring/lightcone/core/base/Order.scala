@@ -24,6 +24,16 @@ case class OrderState(
     amountFee: Amount = 0
 )
 
+object AskTokenMatchType extends Enumeration {
+  type AskTokenMatchType = Value
+
+  val ASK_TOKEN_S_AND_FEE = Value // 查询tokenS, tokenS == tokenFee
+  val ASK_TOKEN_B_AND_FEE = Value // 查询tokenFee, tokenFee == tokenB
+  val ASK_TOKEN_S_ONLY = Value // 查询tokenS, tokenS != tokenFee
+  val ASK_TOKEN_FEE_ONLY = Value // 查询tokenFee, tokenFee != tokenS && tokenFee != tokenB
+}
+
+// 注意!!!! 收益不能保证时,合约等比例计算,分母中不包含amountB
 case class Order(
     id: ID,
     tokenS: Address,
@@ -60,49 +70,51 @@ case class Order(
   }
 
   // Advance methods with implicit contextual arguments
-  private[core] def requestedAmount()(implicit token: Address): Amount = {
-    if (token == tokenS) {
-      if (feeSameWithTokenS()) {
-        outstanding.amountS + outstanding.amountFee
-      } else {
-        outstanding.amountS
-      }
-    } else {
-      if (feeSameWithTokenB()) {
-        if (outstanding.amountFee > outstanding.amountB) outstanding.amountFee - outstanding.amountB else 0
-      } else {
-        outstanding.amountFee
-      }
-    }
+  private[core] def requestedAmount()(implicit token: Address): Amount = askMatchType() match {
+    case AskTokenMatchType.ASK_TOKEN_S_AND_FEE ⇒
+      outstanding.amountS + outstanding.amountFee
+
+    case AskTokenMatchType.ASK_TOKEN_B_AND_FEE ⇒
+      if (outstanding.amountFee > outstanding.amountB) outstanding.amountFee - outstanding.amountB else 0
+
+    case AskTokenMatchType.ASK_TOKEN_S_ONLY ⇒
+      outstanding.amountS
+
+    case AskTokenMatchType.ASK_TOKEN_FEE_ONLY ⇒
+      outstanding.amountFee
   }
 
-  private[core] def reservedAmount()(implicit token: Address) = {
-    val feeIsTokenS = feeSameWithTokenS()
-
-    if ((token == tokenS) && feeIsTokenS) {
+  private[core] def reservedAmount()(implicit token: Address) = askMatchType() match {
+    case AskTokenMatchType.ASK_TOKEN_S_AND_FEE ⇒
       reserved.amountS + reserved.amountFee
-    } else if (token == tokenS && !feeIsTokenS) {
+
+    case AskTokenMatchType.ASK_TOKEN_B_AND_FEE ⇒
+      reserved.amountB + reserved.amountFee
+
+    case AskTokenMatchType.ASK_TOKEN_S_ONLY ⇒
       reserved.amountS
-    } else {
+
+    case AskTokenMatchType.ASK_TOKEN_FEE_ONLY ⇒
       reserved.amountFee
-    }
   }
 
-  private[core] def withReservedAmount(v: Amount)(implicit token: Address) = {
-    val feeIsTokenS = feeSameWithTokenS()
+  // 注意: v < requestAmount
+  private[core] def withReservedAmount(v: Amount)(implicit token: Address) = askMatchType() match {
+    case AskTokenMatchType.ASK_TOKEN_S_AND_FEE ⇒
+      val r = Rational(amountS, amountFee + amountS)
+      val reservedAmountS = (Rational(v) * r).bigintValue()
+      copy(_reserved = Some(OrderState(reservedAmountS, 0, v - reservedAmountS))).updateActual()
 
-    val state =
-      if ((token == tokenS) && feeIsTokenS) {
-        val r = Rational(amountS, amountFee + amountS)
-        val reservedAmountS = (Rational(v) * r).bigintValue()
-        OrderState(reservedAmountS, 0, v - reservedAmountS)
-      } else if (token == tokenS && !feeIsTokenS) {
-        OrderState(v, 0, reserved.amountFee)
-      } else {
-        OrderState(reserved.amountS, 0, v)
-      }
+    case AskTokenMatchType.ASK_TOKEN_B_AND_FEE ⇒
+      val r = Rational(v, requestedAmount())
+      val reservedAmountFee = (Rational(amountFee) * r).bigintValue()
+      copy(_reserved = Some(OrderState(reserved.amountS, v - reservedAmountFee, reservedAmountFee))).updateActual()
 
-    copy(_reserved = Some(state)).updateActual()
+    case AskTokenMatchType.ASK_TOKEN_S_ONLY ⇒
+      copy(_reserved = Some(OrderState(v, 0, reserved.amountFee))).updateActual()
+
+    case AskTokenMatchType.ASK_TOKEN_FEE_ONLY ⇒
+      copy(_reserved = Some(OrderState(reserved.amountS, 0, v))).updateActual()
   }
 
   // Private methods
@@ -131,15 +143,24 @@ case class Order(
     )
   }
 
-  private def feeSameWithTokenS(): Boolean = tokenFee match {
-    case None ⇒ LrcAddress.eq(tokenS)
-    case Some(t) if t == tokenS ⇒ true
-    case _ ⇒ false
-  }
+  private def askMatchType()(implicit token: Address): AskTokenMatchType.Value = {
+    val (feeIsTokenS, feeIsTokenB) = tokenFee match {
+      case None ⇒ (LrcAddress.eq(tokenS), false)
+      case Some(t) if t == tokenS ⇒ (true, false)
+      case Some(t) if t == tokenB ⇒ (false, true)
+      case _ ⇒ (false, false)
+    }
 
-  private def feeSameWithTokenB(): Boolean = tokenFee match {
-    case None ⇒ LrcAddress.eq(tokenB)
-    case Some(t) if t == tokenB ⇒ true
-    case _ ⇒ false
+    if (token == tokenS && feeIsTokenS) {
+      AskTokenMatchType.ASK_TOKEN_S_AND_FEE
+    } else if (token == tokenS && !feeIsTokenS) {
+      AskTokenMatchType.ASK_TOKEN_S_ONLY
+    } else if (token != tokenS && feeIsTokenB) {
+      AskTokenMatchType.ASK_TOKEN_B_AND_FEE
+    } else if (token != tokenS && !feeIsTokenB) {
+      AskTokenMatchType.ASK_TOKEN_FEE_ONLY
+    } else {
+      throw new Exception("ask token:" + token.toString + " invalid")
+    }
   }
 }

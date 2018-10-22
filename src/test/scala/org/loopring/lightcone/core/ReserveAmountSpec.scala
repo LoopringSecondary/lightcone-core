@@ -110,24 +110,58 @@ class ReserveAmountSpec extends FlatSpec with Matchers {
   }
 
   // 情况4: tokenFee == tokenS, allowance不足
-  //  "testReserveAmount4" should "calculate reserve amount" in {
-  //    val order = newOrder(
-  //      "order",
-  //      lrc,
-  //      xyz,
-  //      Option(lrc),
-  //      100,
-  //      20,
-  //      100
-  //    )
-  //    val state = order.withReservedAmount(100)(lrc)
-  //
-  //    state.reserved.amountS should be(50)
-  //    state.reserved.amountFee should be(50)
-  //    state.reservedAmount()(lrc) should be(100)
-  //  }
+  "simpleTest4" should "calculate reserve amount" in {
+    val order = Order(
+      "order",
+      lrc,
+      xyz,
+      Option(lrc),
+      100,
+      20,
+      200
+    )
+    manager.submitOrder(order)
+
+    val state = order.withReservedAmount(200)(lrc)
+
+    state.reserved.amountS.intValue() should be(66)
+    state.reserved.amountFee.intValue() should be(134)
+    state.reservedAmount()(lrc).intValue() should be(200)
+  }
 
   // 情况5: tokenFee == tokenB, allowance充足
+  "simpleTest5" should "calculate reserve amount" in {
+    val order = Order(
+      "order",
+      lrc,
+      xyz,
+      Option(xyz),
+      100,
+      20,
+      200
+    )
+    manager.submitOrder(order)
+
+    val state = order.withReservedAmount(200)(lrc)
+
+    state.reservedAmount()(lrc) should be(180)
+  }
 
   // 情况6: tokenFee == tokenB, allowance不足
+  "simpleTest6" should "calculate reserve amount" in {
+    val order = Order(
+      "order",
+      lrc,
+      xyz,
+      Option(xyz),
+      100,
+      100,
+      400
+    )
+    manager.submitOrder(order)
+
+    val state = order.withReservedAmount(200)(lrc)
+
+    state.reservedAmount()(lrc) should be(200)
+  }
 }
