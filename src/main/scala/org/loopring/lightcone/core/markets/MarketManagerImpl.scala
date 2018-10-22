@@ -57,7 +57,9 @@ class MarketManagerImpl(
 
   private implicit val ordering = defaultOrdering()
   private[core] val bids = SortedSet.empty[Order]
+  private[core] val bidsRecyclable = SortedSet.empty[Order]
   private[core] val asks = SortedSet.empty[Order]
+  private[core] val asksRecyclable = SortedSet.empty[Order]
 
   private val sides = Map(marketId.primary -> bids, marketId.secondary -> asks)
 
@@ -67,8 +69,10 @@ class MarketManagerImpl(
 
     case class State(taker: Order, pending: OrderState = OrderState())
 
+    @tailrec
     def recursivelyMatchOrder(state: State): State = {
-      recursivelyMatchOrder(state)
+
+      recursivelyMatchOrder(state.copy(pending = OrderState()))
     }
 
     val State(updatedOrder, pending) = recursivelyMatchOrder(State(order))
