@@ -16,15 +16,10 @@
 
 package org.loopring.lightcone.core
 
-final object OrderStatus extends Enumeration {
-  type OrderStatus = Value
+final object LrcAddress {
 
-  val NEW = Value
-  val PENDING = Value
-  val EXPIRED = Value
-  val CANCELLED_BY_USER = Value
-  val CANCELLED_LOW_BALANCE = Value
-  val CANCELLED_LOW_FEE_BALANCE = Value
-  val CANCELLED_TOO_MANY_ORDERS = Value
-  val CANCELLED_TOO_MANY_FAILED_SETTLEMENTS = Value
+  val lrc = "LRC"
+
+  def eq(token: Address): Boolean = token.equals(lrc)
+
 }
