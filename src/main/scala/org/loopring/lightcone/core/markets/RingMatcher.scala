@@ -50,20 +50,13 @@ class SimpleRingMatcher(
       case Some(matchable) ⇒ matchable
     }
 
-    var makerExpectFill = ExpectedFill(
-      order = maker,
-      pending = OrderState())
-    var takerExpectFill = ExpectedFill(
-      order = taker,
-      pending = OrderState())
-
     /*合约逻辑：
     取小的成交量计算，按照订单顺序，如果下一单的卖需要缩减，则第一单为最小单
     与顺序相关
     因此生成订单时，按照maker,taker的顺序
      */
     //taker的卖出大于maker的买入时，taker需要缩减，则认为最小交易量为maker的卖出，否则为taker的买入
-    val (makerState, takerState) = if (takerMatchableAmounts.amountS > makerMatchableAmounts.amountB) {
+    val (makerVolume, takerVolume) = if (takerMatchableAmounts.amountS > makerMatchableAmounts.amountB) {
       val takerSVolume = makerMatchableAmounts.amountB
       val takerBVolume = (Rational(takerSVolume) * Rational(taker.amountB, taker.amountS)).bigintValue()
 
@@ -72,11 +65,13 @@ class SimpleRingMatcher(
 
       (
         OrderState(
-        amountS = makerSVolume,
-        amountB = makerBVolume),
+          amountS = makerSVolume,
+          amountB = makerBVolume
+        ),
         OrderState(
           amountS = takerSVolume,
-          amountB = takerBVolume)
+          amountB = takerBVolume
+        )
       )
     } else {
       val takerSVolume = takerMatchableAmounts.amountS
@@ -87,9 +82,9 @@ class SimpleRingMatcher(
 
       (
         OrderState(
-        amountS = makerSVolume,
-        amountB = makerBVolume
-      ),
+          amountS = makerSVolume,
+          amountB = makerBVolume
+        ),
         OrderState(
           amountS = takerSVolume,
           amountB = takerBVolume
@@ -97,19 +92,21 @@ class SimpleRingMatcher(
       )
     }
 
-    val makerMargin = (makerState.amountS - takerState.amountB).min(BigInt(0))
-    val takerMargin = (takerState.amountS - makerState.amountB).min(BigInt(0))
+    val makerMargin = (makerVolume.amountS - takerVolume.amountB).min(BigInt(0))
+    val takerMargin = (takerVolume.amountS - makerVolume.amountB).min(BigInt(0))
     //fee 按照卖出的比例计算
-    val makerFee = makerMatchableAmounts.amountFee * makerState.amountS / makerMatchableAmounts.amountS
-    val takerFee = takerMatchableAmounts.amountFee * takerState.amountS / takerMatchableAmounts.amountS
+    val makerFee = makerMatchableAmounts.amountFee * makerVolume.amountS / makerMatchableAmounts.amountS
+    val takerFee = takerMatchableAmounts.amountFee * takerVolume.amountS / takerMatchableAmounts.amountS
 
     Ring(
-      maker = makerExpectFill.copy(
-        pending = makerState.copy(amountFee = makerFee),
+      maker = ExpectedFill(
+        order = maker,
+        pending = makerVolume.copy(amountFee = makerFee),
         amountMargin = makerMargin
       ),
-      taker = takerExpectFill.copy(
-        pending = takerState.copy(amountFee = takerFee),
+      taker = ExpectedFill(
+        order = taker,
+        pending = takerVolume.copy(amountFee = takerFee),
         amountMargin = takerMargin
       )
     )
