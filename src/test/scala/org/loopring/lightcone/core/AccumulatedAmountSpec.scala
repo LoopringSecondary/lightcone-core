@@ -81,7 +81,7 @@ class AccumulatedAmountSpec extends FlatSpec with Matchers {
 
   // 简单的测试2: 下两个订单后重置账户,账户总金额不够
   // reservations 应该是一个订单
-  "simpleTest2" should "with the same amount" in {
+  "simpleTest2" should "validate reservation size and item balance/allowance" in {
     lrcTokenManager.init(100, 100)
 
     manager.submitOrder(newOrder(
@@ -110,4 +110,38 @@ class AccumulatedAmountSpec extends FlatSpec with Matchers {
     lrcTokenManager.reservations.head.accumulatedAllowance should be(30)
   }
 
+  // tokenManager被设计为不允许balance不足,但是允许allowance不足
+  // 简单的测试3: 下两个订单后重置账户,账户总授权不够
+  // reservations 应该是一个订单
+  "simpleTest3" should "validate reservation size and item balance/allowance" in {
+    lrcTokenManager.init(100, 100)
+
+    manager.submitOrder(newOrder(
+      "order1",
+      lrc,
+      xyz,
+      None,
+      20,
+      10,
+      10
+    ))
+
+    manager.submitOrder(newOrder(
+      "order2",
+      lrc,
+      xyz,
+      None,
+      30,
+      10,
+      20
+    ))
+
+    lrcTokenManager.init(100, 40)
+    lrcTokenManager.reservations.size should be(2)
+    lrcTokenManager.reservations.head.accumulatedBalance should be(30)
+    lrcTokenManager.reservations.head.accumulatedAllowance should be(30)
+
+    lrcTokenManager.reservations.last.accumulatedBalance should be(80)
+    lrcTokenManager.reservations.last.accumulatedAllowance should be(40)
+  }
 }
