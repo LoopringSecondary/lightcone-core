@@ -18,7 +18,6 @@ package org.loopring.lightcone.core
 
 import org.web3j.crypto.Hash
 import org.web3j.utils.Numeric
-import scala.math._
 
 case class ExpectedFill(
     order: Order,
@@ -61,10 +60,10 @@ case class Ring(
     val takerSellPrice = Rational(taker.order.amountS, taker.order.amountB).doubleValue()
 
     val productPrice = takerSellPrice * makerSellPrice
-    val rateOfPrice = pow(productPrice, 0.5)
+    val rateOfPrice = math.pow(productPrice, 0.5)
     val priceByMaker = makerSellPrice * rateOfPrice
 
-    if (maker.order.amountS == chargeToken) priceByMaker
+    if (maker.order.tokenS == chargeToken) priceByMaker
     else 1 / priceByMaker
   }
 
