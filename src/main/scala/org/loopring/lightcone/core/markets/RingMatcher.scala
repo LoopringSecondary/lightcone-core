@@ -23,17 +23,23 @@ trait RingMatcher {
   ): Either[MatchingFailure.Value, Ring]
 }
 
-abstract class SimpleRingMatcher(
+class SimpleRingMatcher(
     ringIncomeEstimator: RingIncomeEstimator
 ) extends RingMatcher {
 
   def matchOrders(
     taker: Order,
     maker: Order
-  ): Either[MatchingFailure.Value, Ring]
+  ): Either[MatchingFailure.Value, Ring] = {
+    val ring = createRing(maker, taker)
+    if (ringIncomeEstimator.isProfitable(ring)) {
+      Right(ring)
+    } else {
+      Left(MatchingFailure.INCOME_NOT_ENOUGH)
+    }
+  }
 
-
-  def generateRing(maker: Order, taker: Order): Ring = {
+  def createRing(maker: Order, taker: Order): Ring = {
 
     val makerAvailableAmounts = maker._matchable match {
       case None            ⇒ OrderState()
