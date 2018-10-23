@@ -16,9 +16,10 @@
 
 package org.loopring.lightcone.core
 
-import scala.collection.mutable.SortedSet
-import org.slf4s.Logging
+import org.loopring.lightcone.core.markets.DustEvaluator
+
 import scala.annotation.tailrec
+import scala.collection.mutable.SortedSet
 
 // For ABC-XYZ market, ABC is secondary, XYZ is primary
 case class MarketId(
@@ -48,12 +49,14 @@ object MarketManagerImpl {
 class MarketManagerImpl(
     marketId: MarketId,
     config: MarketManagerConfig,
-    ringMatcher: RingMatcher
+    ringMatcher: RingMatcher,
+    dustEvaluator: DustEvaluator
 )(
     implicit
     pendingRingPool: PendingRingPool,
     orderPool: OrderPool
 ) extends MarketManager with Logging {
+
   import MarketManagerImpl._
   import MatchingFailure._
 
@@ -71,6 +74,9 @@ class MarketManagerImpl(
     var fullyMatchedOrderIds = Seq.empty[ID]
     var taker = order
 
+    recursivelyMatchOrder()
+
+    @tailrec
     def recursivelyMatchOrder(): Unit = {
       val matchResult = for {
         taker ← Some(taker)
@@ -93,20 +99,20 @@ class MarketManagerImpl(
           taker = ring.taker.order
           val updatedMaker = ring.maker.order
 
-          if (isDust(updatedMaker)) {
+          if (dustEvaluator.isDust(updatedMaker)) {
             fullyMatchedOrderIds :+= updatedMaker.id
           } else {
             skippedOrders :+= updatedMaker
           }
 
-          if (isDust(taker)) {
+          if (dustEvaluator.isDust(taker)) {
             fullyMatchedOrderIds :+= taker.id
           } else {
             recursivelyMatchOrder()
           }
 
         case None ⇒
-          if (!isDust(taker)) {
+          if (!dustEvaluator.isDust(taker)) {
             skippedOrders :+= taker
           }
       }
@@ -118,8 +124,6 @@ class MarketManagerImpl(
 
     SubmitOrderResult(rings, fullyMatchedOrderIds)
   }
-
-  private def isDust(order: Order): Boolean = false
 
   private def takeTopMaker(order: Order): Option[Order] = {
     None
