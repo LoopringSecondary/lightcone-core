@@ -63,7 +63,7 @@ class MarketManagerImpl(
 
   private val sides = Map(marketId.primary -> bids, marketId.secondary -> asks)
 
-  def submitOrder(order: Order): Seq[Ring] = {
+  def submitOrder(order: Order): SubmitOrderResult = {
     log.debug(s"taker order: $order")
 
     var rings = Seq.empty[Ring]
@@ -116,7 +116,7 @@ class MarketManagerImpl(
     val side = bids // or ask
     skippedOrders.foreach(side += _)
 
-    rings
+    SubmitOrderResult(rings, fullyMatchedOrderIds)
   }
 
   private def isDust(order: Order): Boolean = false
