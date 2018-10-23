@@ -104,7 +104,7 @@ class MarketManagerSpec extends FlatSpec with Matchers {
   "submitOrder" should "case of fullfill in first order" in {
     assert(marketManager.bids.nonEmpty)
     val taker = Order(
-      "taker",
+      "taker1",
       eth,
       lrc,
       lrc,
@@ -125,73 +125,73 @@ class MarketManagerSpec extends FlatSpec with Matchers {
     assert(res.rings.size == 1 && res.fullyMatchedOrderIds.size == 2)
   }
 
-  //  "submitOrder" should "case of fullfill two order" in {
-  //    assert(marketManager.bids.nonEmpty)
-  //    val taker = Order(
-  //      "taker",
-  //      eth,
-  //      lrc,
-  //      lrc,
-  //      20,
-  //      200,
-  //      20,
-  //      walletSplitPercentage = 0.2,
-  //      _matchable = Some(OrderState(amountS = 20, amountB = 200, amountFee = 20))
-  //    )
-  //
-  //    val res = marketManager.submitOrder(taker)
-  //    info(res.toString)
-  //    assert(marketManager.bids.isEmpty)
-  //    assert(marketManager.asks.isEmpty)
-  //    assert(res.rings.size == 2 && res.fullyMatchedOrderIds.size == 3)
-  //  }
-  //
-  //  "submitOrder" should "case of partfill" in {
-  //    val maker4 = Order(
-  //      id = "maker4",
-  //      tokenS = lrc,
-  //      tokenB = eth,
-  //      tokenFee = lrc,
-  //      amountS = 100,
-  //      amountB = 10,
-  //      amountFee = 10,
-  //      walletSplitPercentage = 0.2,
-  //      _matchable = Some(OrderState(amountS = 100, amountB = 10, amountFee = 10))
-  //    )
-  //    val maker5 = Order(
-  //      id = "maker5",
-  //      tokenS = lrc,
-  //      tokenB = eth,
-  //      tokenFee = lrc,
-  //      amountS = 200,
-  //      amountB = 20,
-  //      amountFee = 20,
-  //      walletSplitPercentage = 0.2,
-  //      _matchable = Some(OrderState(amountS = 200, amountB = 20, amountFee = 20))
-  //    )
-  //
-  //    marketManager.submitOrder(maker4)
-  //    marketManager.submitOrder(maker5)
-  //
-  //    val taker = Order(
-  //      "taker",
-  //      eth,
-  //      lrc,
-  //      lrc,
-  //      20,
-  //      200,
-  //      20,
-  //      walletSplitPercentage = 0.2,
-  //      _matchable = Some(OrderState(amountS = 20, amountB = 200, amountFee = 20))
-  //    )
-  //
-  //    val res = marketManager.submitOrder(taker)
-  //    info(res.toString)
-  //    assert(marketManager.bids.size == 1)
-  //    assert(marketManager.asks.isEmpty)
-  //    info(res.rings.toString())
-  //    assert(res.rings.size == 2 && res.fullyMatchedOrderIds.size == 2)
-  //  }
+  "submitOrder" should "case of fullfill two order" in {
+    assert(marketManager.bids.nonEmpty)
+    val taker = Order(
+      "taker2",
+      eth,
+      lrc,
+      lrc,
+      20,
+      200,
+      20,
+      walletSplitPercentage = 0.2,
+      _matchable = Some(OrderState(amountS = 20, amountB = 200, amountFee = 20))
+    )
+
+    val res = marketManager.submitOrder(taker)
+    info(res.toString)
+    assert(marketManager.bids.isEmpty)
+    assert(marketManager.asks.isEmpty)
+    assert(res.rings.size == 2 && res.fullyMatchedOrderIds.size == 3)
+  }
+
+  "submitOrder" should "case of partfill" in {
+    val maker4 = Order(
+      id = "maker4",
+      tokenS = lrc,
+      tokenB = eth,
+      tokenFee = lrc,
+      amountS = 100,
+      amountB = 10,
+      amountFee = 10,
+      walletSplitPercentage = 0.2,
+      _matchable = Some(OrderState(amountS = 100, amountB = 10, amountFee = 10))
+    )
+    val maker5 = Order(
+      id = "maker5",
+      tokenS = lrc,
+      tokenB = eth,
+      tokenFee = lrc,
+      amountS = 200,
+      amountB = 20,
+      amountFee = 20,
+      walletSplitPercentage = 0.2,
+      _matchable = Some(OrderState(amountS = 200, amountB = 20, amountFee = 20))
+    )
+
+    marketManager.submitOrder(maker4)
+    marketManager.submitOrder(maker5)
+
+    val taker = Order(
+      "taker3",
+      eth,
+      lrc,
+      lrc,
+      20,
+      200,
+      20,
+      walletSplitPercentage = 0.2,
+      _matchable = Some(OrderState(amountS = 20, amountB = 200, amountFee = 20))
+    )
+
+    val res = marketManager.submitOrder(taker)
+    info(res.toString)
+    assert(marketManager.bids.size == 1)
+    assert(marketManager.asks.isEmpty)
+    info(res.rings.toString())
+    assert(res.rings.size == 2 && res.fullyMatchedOrderIds.size == 2)
+  }
 
   "submitHugeOrder" should "huge orders" in {
     marketManager = new MarketManagerImpl(
