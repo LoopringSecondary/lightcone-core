@@ -90,9 +90,7 @@ case class Order(
     } else if (token == tokenS && tokenFee != tokenS) {
       copy(_reserved = Some(OrderState(v, 0, reserved.amountFee))).updateActual()
     } else if (token != tokenS && tokenFee == tokenB) {
-      val r = Rational(v, requestedAmount())
-      val reservedAmountFee = (Rational(amountFee) * r).bigintValue()
-      copy(_reserved = Some(OrderState(reserved.amountS, v - reservedAmountFee, reservedAmountFee))).updateActual()
+      copy(_reserved = Some(OrderState(reserved.amountS, 0, v))).updateActual()
     } else {
       copy(_reserved = Some(OrderState(reserved.amountS, 0, v))).updateActual()
     }
