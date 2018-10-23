@@ -14,18 +14,19 @@
  * limitations under the License.
  */
 
-package org.loopring.lightcone.core
+package org.loopring.lightcone.core.markets
 
-trait RingIncomeEstimator {
-  def getFiatIncomeValue(ring: Ring): Double
-  def isProfitable(ring: Ring): Boolean
+import org.loopring.lightcone.core.{ Order, TokenValueEstimator }
+
+trait DustEvaluator {
+  def isDust(order: Order): Boolean
 }
 
-final class RingIncomeEstimatorImpl(
-    threshold: Double
-)(implicit tve: TokenValueEstimator) extends RingIncomeEstimator {
+class DustEvaluatorImpl(threshold: Double)(implicit tve: TokenValueEstimator) extends DustEvaluator {
 
-  def getFiatIncomeValue(ring: Ring) = ring.maker.getFiatIncomeValue() + ring.taker.getFiatIncomeValue()
+  override def isDust(order: Order): Boolean = {
+    val fiatValue = tve.getFiatValue(order.tokenS, order.matchable.amountS)
+    fiatValue < threshold
+  }
 
-  def isProfitable(ring: Ring) = getFiatIncomeValue(ring) >= threshold
 }

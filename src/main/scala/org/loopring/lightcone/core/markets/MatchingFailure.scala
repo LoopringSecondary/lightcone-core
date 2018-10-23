@@ -21,4 +21,5 @@ final object MatchingFailure extends Enumeration {
 
   val ORDERS_NOT_TRADABLE = Value
   val INCOME_TOO_SMALL = Value
+  val HAS_BEEN_FULL_FILLED = Value
 }
