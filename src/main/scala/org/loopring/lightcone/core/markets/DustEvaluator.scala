@@ -19,7 +19,6 @@ package org.loopring.lightcone.core
 trait DustEvaluator {
   def isDust(order: Order): Boolean
   def isDust(token: Address, availableBalance: Amount): Boolean
-  def isDust(token: Address, availableBalance: Amount, requestedAmount: Amount): Boolean
 }
 
 final class DustEvaluatorImpl extends DustEvaluator {
@@ -32,12 +31,5 @@ final class DustEvaluatorImpl extends DustEvaluator {
   // todo: 判断订单余额/账户金额是否可用
   def isDust(token: Address, amount: Amount): Boolean = {
     amount <= 0
-  }
-
-  def isDust(token: Address, availableBalance: Amount, requestedAmount: Amount): Boolean = {
-    if (availableBalance < requestedAmount) true
-    else {
-      isDust(token, availableBalance) || isDust(token, requestedAmount)
-    }
   }
 }

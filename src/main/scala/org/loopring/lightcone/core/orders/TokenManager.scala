@@ -152,7 +152,7 @@ private[core] class TokenManager(
       val order = orderPool(r.orderId)
       val requestedAmount = order.requestedAmount
 
-      if (dustEvaluator.isDust(token, availableBalance, requestedAmount)) {
+      if (orderInvalid(token, order.tokenS, availableBalance, requestedAmount)) {
         ordersToDelete += order.id
       } else {
         val reserved =
@@ -184,6 +184,28 @@ private[core] class TokenManager(
   private[core] def getDebugInfo() = {
     val localOrders = reservations.map(r ⇒ orderPool(r.orderId))
     (localOrders, reservations, idxMap, cursor)
+  }
+
+  // 删除订单应该有以下几种情况:
+  // 1.用户主动删除订单, tokenS&tokenFee都删
+  // 2.订单成交后变成灰尘单, tokenS&tokenFee都删
+  // 3.用户账户tokenS balance不足或tokenFee balance不足, 任意一个token balance不足, tokenS&tokenFee都删
+  // 这样一来 tokenManager的release动作绝对不能由内部调用,
+  // 只能由orderManager根据并汇总tokenS&tokenFee情况后删除, 删除时tokenS&tokenFee都要删,不能只留一个
+  //
+  // 注意:按照比例计算订单requestAmountS, requestAmountFee
+  // requestAmountFee最终的法币价值/币币价值都远小于requestAmountS
+  // 如果requestAmountS是灰尘,那么requestAmountFee也应该是灰尘
+  // 反过来, 如果requestAmountFee是灰尘单，requestAmountS却不一定是灰尘单
+  // 这里, 我们对灰尘单的判定仅限于tokenS, 同时考虑账户余额是否充足的问题
+  private def orderInvalid(token: Address, tokenS: Address, availableBalance: Amount, requestedAmount: Amount): Boolean = {
+    if (availableBalance < requestedAmount) {
+      return true
+    }
+    if (token == tokenS && (dustEvaluator.isDust(token, requestedAmount) || dustEvaluator.isDust(token, availableBalance))) {
+      return true
+    }
+    return false
   }
 
 }

@@ -59,8 +59,7 @@ final private[core] class OrderStateManagerImpl(
 
     orderPool += order.as(NEW)
 
-    if (order.callTokenSThenRemoveOrders(_.reserve(order.id)) ||
-      order.callTokenFeeThenRemoveOrders(_.reserve(order.id))) {
+    if (order.callTokenSAndFeeThenRemoveOrders(_.reserve(order.id))) {
       return false
     }
 
@@ -72,9 +71,10 @@ final private[core] class OrderStateManagerImpl(
     orderPool.getOrder(orderId) match {
       case None ⇒ false
       case Some(order) ⇒
-        order.callTokenSThenRemoveOrders(_.release(orderId), CANCELLED_BY_USER)
-        order.callTokenFeeThenRemoveOrders(_.release(orderId), CANCELLED_BY_USER)
-        tryRemoveOrder(orderId, CANCELLED_BY_USER)
+        //        order.callTokenSThenRemoveOrders(_.release(orderId), CANCELLED_BY_USER)
+        //        order.callTokenFeeThenRemoveOrders(_.release(orderId), CANCELLED_BY_USER)
+        //        tryRemoveOrder(orderId, CANCELLED_BY_USER)
+        order.callTokenSAndFeeThenRemoveOrders(_ ⇒ Set(orderId), CANCELLED_BY_USER)
         true
     }
   }
@@ -85,8 +85,7 @@ final private[core] class OrderStateManagerImpl(
       case None ⇒ false
       case Some(order) ⇒
         orderPool += order.withOutstandingAmountS(outstandingAmountS)
-        order.callTokenSThenRemoveOrders(_.adjust(orderId))
-        order.callTokenFeeThenRemoveOrders(_.adjust(orderId))
+        order.callTokenSAndFeeThenRemoveOrders(_.adjust(orderId))
         true
     }
   }
@@ -116,7 +115,6 @@ final private[core] class OrderStateManagerImpl(
     ): Boolean = {
       val deleted = callTokenS_(method).map { id ⇒
         callTokenS_(_.release(id))
-        tryRemoveOrder(id, status)
       }
 
       deleted.size > 0
@@ -128,8 +126,23 @@ final private[core] class OrderStateManagerImpl(
     ): Boolean = {
       val deleted = callTokenFee_(method).map { id ⇒
         callTokenFee_(_.release(id))
-        tryRemoveOrder(id, status)
       }
+
+      deleted.size > 0
+    }
+
+    // todo tokenManager包含多种状态
+    def callTokenSAndFeeThenRemoveOrders(
+      method: TM ⇒ Set[ID],
+      status: OrderStatus = CANCELLED_LOW_FEE_BALANCE
+    ): Boolean = {
+
+      val deleted = callTokenS_(method) ++ callTokenFee_(method)
+      deleted.map(id ⇒ {
+        callTokenS_(_.release(id))
+        callTokenFee_(_.release(id))
+        tryRemoveOrder(id, status)
+      })
 
       deleted.size > 0
     }
