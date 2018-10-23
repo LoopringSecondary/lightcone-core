@@ -49,12 +49,12 @@ object MarketManagerImpl {
 class MarketManagerImpl(
     marketId: MarketId,
     config: MarketManagerConfig,
-    ringMatcher: RingMatcher,
-    dustEvaluator: DustEvaluator
+    ringMatcher: RingMatcher
 )(
     implicit
     pendingRingPool: PendingRingPool,
-    orderPool: OrderPool
+    orderPool: OrderPool,
+    dustEvaluator: DustEvaluator
 ) extends MarketManager with Logging {
 
   import MarketManagerImpl._

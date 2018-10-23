@@ -43,7 +43,7 @@ class MarketManagerSpec extends FlatSpec with Matchers {
   val incomeEvaluator = new RingIncomeEstimatorImpl(10)
   val simpleMatcher = new SimpleRingMatcher(incomeEvaluator)
 
-  val dustEvaluator = new DustEvaluator {
+  implicit val dustEvaluator = new DustEvaluator {
     val threshold = 1
     override def isDust(order: Order): Boolean = {
       order.matchable.amountS <= threshold
@@ -56,8 +56,7 @@ class MarketManagerSpec extends FlatSpec with Matchers {
   var marketManager = new MarketManagerImpl(
     MarketId(lrc, eth),
     MarketManagerConfig(0, 0, 0, 0),
-    simpleMatcher,
-    dustEvaluator
+    simpleMatcher
   )
 
   "submitOrder" should "add orders to marketManager" in {
@@ -197,8 +196,7 @@ class MarketManagerSpec extends FlatSpec with Matchers {
     marketManager = new MarketManagerImpl(
       MarketId(lrc, eth),
       MarketManagerConfig(0, 0, 0, 0),
-      simpleMatcher,
-      dustEvaluator
+      simpleMatcher
     )
     val startTime = System.currentTimeMillis()
     (0 until 10000) foreach (
