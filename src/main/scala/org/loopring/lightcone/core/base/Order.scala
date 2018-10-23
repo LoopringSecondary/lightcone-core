@@ -42,8 +42,8 @@ case class Order(
     private[core] val _matchable: Option[OrderState] = None
 ) {
 
-  lazy val outstanding = _outstanding.getOrElse(OrderState(amountS, amountB, amountFee))
-  lazy val reserved = _reserved.getOrElse(OrderState())
+  lazy val outstanding = _outstanding.getOrElse(OrderState(amountS, amountB, amountFee)) // originAmount - dealtAndCancel
+  lazy val reserved = _reserved.getOrElse(OrderState()) // waiting be matching while allowance not enough
   lazy val actual = _actual.getOrElse(OrderState())
   lazy val matchable = _matchable.getOrElse(OrderState())
 
