@@ -72,7 +72,13 @@ class MarketManagerImpl(
     var rings = Seq.empty[Ring]
     var makerOrdersRecyclable = Seq.empty[Order]
     var fullyMatchedOrderIds = Seq.empty[ID]
-    var taker = order
+
+    val subedPendingAmountS = order.matchable.amountS - pendingRingPool.getOrderPendingAmountS(order.id)
+    var taker = order.copy(_matchable = Some(OrderState(
+      amountS = subedPendingAmountS,
+      amountB = Rational(subedPendingAmountS * order.amountB, order.amountS).bigintValue(),
+      amountFee = Rational(subedPendingAmountS * order.amountFee, order.amountS).bigintValue()
+    )))
 
     recursivelyMatchOrder()
 
