@@ -27,10 +27,9 @@ class TokenSizeSpec extends FlatSpec with Matchers {
   orderPool.addCallback(
     (order: Order) ⇒ {
       receivedOrders += order.id -> order
-    }
-  )
+    })
 
-  val manager = OrderStateManager.default()
+  val manager = OrderManager.default()
   val lrc = "LRC"
   val xyz = "XYZ"
   val gto = "GTO"
@@ -56,8 +55,7 @@ class TokenSizeSpec extends FlatSpec with Matchers {
       None,
       10,
       2,
-      0
-    )
+      0)
     manager.submitOrder(order)
 
     receivedOrders.getOrElse("order1", order).status should be(OrderStatus.PENDING)

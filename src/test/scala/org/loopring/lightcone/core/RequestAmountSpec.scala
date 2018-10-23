@@ -29,10 +29,9 @@ class RequestAmountSpec extends FlatSpec with Matchers {
   orderPool.addCallback(
     (order: Order) ⇒ {
       receivedOrders += order.id -> order
-    }
-  )
+    })
 
-  val manager = OrderStateManager.default()
+  val manager = OrderManager.default()
   val lrc = "LRC"
   val xyz = "XYZ"
   val gto = "GTO"
@@ -60,8 +59,7 @@ class RequestAmountSpec extends FlatSpec with Matchers {
       None,
       50,
       20,
-      50
-    )) should be(true)
+      50)) should be(true)
     manager.cancelOrder("order")
 
     // 情况2: tokenFee == None, balance/allowance不足
@@ -72,8 +70,7 @@ class RequestAmountSpec extends FlatSpec with Matchers {
       None,
       50,
       20,
-      60
-    )) should be(false)
+      60)) should be(false)
 
     // 情况3: tokenFee == tokenS, balance/allowance充足
     manager.submitOrder(Order(
@@ -83,8 +80,7 @@ class RequestAmountSpec extends FlatSpec with Matchers {
       Option(lrc),
       30,
       10,
-      10
-    )) should be(true)
+      10)) should be(true)
     manager.cancelOrder("order")
 
     // 情况4: tokenFee == tokenS, balance/allowance不足
@@ -95,8 +91,7 @@ class RequestAmountSpec extends FlatSpec with Matchers {
       Option(lrc),
       100,
       10,
-      10
-    )) should be(false)
+      10)) should be(false)
 
     // 情况5: tokenFee == tokenB, balance/allowance充足
     manager.submitOrder(Order(
@@ -106,8 +101,7 @@ class RequestAmountSpec extends FlatSpec with Matchers {
       Option(xyz),
       30,
       20,
-      120
-    )) should be(true)
+      120)) should be(true)
     manager.cancelOrder("order")
 
     // 情况6: tokenFee == tokenB, balance/allowance不足
@@ -118,7 +112,6 @@ class RequestAmountSpec extends FlatSpec with Matchers {
       Option(xyz),
       30,
       20,
-      200
-    )) should be(false)
+      200)) should be(false)
   }
 }

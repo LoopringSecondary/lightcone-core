@@ -18,9 +18,9 @@ package org.loopring.lightcone.core
 
 import org.scalatest._
 
-class OrderStateManagerSpec extends FlatSpec with Matchers {
+class OrderManagerSpec extends FlatSpec with Matchers {
 
-  "OrderStateManager" should "add new TokenManager" in {
+  "OrderManager" should "add new TokenManager" in {
     implicit val orderPool = new OrderPool()
 
     var receivedOrders = Map.empty[String, Order]
@@ -28,10 +28,9 @@ class OrderStateManagerSpec extends FlatSpec with Matchers {
     orderPool.addCallback(
       (order: Order) ⇒ {
         receivedOrders += order.id -> order
-      }
-    )
+      })
 
-    val manager = OrderStateManager.default(maxNumOrders = 1000)
+    val manager = OrderManager.default(maxNumOrders = 1000)
 
     manager.hasTokenManager("LRC") should be(false)
 
@@ -52,8 +51,7 @@ class OrderStateManagerSpec extends FlatSpec with Matchers {
       None,
       10,
       1,
-      0
-    ))
+      0))
 
     manager.submitOrder(Order(
       "order2",
@@ -62,8 +60,7 @@ class OrderStateManagerSpec extends FlatSpec with Matchers {
       None,
       15,
       1,
-      1
-    ))
+      1))
 
     manager.submitOrder(Order(
       "order3",
@@ -72,8 +69,7 @@ class OrderStateManagerSpec extends FlatSpec with Matchers {
       Some("GTO"),
       15,
       1,
-      10
-    ))
+      10))
 
     manager.submitOrder(Order(
       "order4",
@@ -82,8 +78,7 @@ class OrderStateManagerSpec extends FlatSpec with Matchers {
       Some("LRC"),
       150,
       1,
-      10
-    ))
+      10))
 
     println("LRC =")
     println(lrc.getDebugInfo)
