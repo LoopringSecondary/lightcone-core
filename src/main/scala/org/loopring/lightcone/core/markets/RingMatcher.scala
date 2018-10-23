@@ -80,8 +80,8 @@ class SimpleRingMatcher(
       }
 
     //fee 按照卖出的比例计算
-    val makerFee = maker.matchable.amountFee * makerVolume.amountS / maker.matchable.amountS
-    val takerFee = taker.matchable.amountFee * takerVolume.amountS / taker.matchable.amountS
+    val makerFee = maker.matchable.amountFee * makerVolume.amountS / maker.amountS
+    val takerFee = taker.matchable.amountFee * takerVolume.amountS / taker.amountS
 
     val makerMargin = (makerVolume.amountS - takerVolume.amountB).max(BigInt(0))
     val takerMargin = (takerVolume.amountS - makerVolume.amountB).max(BigInt(0))

@@ -17,7 +17,7 @@
 package org.loopring.lightcone.core
 
 import org.loopring.lightcone.core.markets.DustEvaluator
-
+import org.slf4s.Logging
 import scala.annotation.tailrec
 import scala.collection.mutable.SortedSet
 
