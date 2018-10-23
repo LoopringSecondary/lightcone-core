@@ -22,6 +22,7 @@ class AccumulatedAmountSpec extends FlatSpec with Matchers {
 
   info("[sbt core/'testOnly *AccumulatedAmountSpec']")
 
+  implicit val dustEvaluator = new DustEvaluatorImpl()
   implicit val orderPool = new OrderPool()
 
   var receivedOrders = Map.empty[String, Order]

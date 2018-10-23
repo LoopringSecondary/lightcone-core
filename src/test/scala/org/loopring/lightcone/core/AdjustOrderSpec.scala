@@ -22,15 +22,8 @@ class AdjustOrderSpec extends FlatSpec with Matchers {
 
   info("[sbt core/'testOnly *AdjustOrderSpec']")
 
+  implicit val dustEvaluator = new DustEvaluatorImpl()
   implicit val orderPool = new OrderPool()
-
-  var receivedOrders = Map.empty[String, Order]
-
-  orderPool.addCallback(
-    (order: Order) ⇒ {
-      receivedOrders += order.id -> order
-    }
-  )
 
   val manager = OrderStateManager.default()
   val lrc = "LRC"
@@ -66,6 +59,7 @@ class AdjustOrderSpec extends FlatSpec with Matchers {
     val state = orderPool(order.id)
     state.requestedAmount()(lrc) should be(60)
     state.reservedAmount()(lrc) should be(60)
+    manager.cancelOrder(order.id)
   }
 
   // 部分成交1:
@@ -145,6 +139,10 @@ class AdjustOrderSpec extends FlatSpec with Matchers {
     reservation3.orderId should be(order3.id)
     reservation3.accumulatedBalance should be(130)
     reservation3.accumulatedAllowance should be(130)
+
+    manager.cancelOrder(order1.id)
+    manager.cancelOrder(order2.id)
+    manager.cancelOrder(order3.id)
   }
 
   // 部分成交2:
@@ -224,6 +222,10 @@ class AdjustOrderSpec extends FlatSpec with Matchers {
     reservation3.orderId should be(order3.id)
     reservation3.accumulatedBalance should be(170)
     reservation3.accumulatedAllowance should be(100)
+
+    manager.cancelOrder(order1.id)
+    manager.cancelOrder(order2.id)
+    manager.cancelOrder(order3.id)
   }
 
   // 完全成交

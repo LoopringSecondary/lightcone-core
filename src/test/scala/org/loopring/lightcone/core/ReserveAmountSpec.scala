@@ -22,6 +22,7 @@ class ReserveAmountSpec extends FlatSpec with Matchers {
 
   info("[sbt core/'testOnly *ReserveAmountSpec']")
 
+  implicit val dustEvaluator = new DustEvaluatorImpl()
   implicit val orderPool = new OrderPool()
 
   var receivedOrders = Map.empty[String, Order]

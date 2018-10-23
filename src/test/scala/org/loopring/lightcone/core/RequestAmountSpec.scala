@@ -22,6 +22,7 @@ class RequestAmountSpec extends FlatSpec with Matchers {
 
   info("[sbt core/'testOnly *RequestAmountSpec']")
 
+  implicit val dustEvaluator = new DustEvaluatorImpl()
   implicit val orderPool = new OrderPool()
 
   var receivedOrders = Map.empty[String, Order]

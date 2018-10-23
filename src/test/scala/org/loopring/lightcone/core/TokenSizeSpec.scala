@@ -20,6 +20,7 @@ import org.scalatest._
 
 class TokenSizeSpec extends FlatSpec with Matchers {
 
+  implicit val dustEvaluator = new DustEvaluatorImpl()
   implicit val orderPool = new OrderPool()
 
   var receivedOrders = Map.empty[String, Order]

@@ -21,6 +21,7 @@ import org.scalatest._
 class OrderStateManagerSpec extends FlatSpec with Matchers {
 
   "OrderStateManager" should "add new TokenManager" in {
+    implicit val dustEvaluator = new DustEvaluatorImpl()
     implicit val orderPool = new OrderPool()
 
     var receivedOrders = Map.empty[String, Order]

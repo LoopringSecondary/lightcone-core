@@ -37,7 +37,8 @@ private[core] class TokenManager(
     val maxNumOrders: Int = 1000
 )(
     implicit
-    orderPool: OrderPool
+    orderPool: OrderPool,
+    dustEvaluator: DustEvaluator
 ) extends Object with Logging {
   implicit private val _t = token
   import OrderStatus._
@@ -151,7 +152,7 @@ private[core] class TokenManager(
       val order = orderPool(r.orderId)
       val requestedAmount = order.requestedAmount
 
-      if (availableBalance < requestedAmount) {
+      if (dustEvaluator.isDust(token, availableBalance, requestedAmount)) {
         ordersToDelete += order.id
         idxMap -= order.id
       } else {
