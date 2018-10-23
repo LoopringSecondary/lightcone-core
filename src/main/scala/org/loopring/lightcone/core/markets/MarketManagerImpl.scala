@@ -80,6 +80,10 @@ class MarketManagerImpl(
       amountFee = Rational(subedPendingAmountS * order.amountFee, order.amountS).bigintValue()
     )))
 
+    if (dustEvaluator.isDust(taker)) {
+      return SubmitOrderResult(rings = rings, fullyMatchedOrderIds = fullyMatchedOrderIds)
+    }
+
     recursivelyMatchOrder()
 
     @tailrec
