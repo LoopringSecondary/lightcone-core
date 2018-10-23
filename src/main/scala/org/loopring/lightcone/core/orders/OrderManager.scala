@@ -16,7 +16,7 @@
 
 package org.loopring.lightcone.core
 
-trait OrderStateManager {
+trait OrderManager {
   def hasTokenManager(token: Address): Boolean
   def addTokenManager(tm: TokenManager): TokenManager
   def getTokenManager(token: Address): TokenManager
@@ -26,12 +26,12 @@ trait OrderStateManager {
   def adjustOrder(orderId: ID, outstandingAmountS: Amount): Boolean
 }
 
-object OrderStateManager {
+object OrderManager {
   def default(
     maxNumOrders: Int = 1000
   )(
     implicit
     orderPool: OrderPool
-  ): OrderStateManager =
-    new OrderStateManagerImpl(maxNumOrders)
+  ): OrderManager =
+    new OrderManagerImpl(maxNumOrders)
 }

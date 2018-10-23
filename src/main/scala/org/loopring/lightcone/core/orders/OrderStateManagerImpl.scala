@@ -18,12 +18,12 @@ package org.loopring.lightcone.core
 
 import org.slf4s.Logging
 
-final private[core] class OrderStateManagerImpl(
+final private[core] class OrderManagerImpl(
     maxNumOrders: Int
 )(
     implicit
     orderPool: OrderPool
-) extends OrderStateManager with Logging {
+) extends OrderManager with Logging {
 
   assert(maxNumOrders > 0)
 

@@ -43,11 +43,13 @@ class RingIncomeEvaluatorSpec extends FlatSpec with Matchers {
   val makerExpectFill = ExpectedFill(
     order = Order(id = "maker", tokenS = lrc, tokenB = eth, tokenFee = lrc, walletSplitPercentage = 0.2),
     pending = OrderState(amountS = 100, amountFee = 100),
-    amountMargin = 100)
+    amountMargin = 100
+  )
   val takerExpectFill = ExpectedFill(
     order = Order(id = "taker", tokenS = eth, tokenB = lrc, tokenFee = lrc, walletSplitPercentage = 0.2),
     pending = OrderState(amountS = 100, amountFee = 100),
-    amountMargin = 100)
+    amountMargin = 100
+  )
 
   //info("[sbt core/'testOnly *RingIncomeEvaluatorSpec -- -z incomeEvaluator']")
   "getFiatValue" should "only lrcfee" in {
@@ -55,10 +57,13 @@ class RingIncomeEvaluatorSpec extends FlatSpec with Matchers {
     val ring = Ring(
       makerExpectFill.copy(
         amountMargin = 0,
-        pending = OrderState(amountS = 100, amountFee = 100)),
+        pending = OrderState(amountS = 100, amountFee = 100)
+      ),
       takerExpectFill.copy(
         amountMargin = 0,
-        pending = OrderState(amountS = 100, amountFee = 100)))
+        pending = OrderState(amountS = 100, amountFee = 100)
+      )
+    )
     val income1 = incomeEvaluator.getIncomeFiatValue(ring)
     //总共收取200lrc，收益应该为0.8*200*(1-0.2)*(1-0.05) = 121.6
     println(income1)
@@ -71,10 +76,13 @@ class RingIncomeEvaluatorSpec extends FlatSpec with Matchers {
     val ring = Ring(
       makerExpectFill.copy(
         amountMargin = 100,
-        pending = OrderState(amountS = 100, amountFee = 0)),
+        pending = OrderState(amountS = 100, amountFee = 0)
+      ),
       takerExpectFill.copy(
         amountMargin = 1,
-        pending = OrderState(amountS = 100, amountFee = 0)))
+        pending = OrderState(amountS = 100, amountFee = 0)
+      )
+    )
     val income1 = incomeEvaluator.getIncomeFiatValue(ring)
     //应该收取1eth,100lrc, 1400*1 + 0.8*100 = 1480
     println(income1)
@@ -86,10 +94,13 @@ class RingIncomeEvaluatorSpec extends FlatSpec with Matchers {
     val ring = Ring(
       makerExpectFill.copy(
         amountMargin = 100,
-        pending = OrderState(amountS = 100, amountFee = 100)),
+        pending = OrderState(amountS = 100, amountFee = 100)
+      ),
       takerExpectFill.copy(
         amountMargin = 1,
-        pending = OrderState(amountS = 100, amountFee = 100)))
+        pending = OrderState(amountS = 100, amountFee = 100)
+      )
+    )
     val income1 = incomeEvaluator.getIncomeFiatValue(ring)
     //应该收取1eth,100lrc, 1400*1 + 0.8*100 + 0.8*200*(1-0.2)*(1-0.05) = 1601.6
     println(income1)
@@ -101,10 +112,13 @@ class RingIncomeEvaluatorSpec extends FlatSpec with Matchers {
     val ring = Ring(
       makerExpectFill.copy(
         amountMargin = 0,
-        pending = OrderState(amountS = 100, amountFee = 10)),
+        pending = OrderState(amountS = 100, amountFee = 10)
+      ),
       takerExpectFill.copy(
         amountMargin = 0,
-        pending = OrderState(amountS = 100, amountFee = 0)))
+        pending = OrderState(amountS = 100, amountFee = 0)
+      )
+    )
     val income1 = incomeEvaluator.getIncomeFiatValue(ring)
     //应该收取1eth,100lrc, 1400*1 + 0.8*100 + 0.8*200*(1-0.2)*(1-0.05) = 1601.6
     println(income1)
