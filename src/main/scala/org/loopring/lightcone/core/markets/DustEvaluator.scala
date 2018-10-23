@@ -26,7 +26,7 @@ final class DustEvaluatorImpl extends DustEvaluator {
 
   // todo: 判断是否为灰尘单
   def isDust(order: Order): Boolean = {
-    order.amountS <= 0
+    order.reservedAmount()(order.tokenS) <= 0
   }
 
   // todo: 判断订单余额/账户金额是否可用
