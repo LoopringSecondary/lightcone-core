@@ -49,7 +49,7 @@ class OrderStateManagerSpec extends FlatSpec with Matchers {
       "order1",
       "LRC",
       "XYZ",
-      None,
+      "LRC",
       10,
       1,
       0
@@ -59,7 +59,7 @@ class OrderStateManagerSpec extends FlatSpec with Matchers {
       "order2",
       "LRC",
       "XYZ",
-      None,
+      "LRC",
       15,
       1,
       1
@@ -69,7 +69,7 @@ class OrderStateManagerSpec extends FlatSpec with Matchers {
       "order3",
       "LRC",
       "XYZ",
-      Some("GTO"),
+      "GTO",
       15,
       1,
       10
@@ -79,7 +79,7 @@ class OrderStateManagerSpec extends FlatSpec with Matchers {
       "order4",
       "GTO",
       "LRC",
-      Some("LRC"),
+      "LRC",
       150,
       1,
       10

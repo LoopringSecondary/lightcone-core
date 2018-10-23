@@ -24,11 +24,12 @@ case class OrderState(
     amountFee: Amount = 0
 )
 
+// 注意!!!! 收益不能保证时,合约等比例计算,分母中不包含amountB
 case class Order(
     id: ID,
     tokenS: Address,
     tokenB: Address,
-    tokenFee: Option[Address],
+    tokenFee: Address,
     amountS: Amount = 0,
     amountB: Amount = 0,
     amountFee: Amount = 0,
@@ -58,43 +59,42 @@ case class Order(
   }
 
   // Advance methods with implicit contextual arguments
-  private[core] def requestedAmount()(implicit token: Address): Amount = {
-    if (token == tokenS) tokenFee match {
-      case None ⇒ outstanding.amountS + outstanding.amountFee
-      case Some(t) if t == tokenS ⇒ outstanding.amountS + outstanding.amountFee
-      case _ ⇒ outstanding.amountS
+  private[core] def requestedAmount()(implicit token: Address): Amount =
+    if (token == tokenS && tokenFee == tokenS) {
+      outstanding.amountS + outstanding.amountFee
+    } else if (token == tokenS && tokenFee != tokenS) {
+      outstanding.amountS
+    } else if (token != tokenS && tokenFee == tokenB) {
+      if (outstanding.amountFee > outstanding.amountB) outstanding.amountFee - outstanding.amountB else 0
+    } else {
+      outstanding.amountFee
     }
-    else if (token == tokenB) tokenFee match {
-      case Some(t) if t == tokenB && outstanding.amountFee > outstanding.amountB ⇒
-        outstanding.amountFee - outstanding.amountB
-      case _ ⇒ 0
+
+  private[core] def reservedAmount()(implicit token: Address) =
+    if (token == tokenS && tokenFee == tokenS) {
+      reserved.amountS + reserved.amountFee
+    } else if (token == tokenS && tokenFee != tokenS) {
+      reserved.amountS
+    } else if (token != tokenS && tokenFee == tokenB) {
+      reserved.amountB + reserved.amountFee
+    } else {
+      reserved.amountFee
     }
-    else outstanding.amountFee
-  }
 
-  private[core] def reservedAmount()(implicit token: Address) = tokenFee match {
-    case None ⇒ reserved.amountS + reserved.amountFee
-    case Some(tokenFee) if token == tokenFee ⇒ reserved.amountFee
-    case _ ⇒ reserved.amountS
-  }
-
+  // 注意: v < requestAmount
   private[core] def withReservedAmount(v: Amount)(implicit token: Address) =
-    tokenFee match {
-      case None ⇒
-        val r = Rational(amountS, amountFee + amountS)
-        val reservedAmountS = (Rational(v) * r).bigintValue
-        val reservedAmountFee = v - reservedAmountS
-
-        copy(_reserved = Some(OrderState(reservedAmountS, 0, reservedAmountFee)))
-          .updateActual()
-
-      case Some(tokenFee) if token == tokenFee ⇒
-        copy(_reserved = Some(reserved.copy(amountFee = v)))
-          .updateActual()
-
-      case _ ⇒
-        copy(_reserved = Some(reserved.copy(amountS = v)))
-          .updateActual()
+    if (token == tokenS && tokenFee == tokenS) {
+      val r = Rational(amountS, amountFee + amountS)
+      val reservedAmountS = (Rational(v) * r).bigintValue()
+      copy(_reserved = Some(OrderState(reservedAmountS, 0, v - reservedAmountS))).updateActual()
+    } else if (token == tokenS && tokenFee != tokenS) {
+      copy(_reserved = Some(OrderState(v, 0, reserved.amountFee))).updateActual()
+    } else if (token != tokenS && tokenFee == tokenB) {
+      val r = Rational(v, requestedAmount())
+      val reservedAmountFee = (Rational(amountFee) * r).bigintValue()
+      copy(_reserved = Some(OrderState(reserved.amountS, v - reservedAmountFee, reservedAmountFee))).updateActual()
+    } else {
+      copy(_reserved = Some(OrderState(reserved.amountS, 0, v))).updateActual()
     }
 
   // Private methods
@@ -120,4 +120,5 @@ case class Order(
       (r * Rational(amountFee)).bigintValue
     )))
   }
+
 }
