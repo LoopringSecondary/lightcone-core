@@ -112,6 +112,10 @@ class MarketManagerImpl(
       }
     }
 
+    // TODO(hongyu): choose side
+    val side = bids // or ask
+    skippedOrders.foreach(side += _)
+
     rings
   }
 
