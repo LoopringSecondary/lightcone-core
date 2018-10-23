@@ -40,8 +40,6 @@ class SimpleRingMatcher(
     }
   }
 
-  // TODO(hongyu): need to return None if these two order cannot trade with each other
-  // because prices don't match.
   private def makeRing(maker: Order, taker: Order): Option[Ring] = {
     if (maker.amountS * taker.amountS < maker.amountB * taker.amountB) {
       return None
@@ -80,20 +78,31 @@ class SimpleRingMatcher(
       }
 
     //fee 按照卖出的比例计算
-    val makerFee = maker.matchable.amountFee * makerVolume.amountS / maker.amountS
-    val takerFee = taker.matchable.amountFee * takerVolume.amountS / taker.amountS
+    val makerFee = maker.matchable.amountFee * makerVolume.amountS / maker.matchable.amountS
+    val takerFee = taker.matchable.amountFee * takerVolume.amountS / taker.matchable.amountS
 
     val makerMargin = (makerVolume.amountS - takerVolume.amountB).max(BigInt(0))
     val takerMargin = (takerVolume.amountS - makerVolume.amountB).max(BigInt(0))
-
     val ring = Ring(
       maker = ExpectedFill(
-        order = maker,
+        order = maker.copy(
+          _matchable = Some(OrderState(
+            amountS = maker.matchable.amountS - makerVolume.amountS,
+            amountB = maker.matchable.amountB - makerVolume.amountB,
+            amountFee = maker.matchable.amountFee - makerFee
+          ))
+        ),
         pending = makerVolume.copy(amountFee = makerFee),
         amountMargin = makerMargin
       ),
       taker = ExpectedFill(
-        order = taker,
+        order = taker.copy(
+          _matchable = Some(OrderState(
+            amountS = taker.matchable.amountS - takerVolume.amountS,
+            amountB = taker.matchable.amountB - takerVolume.amountB,
+            amountFee = taker.matchable.amountFee - takerFee
+          ))
+        ),
         pending = takerVolume.copy(amountFee = takerFee),
         amountMargin = takerMargin
       )
