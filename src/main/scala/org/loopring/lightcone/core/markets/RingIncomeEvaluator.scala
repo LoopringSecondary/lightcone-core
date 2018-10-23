@@ -17,7 +17,7 @@
 package org.loopring.lightcone.core
 
 trait RingIncomeEstimator {
-  def getFiatValue(ring: Ring): Double
+  def getFiatIncomeValue(ring: Ring): Double
   def isProfitable(ring: Ring): Boolean
 }
 
@@ -25,7 +25,7 @@ final class RingIncomeEstimatorImpl(
     threshold: Double
 )(implicit tve: TokenValueEstimator) extends RingIncomeEstimator {
 
-  def getFiatValue(ring: Ring) = ring.maker.getFiatValue() + ring.taker.getFiatValue()
+  def getFiatIncomeValue(ring: Ring) = ring.maker.getFiatIncomeValue() + ring.taker.getFiatIncomeValue()
 
-  def isProfitable(ring: Ring) = getFiatValue(ring) >= threshold
+  def isProfitable(ring: Ring) = getFiatIncomeValue(ring) >= threshold
 }
