@@ -62,6 +62,47 @@ class AdjustOrderSpec extends FlatSpec with Matchers {
     manager.cancelOrder(order.id)
   }
 
+  // 提交订单后完全成交,看订单是否在tokenS&tokenFee manager中是否都删除了
+  "simpleTest2" should "submit order and fill partitial" in {
+    lrcTokenManager.init(200, 200)
+    xyzTokenManager.init(200, 200)
+    gtoTokenManager.init(200, 200)
+
+    val order = Order(
+      "order",
+      lrc,
+      xyz,
+      gto,
+      100,
+      100,
+      100
+    )
+
+    manager.submitOrder(order)
+    manager.adjustOrder(order.id, 0)
+
+    orderPool.contains(order.id) should be(false)
+
+    lrcTokenManager.balance should be(200)
+    lrcTokenManager.allowance should be(200)
+    gtoTokenManager.balance should be(200)
+    gtoTokenManager.allowance should be(200)
+
+    lrcTokenManager.availableBalance should be(200)
+    lrcTokenManager.availableAllowance should be(200)
+    gtoTokenManager.availableBalance should be(200)
+    gtoTokenManager.availableAllowance should be(200)
+
+    lrcTokenManager.idxMap.size should be(0)
+    gtoTokenManager.idxMap.size should be(0)
+
+    lrcTokenManager.cursor should be(-1)
+    gtoTokenManager.cursor should be(-1)
+
+    lrcTokenManager.reservations.size should be(0)
+    gtoTokenManager.reservations.size should be(0)
+  }
+
   // 部分成交1:
   // 连续下三个订单,tokenS对应的balance&allowance始终充足,
   // order2成交70(剩余30)后,tokenManager的订单链位置应该不受影响
