@@ -53,7 +53,7 @@ class MarketManagerSpec extends FlatSpec with Matchers {
   implicit val orderPool = new OrderPool()
   implicit val timeProvider = new SystemTimeProvider()
   implicit val pendingRingPool = new PendingRingPoolImpl()
-  val marketManager = new MarketManagerImpl(
+  var marketManager = new MarketManagerImpl(
     MarketId(lrc, eth),
     MarketManagerConfig(0, 0, 0, 0),
     simpleMatcher,
@@ -188,6 +188,47 @@ class MarketManagerSpec extends FlatSpec with Matchers {
     assert(marketManager.asks.isEmpty)
     info(res.rings.toString())
     assert(res.rings.size == 2 && res.fullyMatchedOrderIds.size == 2)
+  }
+
+  "submitOrder1" should "huge orders" in {
+    marketManager = new MarketManagerImpl(
+      MarketId(lrc, eth),
+      MarketManagerConfig(0, 0, 0, 0),
+      simpleMatcher,
+      dustEvaluator
+    )
+    val startTime = System.currentTimeMillis()
+    (0 until 10000) foreach (
+      i ⇒ {
+        val maker = Order(
+          id = "maker" + i,
+          tokenS = lrc,
+          tokenB = eth,
+          tokenFee = lrc,
+          amountS = 100,
+          amountB = 10,
+          amountFee = 10,
+          walletSplitPercentage = 0.2,
+          _matchable = Some(OrderState(amountS = 100, amountB = 10, amountFee = 10))
+        )
+        marketManager.submitOrder(maker)
+      }
+    )
+    info("time of submit 10000 :" + (System.currentTimeMillis() - startTime))
+    val taker = Order(
+      "taker",
+      eth,
+      lrc,
+      lrc,
+      8,
+      100,
+      20,
+      walletSplitPercentage = 0.2,
+      _matchable = Some(OrderState(amountS = 8, amountB = 100, amountFee = 20))
+    )
+
+    val res = marketManager.submitOrder(taker)
+    info(res.toString)
   }
 
 }
