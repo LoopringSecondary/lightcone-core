@@ -71,9 +71,6 @@ final private[core] class OrderStateManagerImpl(
     orderPool.getOrder(orderId) match {
       case None ⇒ false
       case Some(order) ⇒
-        //        order.callTokenSThenRemoveOrders(_.release(orderId), CANCELLED_BY_USER)
-        //        order.callTokenFeeThenRemoveOrders(_.release(orderId), CANCELLED_BY_USER)
-        //        tryRemoveOrder(orderId, CANCELLED_BY_USER)
         order.callTokenSAndFeeThenRemoveOrders(_ ⇒ Set(orderId), CANCELLED_BY_USER)
         true
     }
@@ -132,6 +129,12 @@ final private[core] class OrderStateManagerImpl(
     }
 
     // todo tokenManager包含多种状态
+    // 删除订单应该有以下几种情况:
+    // 1.用户主动删除订单, tokenS&tokenFee都删
+    // 2.订单成交后变成灰尘单, tokenS&tokenFee都删
+    // 3.用户账户tokenS balance不足或tokenFee balance不足, 任意一个token balance不足, tokenS&tokenFee都删
+    // 这样一来 tokenManager的release动作绝对不能由tokenManager本身调用,
+    // 只能由orderManager根据并汇总tokenS&tokenFee情况后删除, 删除时tokenS&tokenFee都要删,不能只留一个
     def callTokenSAndFeeThenRemoveOrders(
       method: TM ⇒ Set[ID],
       status: OrderStatus = CANCELLED_LOW_FEE_BALANCE

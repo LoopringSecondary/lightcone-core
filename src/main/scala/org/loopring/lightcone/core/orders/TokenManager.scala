@@ -186,13 +186,6 @@ private[core] class TokenManager(
     (localOrders, reservations, idxMap, cursor)
   }
 
-  // 删除订单应该有以下几种情况:
-  // 1.用户主动删除订单, tokenS&tokenFee都删
-  // 2.订单成交后变成灰尘单, tokenS&tokenFee都删
-  // 3.用户账户tokenS balance不足或tokenFee balance不足, 任意一个token balance不足, tokenS&tokenFee都删
-  // 这样一来 tokenManager的release动作绝对不能由内部调用,
-  // 只能由orderManager根据并汇总tokenS&tokenFee情况后删除, 删除时tokenS&tokenFee都要删,不能只留一个
-  //
   // 注意:按照比例计算订单requestAmountS, requestAmountFee
   // requestAmountFee最终的法币价值/币币价值都远小于requestAmountS
   // 如果requestAmountS是灰尘,那么requestAmountFee也应该是灰尘
