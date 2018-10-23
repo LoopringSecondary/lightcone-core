@@ -16,11 +16,13 @@
 
 package org.loopring.lightcone.core
 
+import MatchingFailure._
+
 trait RingMatcher {
   def matchOrders(
     taker: Order,
     maker: Order
-  ): Either[MatchingFailure.Value, Ring]
+  ): Either[MatchingFailure, Ring]
 }
 
 class SimpleRingMatcher(
@@ -30,75 +32,58 @@ class SimpleRingMatcher(
   def matchOrders(
     taker: Order,
     maker: Order
-  ): Either[MatchingFailure.Value, Ring] = {
-    val ring = createRing(maker, taker)
-    if (ringIncomeEstimator.isProfitable(ring)) {
-      Right(ring)
-    } else {
-      Left(MatchingFailure.INCOME_NOT_ENOUGH)
+  ): Either[MatchingFailure, Ring] = {
+    makeRing(maker, taker) match {
+      case Some(ring) if ringIncomeEstimator.isProfitable(ring) ⇒ Right(ring)
+      case Some(ring) ⇒ Left(ORDERS_NOT_TRADABLE)
+      case None ⇒ Left(INCOME_TOO_SMALL)
     }
   }
 
-  def createRing(maker: Order, taker: Order): Ring = {
-
-    val makerMatchableAmounts = maker._matchable match {
-      case None            ⇒ OrderState()
-      case Some(matchable) ⇒ matchable
-    }
-    val takerMatchableAmounts = maker._matchable match {
-      case None            ⇒ OrderState()
-      case Some(matchable) ⇒ matchable
-    }
-
+  // TODO(hongyu): need to return None if these two order cannot trade with each other
+  // because prices don't match.
+  private def makeRing(maker: Order, taker: Order): Option[Ring] = {
     /*合约逻辑：
     取小的成交量计算，按照订单顺序，如果下一单的卖需要缩减，则第一单为最小单
     与顺序相关
     因此生成订单时，按照maker,taker的顺序
      */
     //taker的卖出大于maker的买入时，taker需要缩减，则认为最小交易量为maker的卖出，否则为taker的买入
-    val (makerVolume, takerVolume) = if (takerMatchableAmounts.amountS > makerMatchableAmounts.amountB) {
-      val takerSVolume = makerMatchableAmounts.amountB
-      val takerBVolume = (Rational(takerSVolume) * Rational(taker.amountB, taker.amountS)).bigintValue()
-
-      val makerBVolume = makerMatchableAmounts.amountB
-      val makerSVolume = makerMatchableAmounts.amountS
-
-      (
-        OrderState(
-          amountS = makerSVolume,
-          amountB = makerBVolume
-        ),
-        OrderState(
-          amountS = takerSVolume,
-          amountB = takerBVolume
+    val (makerVolume, takerVolume) =
+      if (taker.matchable.amountS > maker.matchable.amountB) {
+        (
+          OrderState(
+            amountS = maker.matchable.amountS,
+            amountB = maker.matchable.amountB
+          ),
+          OrderState(
+            amountS = maker.matchable.amountB,
+            amountB = (Rational(maker.matchable.amountB) *
+              Rational(taker.amountB, taker.amountS)).bigintValue
+          )
         )
-      )
-    } else {
-      val takerSVolume = takerMatchableAmounts.amountS
-      val takerBVolume = takerMatchableAmounts.amountB
-
-      val makerSVolume = takerMatchableAmounts.amountB
-      val makerBVolume = (Rational(makerSVolume) * Rational(maker.amountB, maker.amountS)).bigintValue()
-
-      (
-        OrderState(
-          amountS = makerSVolume,
-          amountB = makerBVolume
-        ),
-        OrderState(
-          amountS = takerSVolume,
-          amountB = takerBVolume
+      } else {
+        (
+          OrderState(
+            amountS = taker.matchable.amountB,
+            amountB = (Rational(taker.matchable.amountB) *
+              Rational(maker.amountB, maker.amountS)).bigintValue
+          ),
+            OrderState(
+              amountS = taker.matchable.amountS,
+              amountB = taker.matchable.amountB
+            )
         )
-      )
-    }
+      }
 
-    val makerMargin = (makerVolume.amountS - takerVolume.amountB).min(BigInt(0))
-    val takerMargin = (takerVolume.amountS - makerVolume.amountB).min(BigInt(0))
     //fee 按照卖出的比例计算
-    val makerFee = makerMatchableAmounts.amountFee * makerVolume.amountS / makerMatchableAmounts.amountS
-    val takerFee = takerMatchableAmounts.amountFee * takerVolume.amountS / takerMatchableAmounts.amountS
+    val makerFee = maker.matchable.amountFee * makerVolume.amountS / maker.matchable.amountS
+    val takerFee = taker.matchable.amountFee * takerVolume.amountS / taker.matchable.amountS
 
-    Ring(
+    val makerMargin = (makerVolume.amountS - takerVolume.amountB).max(BigInt(0))
+    val takerMargin = (takerVolume.amountS - makerVolume.amountB).max(BigInt(0))
+
+    val ring = Ring(
       maker = ExpectedFill(
         order = maker,
         pending = makerVolume.copy(amountFee = makerFee),
@@ -110,5 +95,7 @@ class SimpleRingMatcher(
         amountMargin = takerMargin
       )
     )
+
+    Some(ring)
   }
 }

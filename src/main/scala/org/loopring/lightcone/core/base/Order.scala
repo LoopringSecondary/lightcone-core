@@ -32,10 +32,9 @@ case class Order(
     amountS: Amount = 0,
     amountB: Amount = 0,
     amountFee: Amount = 0,
-    // original: OrderState,
     createdAt: Long = -1,
     status: OrderStatus = NEW,
-    walletSplitPercentage: Double = 0.2,
+    walletSplitPercentage: Double = 0,
     private[core] val _outstanding: Option[OrderState] = None,
     private[core] val _reserved: Option[OrderState] = None,
     private[core] val _actual: Option[OrderState] = None,
@@ -50,14 +49,12 @@ case class Order(
   lazy val rate = Rational(amountB, amountS)
 
   def withOutstandingAmountS(v: Amount) = {
-    var r = Rational(v, amountS)
-    copy(
-      _outstanding = Some(OrderState(
-        (r * Rational(amountS)).bigintValue,
-        (r * Rational(amountB)).bigintValue,
-        (r * Rational(amountFee)).bigintValue
-      ))
-    )
+    val r = Rational(v, amountS)
+    copy(_outstanding = Some(OrderState(
+      (r * Rational(amountS)).bigintValue,
+      (r * Rational(amountB)).bigintValue,
+      (r * Rational(amountFee)).bigintValue
+    )))
   }
 
   // Advance methods with implicit contextual arguments
@@ -84,25 +81,19 @@ case class Order(
   private[core] def withReservedAmount(v: Amount)(implicit token: Address) =
     tokenFee match {
       case None ⇒
-        val r = Rational(amountS / (amountFee + amountS))
+        val r = Rational(amountS, amountFee + amountS)
         val reservedAmountS = (Rational(v) * r).bigintValue
         val reservedAmountFee = v - reservedAmountS
 
-        copy(
-          _reserved = Some(OrderState(
-            reservedAmountS,
-            0,
-            reservedAmountFee
-          ))
-        )
+        copy(_reserved = Some(OrderState(reservedAmountS, 0, reservedAmountFee)))
           .updateActual()
 
       case Some(tokenFee) if token == tokenFee ⇒
-        copy(_reserved = _reserved.map(_.copy(amountFee = v)))
+        copy(_reserved = Some(reserved.copy(amountFee = v)))
           .updateActual()
 
       case _ ⇒
-        copy(_reserved = _reserved.map(_.copy(amountS = v)))
+        copy(_reserved = Some(reserved.copy(amountS = v)))
           .updateActual()
     }
 
@@ -123,12 +114,10 @@ case class Order(
       r = r min Rational(reserved.amountFee, amountFee)
     }
 
-    copy(
-      _actual = Some(OrderState(
-        (r * Rational(amountS)).bigintValue,
-        (r * Rational(amountB)).bigintValue,
-        (r * Rational(amountFee)).bigintValue
-      ))
-    )
+    copy(_actual = Some(OrderState(
+      (r * Rational(amountS)).bigintValue,
+      (r * Rational(amountB)).bigintValue,
+      (r * Rational(amountFee)).bigintValue
+    )))
   }
 }
