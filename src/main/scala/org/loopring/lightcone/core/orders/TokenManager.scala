@@ -154,7 +154,6 @@ private[core] class TokenManager(
 
       if (dustEvaluator.isDust(token, availableBalance, requestedAmount)) {
         ordersToDelete += order.id
-        idxMap -= order.id
       } else {
         val reserved =
           if (availableAllowance >= requestedAmount) requestedAmount
