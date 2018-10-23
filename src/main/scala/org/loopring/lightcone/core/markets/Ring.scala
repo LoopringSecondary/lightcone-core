@@ -28,7 +28,7 @@ case class ExpectedFill(
   def id = order.id
 
   def getFiatValue()(implicit tve: TokenValueEstimator) = {
-    val tokenFee = order.tokenFee.getOrElse(order.tokenS)
+    val tokenFee = order.tokenFee
     val rate = (1 - order.walletSplitPercentage) * (1 - tve.getBurnRate(tokenFee))
     rate * tve.getFiatValue(
       tokenFee,

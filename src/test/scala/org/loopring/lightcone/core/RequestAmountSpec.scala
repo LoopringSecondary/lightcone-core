@@ -52,27 +52,27 @@ class RequestAmountSpec extends FlatSpec with Matchers {
     xyzTokenManager.init(100, 200)
     gtoTokenManager.init(100, 200)
 
-    // 情况1:tokenFee == None, balance/allowance充足
+    // 情况1:tokenFee only, balance/allowance充足
     manager.submitOrder(Order(
       "order",
       lrc,
       xyz,
-      None,
+      gto,
       50,
       20,
       50
     )) should be(true)
     manager.cancelOrder("order")
 
-    // 情况2: tokenFee == None, balance/allowance不足
+    // 情况2: tokenFee only, balance/allowance不足
     manager.submitOrder(Order(
       "order",
       lrc,
       xyz,
-      None,
+      gto,
       50,
       20,
-      60
+      110
     )) should be(false)
 
     // 情况3: tokenFee == tokenS, balance/allowance充足
@@ -80,7 +80,7 @@ class RequestAmountSpec extends FlatSpec with Matchers {
       "order",
       lrc,
       xyz,
-      Option(lrc),
+      lrc,
       30,
       10,
       10
@@ -92,7 +92,7 @@ class RequestAmountSpec extends FlatSpec with Matchers {
       "order",
       lrc,
       xyz,
-      Option(lrc),
+      lrc,
       100,
       10,
       10
@@ -103,7 +103,7 @@ class RequestAmountSpec extends FlatSpec with Matchers {
       "order",
       lrc,
       xyz,
-      Option(xyz),
+      xyz,
       30,
       20,
       120
@@ -115,7 +115,7 @@ class RequestAmountSpec extends FlatSpec with Matchers {
       "order",
       lrc,
       xyz,
-      Option(xyz),
+      xyz,
       30,
       20,
       200
