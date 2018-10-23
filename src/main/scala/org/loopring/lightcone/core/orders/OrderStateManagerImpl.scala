@@ -49,9 +49,7 @@ final private[core] class OrderStateManagerImpl(
     assert(order.amountS > 0)
 
     assert(tokens.contains(order.tokenS))
-    if (order.tokenFee.nonEmpty) {
-      assert(tokens.contains(order.tokenFee.get))
-    }
+    assert(tokens.contains(order.tokenFee))
 
     if (order.onTokenS(_.hasTooManyOrders) &&
       order.onTokenFee(_.hasTooManyOrders)) {
@@ -110,7 +108,7 @@ final private[core] class OrderStateManagerImpl(
       method(tokens(order.tokenS))
 
     def onTokenFee[R](method: TM ⇒ R): R =
-      method(tokens(order.nonEmptyTokenFee))
+      method(tokens(order.tokenFee))
 
     def callTokenSThenRemoveOrders(
       method: TM ⇒ Set[ID],

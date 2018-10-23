@@ -38,13 +38,13 @@ case class Order(
     id: ID,
     tokenS: Address,
     tokenB: Address,
-    tokenFee: Option[Address],
+    tokenFee: Address,
     amountS: Amount = 0,
     amountB: Amount = 0,
     amountFee: Amount = 0,
-    // original: OrderState,
     createdAt: Long = -1,
     status: OrderStatus = NEW,
+    walletSplitPercentage: Double = 0,
     private[core] val _outstanding: Option[OrderState] = None,
     private[core] val _reserved: Option[OrderState] = None,
     private[core] val _actual: Option[OrderState] = None,
@@ -59,14 +59,12 @@ case class Order(
   lazy val rate = Rational(amountB, amountS)
 
   def withOutstandingAmountS(v: Amount) = {
-    var r = Rational(v, amountS)
-    copy(
-      _outstanding = Some(OrderState(
-        (r * Rational(amountS)).bigintValue,
-        (r * Rational(amountB)).bigintValue,
-        (r * Rational(amountFee)).bigintValue
-      ))
-    )
+    val r = Rational(v, amountS)
+    copy(_outstanding = Some(OrderState(
+      (r * Rational(amountS)).bigintValue,
+      (r * Rational(amountB)).bigintValue,
+      (r * Rational(amountFee)).bigintValue
+    )))
   }
 
   // Advance methods with implicit contextual arguments
@@ -128,43 +126,27 @@ case class Order(
     )
   }
 
-  private[core] def nonEmptyTokenFee: Address = {
-    tokenFee match {
-      case None    ⇒ LrcAddress.lrc
-      case Some(t) ⇒ t
-    }
-  }
-
   private def updateActual() = {
     var r = Rational(reserved.amountS, amountS)
     if (amountFee > 0) {
       r = r min Rational(reserved.amountFee, amountFee)
     }
 
-    copy(
-      _actual = Some(OrderState(
-        (r * Rational(amountS)).bigintValue,
-        (r * Rational(amountB)).bigintValue,
-        (r * Rational(amountFee)).bigintValue
-      ))
-    )
+    copy(_actual = Some(OrderState(
+      (r * Rational(amountS)).bigintValue,
+      (r * Rational(amountB)).bigintValue,
+      (r * Rational(amountFee)).bigintValue
+    )))
   }
 
   private def askMatchType()(implicit token: Address): AskTokenMatchType.Value = {
-    val (feeIsTokenS, feeIsTokenB) = tokenFee match {
-      case None ⇒ (LrcAddress.eq(tokenS), false)
-      case Some(t) if t == tokenS ⇒ (true, false)
-      case Some(t) if t == tokenB ⇒ (false, true)
-      case _ ⇒ (false, false)
-    }
-
-    if (token == tokenS && feeIsTokenS) {
+    if (token == tokenS && tokenFee == tokenS) {
       AskTokenMatchType.ASK_TOKEN_S_AND_FEE
-    } else if (token == tokenS && !feeIsTokenS) {
+    } else if (token == tokenS && tokenFee != tokenS) {
       AskTokenMatchType.ASK_TOKEN_S_ONLY
-    } else if (token != tokenS && feeIsTokenB) {
+    } else if (token != tokenS && tokenFee == tokenB) {
       AskTokenMatchType.ASK_TOKEN_B_AND_FEE
-    } else if (token != tokenS && !feeIsTokenB) {
+    } else if (token != tokenS && tokenFee != tokenB) {
       AskTokenMatchType.ASK_TOKEN_FEE_ONLY
     } else {
       throw new Exception("ask token:" + token.toString + " invalid")

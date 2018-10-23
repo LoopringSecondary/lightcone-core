@@ -53,7 +53,7 @@ class TokenSizeSpec extends FlatSpec with Matchers {
       "order1",
       lrc,
       xyz,
-      None,
+      lrc,
       10,
       2,
       0

@@ -57,7 +57,7 @@ class AccumulatedAmountSpec extends FlatSpec with Matchers {
       "order1",
       lrc,
       xyz,
-      None,
+      lrc,
       20,
       10,
       10
@@ -67,7 +67,7 @@ class AccumulatedAmountSpec extends FlatSpec with Matchers {
       "order2",
       lrc,
       xyz,
-      None,
+      lrc,
       30,
       10,
       20
@@ -86,7 +86,7 @@ class AccumulatedAmountSpec extends FlatSpec with Matchers {
       "order1",
       lrc,
       xyz,
-      None,
+      lrc,
       20,
       10,
       10
@@ -96,7 +96,7 @@ class AccumulatedAmountSpec extends FlatSpec with Matchers {
       "order2",
       lrc,
       xyz,
-      None,
+      lrc,
       30,
       10,
       20
@@ -118,7 +118,7 @@ class AccumulatedAmountSpec extends FlatSpec with Matchers {
       "order1",
       lrc,
       xyz,
-      None,
+      lrc,
       20,
       10,
       10
@@ -128,7 +128,7 @@ class AccumulatedAmountSpec extends FlatSpec with Matchers {
       "order2",
       lrc,
       xyz,
-      None,
+      lrc,
       30,
       10,
       20

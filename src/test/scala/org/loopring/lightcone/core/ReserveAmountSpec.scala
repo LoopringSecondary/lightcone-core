@@ -49,13 +49,13 @@ class ReserveAmountSpec extends FlatSpec with Matchers {
   xyzTokenManager.init(1000, 1000)
   gtoTokenManager.init(1000, 1000)
 
-  // 情况1:tokenFee == None, allowance充足
+  // 情况1:tokenFee only, allowance充足
   "simpleTest1" should "calculate reserve amount" in {
     val order = Order(
       "order",
       gto,
       xyz,
-      None,
+      lrc,
       100,
       20,
       100
@@ -68,13 +68,13 @@ class ReserveAmountSpec extends FlatSpec with Matchers {
     state.reservedAmount()(lrc) should be(100)
   }
 
-  // 情况2: tokenFee == None, allowance不足
+  // 情况2: tokenFee only, allowance不足
   "simpleTest2" should "calculate reserve amount" in {
     val order = Order(
       "order",
       gto,
       xyz,
-      None,
+      lrc,
       100,
       20,
       100
@@ -93,7 +93,7 @@ class ReserveAmountSpec extends FlatSpec with Matchers {
       "order",
       lrc,
       xyz,
-      Option(lrc),
+      lrc,
       100,
       20,
       50
@@ -114,7 +114,7 @@ class ReserveAmountSpec extends FlatSpec with Matchers {
       "order",
       lrc,
       xyz,
-      Option(lrc),
+      lrc,
       100,
       20,
       200
@@ -135,7 +135,7 @@ class ReserveAmountSpec extends FlatSpec with Matchers {
       "order",
       lrc,
       xyz,
-      Option(xyz),
+      xyz,
       100,
       20,
       200
@@ -152,7 +152,7 @@ class ReserveAmountSpec extends FlatSpec with Matchers {
       "order",
       lrc,
       xyz,
-      Option(xyz),
+      xyz,
       100,
       100,
       400
