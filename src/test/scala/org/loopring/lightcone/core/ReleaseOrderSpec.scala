@@ -18,7 +18,7 @@ package org.loopring.lightcone.core
 
 import org.scalatest._
 
-class ReleseOrderSpec extends FlatSpec with Matchers {
+class ReleaseOrderSpec extends FlatSpec with Matchers {
 
   info("[sbt core/'testOnly *ReleseOrderSpec']")
 
