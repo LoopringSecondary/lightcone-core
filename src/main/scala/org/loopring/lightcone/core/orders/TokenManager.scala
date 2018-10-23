@@ -122,7 +122,6 @@ private[core] class TokenManager(
       case None ⇒ Set.empty
       case Some(idx) ⇒
         assert(orderPool.contains(id))
-        cursor = Math.min(cursor, idx)
         val order = orderPool(id)
         cursor = idx - 1
         rebalance()

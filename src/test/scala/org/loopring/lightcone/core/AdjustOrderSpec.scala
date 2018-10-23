@@ -45,11 +45,11 @@ class AdjustOrderSpec extends FlatSpec with Matchers {
   val xyzTokenManager = manager.getTokenManager(xyz)
   val gtoTokenManager = manager.getTokenManager(gto)
 
-  lrcTokenManager.init(200, 200)
-  xyzTokenManager.init(200, 200)
-  gtoTokenManager.init(200, 200)
-
   "simpleTest1" should "submit order and fill partitial" in {
+    lrcTokenManager.init(200, 200)
+    xyzTokenManager.init(200, 200)
+    gtoTokenManager.init(200, 200)
+
     val order = Order(
       "order",
       lrc,
@@ -66,5 +66,83 @@ class AdjustOrderSpec extends FlatSpec with Matchers {
     val state = orderPool(order.id)
     state.requestedAmount()(lrc) should be(60)
     state.reservedAmount()(lrc) should be(60)
+  }
+
+  // 连续下三个订单,tokenS对应的balance&allowance始终充足,
+  // order2成交70(剩余30)后,tokenManager的订单链位置应该不受影响
+  // cursor应该仍然为2,
+  // reservation数量不变,accumulatedAmount从order2递减
+  // balance&allowance不变
+  // availableBalance&availableAllowance对应增加order2成交量
+  "complexTest1" should "submit orders then fill one of them" in {
+    lrcTokenManager.init(200, 200)
+    xyzTokenManager.init(200, 200)
+    gtoTokenManager.init(200, 200)
+
+    val order1 = Order(
+      "order1",
+      lrc,
+      xyz,
+      gto,
+      50,
+      10,
+      10
+    )
+    manager.submitOrder(order1)
+
+    val order2 = Order(
+      "order2",
+      lrc,
+      xyz,
+      gto,
+      100,
+      10,
+      10
+    )
+    manager.submitOrder(order2)
+
+    val order3 = Order(
+      "order3",
+      lrc,
+      xyz,
+      gto,
+      50,
+      10,
+      10
+    )
+    manager.submitOrder(order3)
+
+    // order2成交70, 剩余30
+    manager.adjustOrder(order2.id, 30)
+
+    lrcTokenManager.balance should be(200)
+    lrcTokenManager.allowance should be(200)
+
+    lrcTokenManager.availableBalance should be(70)
+    lrcTokenManager.availableAllowance should be(70)
+
+    lrcTokenManager.cursor should be(2)
+
+    lrcTokenManager.idxMap.size should be(3)
+    lrcTokenManager.idxMap.getOrElse(order1.id, -1) should be(0)
+    lrcTokenManager.idxMap.getOrElse(order2.id, -1) should be(1)
+    lrcTokenManager.idxMap.getOrElse(order3.id, -1) should be(2)
+
+    lrcTokenManager.reservations.size should be(3)
+
+    val reservation1 = lrcTokenManager.reservations(0)
+    reservation1.orderId should be(order1.id)
+    reservation1.accumulatedBalance should be(50)
+    reservation1.accumulatedAllowance should be(50)
+
+    val reservation2 = lrcTokenManager.reservations(1)
+    reservation2.orderId should be(order2.id)
+    reservation2.accumulatedBalance should be(80)
+    reservation2.accumulatedAllowance should be(80)
+
+    val reservation3 = lrcTokenManager.reservations(2)
+    reservation3.orderId should be(order3.id)
+    reservation3.accumulatedBalance should be(130)
+    reservation3.accumulatedAllowance should be(130)
   }
 }
