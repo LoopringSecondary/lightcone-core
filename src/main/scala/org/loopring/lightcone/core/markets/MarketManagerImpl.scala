@@ -125,6 +125,8 @@ class MarketManagerImpl(
 
     makerOrdersRecyclable.foreach(addToSide)
 
+    rings foreach pendingRingPool.addRing
+
     SubmitOrderResult(rings, fullyMatchedOrderIds)
   }
 
