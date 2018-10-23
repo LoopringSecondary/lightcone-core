@@ -16,8 +16,17 @@
 
 package org.loopring.lightcone.core.markets
 
-import org.loopring.lightcone.core.Order
+import org.loopring.lightcone.core.{ Order, TokenValueEstimator }
 
 trait DustEvaluator {
   def isDust(order: Order): Boolean
+}
+
+class DustEvaluatorImpl(threshold: Double)(implicit tve: TokenValueEstimator) extends DustEvaluator {
+
+  override def isDust(order: Order): Boolean = {
+    val fiatValue = tve.getFiatValue(order.tokenS, order.matchable.amountS)
+    fiatValue < threshold
+  }
+
 }
