@@ -16,7 +16,6 @@
 
 package org.loopring.lightcone.core
 
-import org.loopring.lightcone.core.markets.{ DustEvaluator, DustEvaluatorImpl }
 import org.scalatest._
 
 class MarketManagerSpec extends FlatSpec with Matchers {
@@ -43,7 +42,7 @@ class MarketManagerSpec extends FlatSpec with Matchers {
   val incomeEvaluator = new RingIncomeEstimatorImpl(10)
   val simpleMatcher = new SimpleRingMatcher(incomeEvaluator)
 
-  implicit val dustEvaluator = new DustEvaluatorImpl(1)
+  implicit val dustEvaluator = new DustOrderEvaluatorImpl(1)
 
   implicit val orderPool = new OrderPool()
   implicit val timeProvider = new SystemTimeProvider()

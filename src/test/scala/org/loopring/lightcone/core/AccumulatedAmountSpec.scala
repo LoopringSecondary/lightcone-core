@@ -32,7 +32,7 @@ class AccumulatedAmountSpec extends FlatSpec with Matchers {
     }
   )
 
-  val manager = OrderStateManager.default()
+  val manager = OrderManager.default()
   val lrc = "LRC"
   val xyz = "XYZ"
   val gto = "GTO"

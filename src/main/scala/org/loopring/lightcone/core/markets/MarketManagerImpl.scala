@@ -16,7 +16,6 @@
 
 package org.loopring.lightcone.core
 
-import org.loopring.lightcone.core.markets.DustEvaluator
 import org.slf4s.Logging
 import scala.annotation.tailrec
 import scala.collection.mutable.SortedSet
@@ -54,7 +53,7 @@ class MarketManagerImpl(
     implicit
     pendingRingPool: PendingRingPool,
     orderPool: OrderPool,
-    dustEvaluator: DustEvaluator
+    dustOrderEvaluator: DustOrderEvaluator
 ) extends MarketManager with Logging {
 
   import MarketManagerImpl._
@@ -73,18 +72,26 @@ class MarketManagerImpl(
     var makerOrdersRecyclable = Seq.empty[Order]
     var fullyMatchedOrderIds = Seq.empty[ID]
 
-    val subedPendingAmountS = order.matchable.amountS - pendingRingPool.getOrderPendingAmountS(order.id)
+    val subedPendingAmountS =
+      order.matchable.amountS -
+        pendingRingPool.getOrderPendingAmountS(order.id)
+
     var taker = order.copy(_matchable = Some(OrderState(
       amountS = subedPendingAmountS,
-      amountB = Rational(subedPendingAmountS * order.amountB, order.amountS).bigintValue(),
-      amountFee = Rational(subedPendingAmountS * order.amountFee, order.amountS).bigintValue()
+      amountB = Rational(
+        subedPendingAmountS * order.amountB,
+        order.amountS
+      ).bigintValue(),
+      amountFee = Rational(
+        subedPendingAmountS * order.amountFee,
+        order.amountS
+      ).bigintValue()
     )))
 
-    if (dustEvaluator.isDust(taker)) {
-      return SubmitOrderResult(rings = rings, fullyMatchedOrderIds = fullyMatchedOrderIds)
+    if (dustOrderEvaluator.isDust(taker)) {
+      fullyMatchedOrderIds :+= taker.id
+      return SubmitOrderResult(rings, fullyMatchedOrderIds)
     }
-
-    recursivelyMatchOrder()
 
     @tailrec
     def recursivelyMatchOrder(): Unit = {
@@ -108,28 +115,30 @@ class MarketManagerImpl(
           taker = ring.taker.order
           val updatedMaker = ring.maker.order
 
-          if (dustEvaluator.isDust(updatedMaker)) {
+          if (dustOrderEvaluator.isDust(updatedMaker)) {
             fullyMatchedOrderIds :+= updatedMaker.id
           } else {
             makerOrdersRecyclable :+= updatedMaker
           }
 
-          if (dustEvaluator.isDust(taker)) {
+          if (dustOrderEvaluator.isDust(taker)) {
             fullyMatchedOrderIds :+= taker.id
           } else {
             recursivelyMatchOrder()
           }
 
         case None ⇒
-          if (!dustEvaluator.isDust(taker)) {
+          if (!dustOrderEvaluator.isDust(taker)) {
             addToSide(taker)
           }
       }
     }
 
+    recursivelyMatchOrder()
+
     makerOrdersRecyclable.foreach(addToSide)
 
-    rings foreach pendingRingPool.addRing
+    rings.foreach(pendingRingPool.addRing)
 
     SubmitOrderResult(rings, fullyMatchedOrderIds)
   }
@@ -139,14 +148,14 @@ class MarketManagerImpl(
   }
 
   private def takeTopMaker(order: Order): Option[Order] = {
-    val orders = if (marketId.primary == order.tokenS) asks else bids
-    val headOption = orders.headOption
-    headOption match {
-      case None ⇒ None
-      case Some(head) ⇒
+    val orders = sides(order.tokenB)
+
+    orders.headOption.map {
+      head ⇒
         orders.remove(head)
-        headOption
+        head
     }
+
   }
 
 }

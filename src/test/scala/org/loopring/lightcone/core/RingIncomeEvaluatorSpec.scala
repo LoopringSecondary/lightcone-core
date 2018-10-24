@@ -64,7 +64,7 @@ class RingIncomeEvaluatorSpec extends FlatSpec with Matchers {
         pending = OrderState(amountS = 100, amountFee = 100)
       )
     )
-    val income1 = incomeEvaluator.getFiatIncomeValue(ring)
+    val income1 = incomeEvaluator.getIncomeFiatValue(ring)
     //总共收取200lrc，收益应该为0.8*200*(1-0.2)*(1-0.05) = 121.6
     println(income1)
     assert(income1 == 121.6)
@@ -83,7 +83,7 @@ class RingIncomeEvaluatorSpec extends FlatSpec with Matchers {
         pending = OrderState(amountS = 100, amountFee = 0)
       )
     )
-    val income1 = incomeEvaluator.getFiatIncomeValue(ring)
+    val income1 = incomeEvaluator.getIncomeFiatValue(ring)
     //应该收取1eth,100lrc, 1400*1 + 0.8*100 = 1480
     println(income1)
     assert(income1 == 1480)
@@ -101,7 +101,7 @@ class RingIncomeEvaluatorSpec extends FlatSpec with Matchers {
         pending = OrderState(amountS = 100, amountFee = 100)
       )
     )
-    val income1 = incomeEvaluator.getFiatIncomeValue(ring)
+    val income1 = incomeEvaluator.getIncomeFiatValue(ring)
     //应该收取1eth,100lrc, 1400*1 + 0.8*100 + 0.8*200*(1-0.2)*(1-0.05) = 1601.6
     println(income1)
     assert(income1 == 1601.6)
@@ -119,7 +119,7 @@ class RingIncomeEvaluatorSpec extends FlatSpec with Matchers {
         pending = OrderState(amountS = 100, amountFee = 0)
       )
     )
-    val income1 = incomeEvaluator.getFiatIncomeValue(ring)
+    val income1 = incomeEvaluator.getIncomeFiatValue(ring)
     //应该收取1eth,100lrc, 1400*1 + 0.8*100 + 0.8*200*(1-0.2)*(1-0.05) = 1601.6
     println(income1)
     assert(incomeEvaluator.isProfitable(ring))
