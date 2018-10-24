@@ -37,7 +37,7 @@ class MarketManagerSpec extends FlatSpec with Matchers {
   implicit val pendingRingPool = new PendingRingPoolImpl()
   var marketManager = new MarketManagerImpl(
     MarketId(lrc, eth),
-    MarketManagerConfig(0, 0, 0, 0),
+    MarketManagerConfig(0, 0),
     simpleMatcher
   )
 
@@ -177,7 +177,7 @@ class MarketManagerSpec extends FlatSpec with Matchers {
   "submitHugeOrder" should "huge orders" in {
     marketManager = new MarketManagerImpl(
       MarketId(lrc, eth),
-      MarketManagerConfig(0, 0, 0, 0),
+      MarketManagerConfig(0, 0),
       simpleMatcher
     )
     val startTime = System.currentTimeMillis()
@@ -197,6 +197,8 @@ class MarketManagerSpec extends FlatSpec with Matchers {
         marketManager.submitOrder(maker)
       }
     )
+    info(marketManager.bids.size.toString)
+    info(marketManager.asks.size.toString)
     info("time of submit 10000 :" + (System.currentTimeMillis() - startTime))
     val taker = Order(
       "taker",
@@ -214,4 +216,89 @@ class MarketManagerSpec extends FlatSpec with Matchers {
     info(res.toString)
   }
 
+  "removeOrder" should "remove order" in {
+    marketManager = new MarketManagerImpl(
+      MarketId(lrc, eth),
+      MarketManagerConfig(0, 0),
+      simpleMatcher
+    )
+    val startTime = System.currentTimeMillis()
+    val size = 10
+    (0 until size) foreach (
+      i ⇒ {
+        val maker = Order(
+          id = "maker-" + i,
+          tokenS = lrc,
+          tokenB = eth,
+          tokenFee = lrc,
+          amountS = 100,
+          amountB = 10,
+          amountFee = 10,
+          walletSplitPercentage = 0.2,
+          _matchable = Some(OrderState(amountS = 100, amountB = 10, amountFee = 10))
+        )
+        marketManager.submitOrder(maker)
+      }
+    )
+    val order = Order(
+      id = "maker-1",
+      tokenS = lrc,
+      tokenB = eth,
+      tokenFee = lrc,
+      amountS = 100,
+      amountB = 10,
+      amountFee = 10,
+      walletSplitPercentage = 0.2,
+      _matchable = Some(OrderState(amountS = 100, amountB = 10, amountFee = 10))
+    )
+    val res = marketManager.deleteOrder(order)
+    info(res.toString)
+    assert(res)
+    assert(marketManager.bids.size == size - 1)
+    assert(marketManager.asks.isEmpty)
+  }
+
+  "triggerMatch" should "rematch orders" in {
+    marketManager = new MarketManagerImpl(
+      MarketId(lrc, eth),
+      MarketManagerConfig(0, 0),
+      simpleMatcher
+    )
+    val startTime = System.currentTimeMillis()
+    val size = 10
+    (0 until size) foreach (
+      i ⇒ {
+        val maker = Order(
+          id = "maker-" + i,
+          tokenS = lrc,
+          tokenB = eth,
+          tokenFee = lrc,
+          amountS = 100,
+          amountB = 10,
+          amountFee = 10,
+          walletSplitPercentage = 0.2,
+          _matchable = Some(OrderState(amountS = 100, amountB = 10, amountFee = 10))
+        )
+        val taker = Order(
+          id = "taker-" + i,
+          tokenS = eth,
+          tokenB = lrc,
+          tokenFee = lrc,
+          amountS = 10,
+          amountB = 100,
+          amountFee = 10,
+          walletSplitPercentage = 0.2,
+          _matchable = Some(OrderState(amountS = 10, amountB = 100, amountFee = 10))
+        )
+        marketManager.bids.add(maker)
+        marketManager.asks.add(taker)
+      }
+    )
+    assert(marketManager.bids.size == size)
+    assert(marketManager.asks.size == size)
+
+    marketManager.triggerMatch()
+    assert(marketManager.bids.isEmpty)
+    assert(marketManager.asks.isEmpty)
+  }
 }
