@@ -16,8 +16,43 @@
 
 package org.loopring.lightcone.core
 
+
 trait TokenValueEstimator {
   def getFiatValue(token: Address, amount: Amount): Double
 
   def getBurnRate(token: Address): Double
+
+  def canGetMarketcap(token: Address): Boolean
 }
+
+class TokenValueEstimatorImpl extends TokenValueEstimator {
+
+  var tokens = Map[Address, BigInt]()
+
+  var marketcaps = Map[Address, Double]()
+
+  var burnRates = Map[Address, Double]()
+
+  def resetTokens(tokens: Map[Address, BigInt]): Unit = {
+    this.tokens = tokens
+  }
+
+  def resetMarketcaps(marketcaps: Map[Address, Double]): Unit = {
+    this.marketcaps = marketcaps
+  }
+
+  def resetBurnRates(burnRates: Map[Address, Double]): Unit = {
+    this.burnRates = burnRates
+  }
+
+  override def getFiatValue(token: Address, amount: Amount): Double = {
+    val decimal = tokens.getOrElse(token, BigInt(1))
+    val price = marketcaps.getOrElse(token, 0.0)
+    price * amount.doubleValue() / decimal.doubleValue()
+  }
+
+  override def getBurnRate(token: Address): Double = burnRates.getOrElse(token, 0.05)
+
+  override def canGetMarketcap(token: Address): Boolean = tokens.contains(token) && marketcaps.contains(token)
+}
+
