@@ -59,8 +59,7 @@ final private[core] class OrderManagerImpl(
 
     orderPool += order.as(NEW)
 
-    if (order.callTokenSThenRemoveOrders(_.reserve(order.id)) ||
-      order.callTokenFeeThenRemoveOrders(_.reserve(order.id))) {
+    if (order.callTokenSAndFeeThenRemoveOrders(_.reserve(order.id))) {
       return false
     }
 
@@ -72,8 +71,7 @@ final private[core] class OrderManagerImpl(
     orderPool.getOrder(orderId) match {
       case None ⇒ false
       case Some(order) ⇒
-        order.callTokenSThenRemoveOrders(_.release(orderId), CANCELLED_BY_USER)
-        order.callTokenFeeThenRemoveOrders(_.release(orderId), CANCELLED_BY_USER)
+        order.callTokenSAndFeeThenRemoveOrders(_.release(orderId))
         tryRemoveOrder(orderId, CANCELLED_BY_USER)
         true
     }
@@ -85,8 +83,7 @@ final private[core] class OrderManagerImpl(
       case None ⇒ false
       case Some(order) ⇒
         orderPool += order.withOutstandingAmountS(outstandingAmountS)
-        order.callTokenSThenRemoveOrders(_.adjust(orderId))
-        order.callTokenFeeThenRemoveOrders(_.adjust(orderId))
+        order.callTokenSAndFeeThenRemoveOrders(_.adjust(orderId))
         true
     }
   }
@@ -110,35 +107,30 @@ final private[core] class OrderManagerImpl(
     def onTokenFee[R](method: TM ⇒ R): R =
       method(tokens(order.tokenFee))
 
-    def callTokenSThenRemoveOrders(
-      method: TM ⇒ Set[ID],
-      status: OrderStatus = CANCELLED_LOW_BALANCE
+    private def callTokenS_(method: TM ⇒ Map[ID, OrderStatus]) =
+      onTokenS[Map[ID, OrderStatus]](method)
+
+    private def callTokenFee_(method: TM ⇒ Map[ID, OrderStatus]) =
+      onTokenFee[Map[ID, OrderStatus]](method)
+
+    // 删除订单应该有以下几种情况:
+    // 1.用户主动删除订单
+    // 2.订单成交后变成灰尘单
+    // 3.用户账户tokenS balance不足或tokenFee balance不足
+    // (除了用户主动操作以外,其他的删除动作都由tokenManager引发)
+    // tokenManager的release动作不能由tokenManager本身调用,
+    // 只能由orderManager根据并汇总tokenS&tokenFee情况后删除,
+    // 删除时tokenS&tokenFee都要删,不能只留一个
+    def callTokenSAndFeeThenRemoveOrders(
+      method: TM ⇒ Map[ID, OrderStatus]
     ): Boolean = {
-      val deleted = callTokenS_(method).map { id ⇒
+      (callTokenS_(method) ++ callTokenFee_(method)).map(x ⇒ {
+        val id = x._1
         callTokenS_(_.release(id))
-        tryRemoveOrder(id, status)
-      }
-
-      deleted.size > 0
-    }
-
-    def callTokenFeeThenRemoveOrders(
-      method: TM ⇒ Set[ID],
-      status: OrderStatus = CANCELLED_LOW_FEE_BALANCE
-    ): Boolean = {
-      val deleted = callTokenFee_(method).map { id ⇒
         callTokenFee_(_.release(id))
-        tryRemoveOrder(id, status)
-      }
-
-      deleted.size > 0
+        tryRemoveOrder(id, x._2)
+      }).size > 0
     }
-
-    private def callTokenS_(method: TM ⇒ Set[ID]) =
-      onTokenS[Set[ID]](method)
-
-    private def callTokenFee_(method: TM ⇒ Set[ID]) =
-      onTokenFee[Set[ID]](method)
 
   }
 

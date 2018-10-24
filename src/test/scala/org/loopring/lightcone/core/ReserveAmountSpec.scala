@@ -17,40 +17,19 @@
 package org.loopring.lightcone.core
 
 import org.scalatest._
-
+import helper._
 class ReserveAmountSpec extends FlatSpec with Matchers {
 
   info("[sbt core/'testOnly *ReserveAmountSpec']")
 
-  implicit val orderPool = new OrderPool()
-
-  var receivedOrders = Map.empty[String, Order]
-
-  orderPool.addCallback(
-    (order: Order) ⇒ {
-      receivedOrders += order.id -> order
-    }
-  )
-
-  val manager = OrderManager.default()
-  val lrc = "LRC"
-  val xyz = "XYZ"
-  val gto = "GTO"
-
-  manager.addTokenManager(new TokenManager(lrc))
-  manager.addTokenManager(new TokenManager(xyz))
-  manager.addTokenManager(new TokenManager(gto))
-
-  val lrcTokenManager = manager.getTokenManager(lrc)
-  val xyzTokenManager = manager.getTokenManager(xyz)
-  val gtoTokenManager = manager.getTokenManager(gto)
-
-  lrcTokenManager.init(1000, 1000)
-  xyzTokenManager.init(1000, 1000)
-  gtoTokenManager.init(1000, 1000)
-
   // 情况1:tokenFee only, allowance充足
   "simpleTest1" should "calculate reserve amount" in {
+    val (manager, orderPool, lrcTokenManager, xyzTokenManager, gtoTokenManager) = prepare
+
+    lrcTokenManager.init(1000, 1000)
+    xyzTokenManager.init(1000, 1000)
+    gtoTokenManager.init(1000, 1000)
+
     val order = Order(
       "order",
       gto,
@@ -70,6 +49,12 @@ class ReserveAmountSpec extends FlatSpec with Matchers {
 
   // 情况2: tokenFee only, allowance不足
   "simpleTest2" should "calculate reserve amount" in {
+    val (manager, orderPool, lrcTokenManager, xyzTokenManager, gtoTokenManager) = prepare
+
+    lrcTokenManager.init(1000, 1000)
+    xyzTokenManager.init(1000, 1000)
+    gtoTokenManager.init(1000, 1000)
+
     val order = Order(
       "order",
       gto,
@@ -89,6 +74,12 @@ class ReserveAmountSpec extends FlatSpec with Matchers {
 
   // 情况3: tokenFee == tokenS, allowance充足
   "simpleTest3" should "calculate reserve amount" in {
+    val (manager, orderPool, lrcTokenManager, xyzTokenManager, gtoTokenManager) = prepare
+
+    lrcTokenManager.init(1000, 1000)
+    xyzTokenManager.init(1000, 1000)
+    gtoTokenManager.init(1000, 1000)
+
     val order = Order(
       "order",
       lrc,
@@ -110,6 +101,12 @@ class ReserveAmountSpec extends FlatSpec with Matchers {
 
   // 情况4: tokenFee == tokenS, allowance不足
   "simpleTest4" should "calculate reserve amount" in {
+    val (manager, orderPool, lrcTokenManager, xyzTokenManager, gtoTokenManager) = prepare
+
+    lrcTokenManager.init(1000, 1000)
+    xyzTokenManager.init(1000, 1000)
+    gtoTokenManager.init(1000, 1000)
+
     val order = Order(
       "order",
       lrc,
@@ -131,6 +128,12 @@ class ReserveAmountSpec extends FlatSpec with Matchers {
 
   // 情况5: tokenFee == tokenB, allowance充足
   "simpleTest5" should "calculate reserve amount" in {
+    val (manager, orderPool, lrcTokenManager, xyzTokenManager, gtoTokenManager) = prepare
+
+    lrcTokenManager.init(1000, 1000)
+    xyzTokenManager.init(1000, 1000)
+    gtoTokenManager.init(1000, 1000)
+
     val order = Order(
       "order",
       lrc,
@@ -148,6 +151,12 @@ class ReserveAmountSpec extends FlatSpec with Matchers {
 
   // 情况6: tokenFee == tokenB, allowance不足
   "simpleTest6" should "calculate reserve amount" in {
+    val (manager, orderPool, lrcTokenManager, xyzTokenManager, gtoTokenManager) = prepare
+
+    lrcTokenManager.init(1000, 1000)
+    xyzTokenManager.init(1000, 1000)
+    gtoTokenManager.init(1000, 1000)
+
     val order = Order(
       "order",
       lrc,

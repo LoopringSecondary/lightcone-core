@@ -16,36 +16,20 @@
 
 package org.loopring.lightcone.core
 
+import helper._
 import org.scalatest._
 
 class TokenSizeSpec extends FlatSpec with Matchers {
 
-  implicit val orderPool = new OrderPool()
-
-  var receivedOrders = Map.empty[String, Order]
-
-  orderPool.addCallback(
-    (order: Order) ⇒ {
-      receivedOrders += order.id -> order
-    }
-  )
-
-  val manager = OrderManager.default()
-  val lrc = "LRC"
-  val xyz = "XYZ"
-  val gto = "GTO"
-
-  manager.addTokenManager(new TokenManager(lrc))
-  manager.addTokenManager(new TokenManager(xyz))
-  manager.addTokenManager(new TokenManager(gto))
-
-  val lrcTokenManager = manager.getTokenManager(lrc)
-  val xyzTokenManager = manager.getTokenManager(xyz)
-  val gtoTokenManager = manager.getTokenManager(gto)
+  info("[sbt core/'testOnly *TokenSizeSpec -- -z testTokenSize']")
 
   // tokenManager订单size测试
   "testTokenSize" should "add new TokenManager" in {
-    info("[sbt core/'testOnly *TokenSizeSpec -- -z testTokenSize']")
+    val (manager, orderPool, lrcTokenManager, xyzTokenManager, gtoTokenManager) = prepare
+
+    lrcTokenManager.init(1000, 1000)
+    xyzTokenManager.init(1000, 1000)
+    gtoTokenManager.init(1000, 1000)
 
     lrcTokenManager.init(100, 200)
 
@@ -60,7 +44,7 @@ class TokenSizeSpec extends FlatSpec with Matchers {
     )
     manager.submitOrder(order)
 
-    receivedOrders.getOrElse("order1", order).status should be(OrderStatus.PENDING)
+    orderPool.getOrder(order.id).get.status should be(OrderStatus.PENDING)
   }
 
 }
