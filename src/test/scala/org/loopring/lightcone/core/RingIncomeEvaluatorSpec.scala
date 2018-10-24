@@ -108,8 +108,22 @@ class RingIncomeEvaluatorSpec extends FlatSpec with Matchers {
   }
 
   "isProfitable" should "test isProfitable" in {
-    //只计算lrcfee时的收益,amountMargin = 0, amountFee = 100
     val ring = Ring(
+      makerExpectFill.copy(
+        amountMargin = 0,
+        pending = OrderState(amountS = 100, amountFee = 10)
+      ),
+      takerExpectFill.copy(
+        amountMargin = 0,
+        pending = OrderState(amountS = 100, amountFee = 10)
+      )
+    )
+    val income = incomeEvaluator.getIncomeFiatValue(ring)
+    //    0.8*20*(1-0.2)*(1-0.05) = 12.16
+    println(income)
+    assert(incomeEvaluator.isProfitable(ring))
+
+    val ring1 = Ring(
       makerExpectFill.copy(
         amountMargin = 0,
         pending = OrderState(amountS = 100, amountFee = 10)
@@ -120,9 +134,9 @@ class RingIncomeEvaluatorSpec extends FlatSpec with Matchers {
       )
     )
     val income1 = incomeEvaluator.getIncomeFiatValue(ring)
-    //应该收取1eth,100lrc, 1400*1 + 0.8*100 + 0.8*200*(1-0.2)*(1-0.05) = 1601.6
+    //    0.8*10*(1-0.2)*(1-0.05) = 6.08
     println(income1)
-    assert(incomeEvaluator.isProfitable(ring))
+    assert(!incomeEvaluator.isProfitable(ring1))
   }
 
 }
