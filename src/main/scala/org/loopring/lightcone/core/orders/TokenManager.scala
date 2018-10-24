@@ -32,7 +32,7 @@ private[core] case class Reservation(
     accumulatedAllowance: Amount
 )
 
-private[core] class TokenManager(
+class TokenManager(
     val token: Address,
     val maxNumOrders: Int = 1000
 )(
