@@ -24,8 +24,8 @@ class RingMatcherSpec extends FlatSpec with Matchers {
   val eth = "ETH"
 
   implicit val tve = new TokenValueEstimatorImpl()
-  tve.resetMarketcaps(Map[Address,Double](lrc→0.8, eth→1400))
-  tve.resetTokens(Map[Address,BigInt](lrc→BigInt(1), eth→BigInt(1)))
+  tve.setMarketCaps(Map[Address, Double](lrc → 0.8, eth → 1400))
+  tve.setTokens(Map[Address, BigInt](lrc → BigInt(1), eth → BigInt(1)))
 
   val incomeEvaluator = new RingIncomeEstimatorImpl(10)
   val simpleMatcher = new SimpleRingMatcher(incomeEvaluator)

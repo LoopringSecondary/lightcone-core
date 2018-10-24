@@ -33,7 +33,7 @@ case class ExpectedFill(
      */
     val rate = (1 - order.walletSplitPercentage) * (1 - tve.getBurnRate(order.tokenFee))
     val fiatFee = rate * tve.getFiatValue(order.tokenFee, pending.amountFee)
-    val fiatMargin = if (tve.canGetMarketcap(order.tokenS)) {
+    val fiatMargin = if (tve.canGetMarketCap(order.tokenS)) {
       tve.getFiatValue(order.tokenS, amountMargin)
     } else {
       val amountBMargin = Rational(amountMargin * order.amountS, order.amountB).bigintValue()
