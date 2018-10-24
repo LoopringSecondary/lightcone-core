@@ -42,9 +42,13 @@ class TokenValueEstimatorImpl extends TokenValueEstimator {
   }
 
   def getFiatValue(token: Address, amount: Amount): Double = {
-    val decimal = tokens.getOrElse(token, BigInt(1))
-    val price = marketcaps.getOrElse(token, 0.0)
-    price * amount.doubleValue() / decimal.doubleValue()
+    if (amount.signum <= 0) {
+      0
+    } else {
+      val decimal = tokens.getOrElse(token, BigInt(1))
+      val price = marketcaps.getOrElse(token, 0.0)
+      price * amount.doubleValue() / decimal.doubleValue()
+    }
   }
 
   def getBurnRate(token: Address): Double = burnRates.getOrElse(token, 0.05)
