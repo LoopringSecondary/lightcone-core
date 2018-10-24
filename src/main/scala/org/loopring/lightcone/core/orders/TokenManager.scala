@@ -151,7 +151,7 @@ class TokenManager(
       val order = orderPool(r.orderId)
       val requestedAmount = order.requestedAmount
 
-      val status = validateOrderStatus(order, requestedAmount)
+      val status = calculateOrderStatus(order, requestedAmount)
       if (status != OrderStatus.PENDING) {
         ordersToDelete += order.id -> status
         idxMap -= order.id
@@ -193,7 +193,7 @@ class TokenManager(
   // 如果requestAmountS是灰尘,那么requestAmountFee也应该是灰尘
   // 反过来, 如果requestAmountFee是灰尘单，requestAmountS却不一定是灰尘单
   // 这里, 我们对灰尘单的判定仅限于tokenS, 同时考虑账户余额是否充足的问题
-  private def validateOrderStatus(order: Order, requestedAmount: Amount): OrderStatus =
+  private def calculateOrderStatus(order: Order, requestedAmount: Amount): OrderStatus =
     if (availableBalance < requestedAmount) {
       if (token == order.tokenS)
         OrderStatus.CANCELLED_LOW_BALANCE
@@ -202,7 +202,7 @@ class TokenManager(
     } else if (token == order.tokenS && dustEvaluator.isDust(token, availableBalance)) {
       OrderStatus.CANCELLED_LOW_BALANCE
     } else if (token == order.tokenS && dustEvaluator.isDust(token, requestedAmount)) {
-      OrderStatus.FINISHED
+      OrderStatus.COMPLETELY_FILLED
     } else {
       OrderStatus.PENDING
     }

@@ -18,6 +18,7 @@ package org.loopring.lightcone.core
 
 trait DustOrderEvaluator {
   def isDust(order: Order): Boolean
+  def isDust(token: Address, amount: Amount): Boolean
 }
 
 class DustOrderEvaluatorImpl(threshold: Double)(
@@ -29,5 +30,10 @@ class DustOrderEvaluatorImpl(threshold: Double)(
   def isDust(order: Order): Boolean = {
     val fiatValue = tve.getFiatValue(order.tokenS, order.matchable.amountS)
     fiatValue < threshold
+  }
+
+  // todo: 判断订单余额/账户金额是否可用
+  def isDust(token: Address, amount: Amount): Boolean = {
+    amount <= 0
   }
 }
