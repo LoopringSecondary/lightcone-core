@@ -22,7 +22,13 @@ case class OrderState(
     amountS: Amount = 0,
     amountB: Amount = 0,
     amountFee: Amount = 0
-)
+) {
+  def scaleBy(ratio: Rational) = OrderState(
+    (Rational(amountS) * ratio).bigintValue,
+    (Rational(amountB) * ratio).bigintValue,
+    (Rational(amountFee) * ratio).bigintValue
+  )
+}
 
 // 注意!!!! 收益不能保证时,合约等比例计算,分母中不包含amountB
 case class Order(
