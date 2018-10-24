@@ -19,7 +19,6 @@ package org.loopring.lightcone.core
 import org.slf4s.Logging
 
 import scala.annotation.tailrec
-import scala.collection.mutable
 import scala.collection.mutable.SortedSet
 
 // For ABC-XYZ market, ABC is secondary, XYZ is primary
@@ -184,7 +183,7 @@ class MarketManagerImpl(
     popOrder(sides(order.tokenB))
   }
 
-  private def popOrder(side: mutable.SortedSet[Order]) = {
+  private def popOrder(side: SortedSet[Order]) = {
     side.headOption.map {
       head ⇒
         side.remove(head)
