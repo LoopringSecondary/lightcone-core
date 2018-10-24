@@ -28,16 +28,18 @@ case class ExpectedFill(
   def id = order.id
 
   def getIncomeFiatValue()(implicit tve: TokenValueEstimator) = {
-    val tokenFee = order.tokenFee
-    val rate = (1 - order.walletSplitPercentage) * (1 - tve.getBurnRate(tokenFee))
-    rate * tve.getFiatValue(
-      tokenFee,
-      pending.amountFee
-    ) +
-      tve.getFiatValue(
-        order.tokenS,
-        amountMargin
-      )
+    /** 当不包含tokenFee时，无法转换，则返回0
+     *  当不包含tokenS时，需要使用tokenB计算
+     */
+    val rate = (1 - order.walletSplitPercentage) * (1 - tve.getBurnRate(order.tokenFee))
+    val fiatFee = rate * tve.getFiatValue(order.tokenFee, pending.amountFee)
+    val fiatMargin = if (tve.canGetMarketCap(order.tokenS)) {
+      tve.getFiatValue(order.tokenS, amountMargin)
+    } else {
+      val amountBMargin = Rational(amountMargin * order.amountS, order.amountB).bigintValue()
+      tve.getFiatValue(order.tokenB, amountBMargin)
+    }
+    fiatFee + fiatMargin
   }
 }
 
