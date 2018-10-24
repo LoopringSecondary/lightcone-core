@@ -29,8 +29,8 @@ case class ExpectedFill(
 
   def getIncomeFiatValue()(implicit tve: TokenValueEstimator) = {
     /** 当不包含tokenFee时，无法转换，则返回0
-      *  当不包含tokenS时，需要使用tokenS计算
-      */
+     *  当不包含tokenS时，需要使用tokenB计算
+     */
     val rate = (1 - order.walletSplitPercentage) * (1 - tve.getBurnRate(order.tokenFee))
     val fiatFee = rate * tve.getFiatValue(order.tokenFee, pending.amountFee)
     val fiatMargin = if (tve.canGetMarketcap(order.tokenS)) {
