@@ -16,29 +16,16 @@
 
 package org.loopring.lightcone.core
 
+import helper._
 import org.scalatest._
 
 class AdjustOrderSpec extends FlatSpec with Matchers {
 
   info("[sbt core/'testOnly *AdjustOrderSpec']")
 
-  implicit val dustEvaluator = new DustEvaluatorImpl()
-  implicit val orderPool = new OrderPool()
-
-  val manager = OrderStateManager.default()
-  val lrc = "LRC"
-  val xyz = "XYZ"
-  val gto = "GTO"
-
-  manager.addTokenManager(new TokenManager(lrc))
-  manager.addTokenManager(new TokenManager(xyz))
-  manager.addTokenManager(new TokenManager(gto))
-
-  val lrcTokenManager = manager.getTokenManager(lrc)
-  val xyzTokenManager = manager.getTokenManager(xyz)
-  val gtoTokenManager = manager.getTokenManager(gto)
-
   "simpleTest1" should "submit order and fill partitial" in {
+    val (manager, orderPool, lrcTokenManager, xyzTokenManager, gtoTokenManager) = prepare
+
     lrcTokenManager.init(200, 200)
     xyzTokenManager.init(200, 200)
     gtoTokenManager.init(200, 200)
@@ -59,11 +46,12 @@ class AdjustOrderSpec extends FlatSpec with Matchers {
     val state = orderPool(order.id)
     state.requestedAmount()(lrc) should be(60)
     state.reservedAmount()(lrc) should be(60)
-    manager.cancelOrder(order.id)
   }
 
   // 提交订单后完全成交,看订单是否在tokenS&tokenFee manager中是否都删除了
   "simpleTest2" should "submit order and fill partitial" in {
+    val (manager, orderPool, lrcTokenManager, xyzTokenManager, gtoTokenManager) = prepare
+
     lrcTokenManager.init(200, 200)
     xyzTokenManager.init(200, 200)
     gtoTokenManager.init(200, 200)
@@ -111,6 +99,8 @@ class AdjustOrderSpec extends FlatSpec with Matchers {
   // balance&allowance不变
   // availableBalance&availableAllowance对应增加order2成交量
   "complexTest1" should "submit orders then fill one of them" in {
+    val (manager, orderPool, lrcTokenManager, xyzTokenManager, gtoTokenManager) = prepare
+
     lrcTokenManager.init(200, 200)
     xyzTokenManager.init(200, 200)
     gtoTokenManager.init(200, 200)
@@ -180,10 +170,6 @@ class AdjustOrderSpec extends FlatSpec with Matchers {
     reservation3.orderId should be(order3.id)
     reservation3.accumulatedBalance should be(130)
     reservation3.accumulatedAllowance should be(130)
-
-    manager.cancelOrder(order1.id)
-    manager.cancelOrder(order2.id)
-    manager.cancelOrder(order3.id)
   }
 
   // 部分成交2:
@@ -194,6 +180,8 @@ class AdjustOrderSpec extends FlatSpec with Matchers {
   // balance&allowance不变
   // availableBalance&availableAllowance对应增加order2成交量
   "complexTest2" should "submit orders then fill one of them" in {
+    val (manager, orderPool, lrcTokenManager, xyzTokenManager, gtoTokenManager) = prepare
+
     lrcTokenManager.init(200, 100)
     xyzTokenManager.init(200, 200)
     gtoTokenManager.init(200, 200)
@@ -263,10 +251,6 @@ class AdjustOrderSpec extends FlatSpec with Matchers {
     reservation3.orderId should be(order3.id)
     reservation3.accumulatedBalance should be(170)
     reservation3.accumulatedAllowance should be(100)
-
-    manager.cancelOrder(order1.id)
-    manager.cancelOrder(order2.id)
-    manager.cancelOrder(order3.id)
   }
 
   // 完全成交
