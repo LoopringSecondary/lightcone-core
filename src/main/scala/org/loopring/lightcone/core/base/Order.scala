@@ -36,10 +36,10 @@ case class Order(
     createdAt: Long = -1,
     status: OrderStatus = NEW,
     walletSplitPercentage: Double = 0,
-    private[core] val _outstanding: Option[OrderState] = None,
-    private[core] val _reserved: Option[OrderState] = None,
-    private[core] val _actual: Option[OrderState] = None,
-    private[core] val _matchable: Option[OrderState] = None
+    _outstanding: Option[OrderState] = None,
+    _reserved: Option[OrderState] = None,
+    _actual: Option[OrderState] = None,
+    _matchable: Option[OrderState] = None
 ) {
 
   lazy val outstanding = _outstanding.getOrElse(OrderState(amountS, amountB, amountFee)) // originAmount - dealtAndCancel

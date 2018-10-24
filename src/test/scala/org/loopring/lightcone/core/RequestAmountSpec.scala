@@ -16,39 +16,18 @@
 
 package org.loopring.lightcone.core
 
+import helper._
 import org.scalatest._
 
 class RequestAmountSpec extends FlatSpec with Matchers {
 
   info("[sbt core/'testOnly *RequestAmountSpec']")
 
-  implicit val dustEvaluator = new DustEvaluatorImpl()
-  implicit val orderPool = new OrderPool()
-
-  var receivedOrders = Map.empty[String, Order]
-
-  orderPool.addCallback(
-    (order: Order) ⇒ {
-      receivedOrders += order.id -> order
-    }
-  )
-
-  val manager = OrderStateManager.default()
-  val lrc = "LRC"
-  val xyz = "XYZ"
-  val gto = "GTO"
-
-  manager.addTokenManager(new TokenManager(lrc))
-  manager.addTokenManager(new TokenManager(xyz))
-  manager.addTokenManager(new TokenManager(gto))
-
-  val lrcTokenManager = manager.getTokenManager(lrc)
-  val xyzTokenManager = manager.getTokenManager(xyz)
-  val gtoTokenManager = manager.getTokenManager(gto)
-
   // 多种情况测试orderRequest
   // 注意: tokenManager在判断requestedAmount时,允许等于
   "testRequestAmount" should "cancel order" in {
+    val (manager, orderPool, lrcTokenManager, xyzTokenManager, gtoTokenManager) = prepare
+
     lrcTokenManager.init(100, 200)
     xyzTokenManager.init(100, 200)
     gtoTokenManager.init(100, 200)

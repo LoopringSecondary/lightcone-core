@@ -16,9 +16,9 @@
 
 package org.loopring.lightcone.core
 
-import scala.collection.mutable.SortedSet
 import org.slf4s.Logging
 import scala.annotation.tailrec
+import scala.collection.mutable.SortedSet
 
 // For ABC-XYZ market, ABC is secondary, XYZ is primary
 case class MarketId(
@@ -40,7 +40,7 @@ object MarketManagerImpl {
       else if (a.rate > b.rate) 1
       else if (a.createdAt < b.createdAt) -1
       else if (a.createdAt > b.createdAt) 1
-      else 0
+      else a.id compare b.id //在rate和createAt相同时，根据id排序，否则会丢单
     }
   }
 }
@@ -52,8 +52,10 @@ class MarketManagerImpl(
 )(
     implicit
     pendingRingPool: PendingRingPool,
-    orderPool: OrderPool
+    orderPool: OrderPool,
+    dustOrderEvaluator: DustOrderEvaluator
 ) extends MarketManager with Logging {
+
   import MarketManagerImpl._
   import MatchingFailure._
 
@@ -67,23 +69,43 @@ class MarketManagerImpl(
     log.debug(s"taker order: $order")
 
     var rings = Seq.empty[Ring]
-    var skippedOrders = Seq.empty[Order]
+    var makerOrdersRecyclable = Seq.empty[Order]
     var fullyMatchedOrderIds = Seq.empty[ID]
-    var taker = order
 
+    val subedPendingAmountS =
+      order.matchable.amountS -
+        pendingRingPool.getOrderPendingAmountS(order.id)
+
+    var taker = order.copy(_matchable = Some(OrderState(
+      amountS = subedPendingAmountS,
+      amountB = Rational(
+        subedPendingAmountS * order.amountB,
+        order.amountS
+      ).bigintValue(),
+      amountFee = Rational(
+        subedPendingAmountS * order.amountFee,
+        order.amountS
+      ).bigintValue()
+    )))
+
+    if (dustOrderEvaluator.isDust(taker)) {
+      fullyMatchedOrderIds :+= taker.id
+      return SubmitOrderResult(rings, fullyMatchedOrderIds)
+    }
+
+    @tailrec
     def recursivelyMatchOrder(): Unit = {
       val matchResult = for {
-        taker ← Some(taker)
         maker ← takeTopMaker(taker)
       } yield (maker, ringMatcher.matchOrders(taker, maker))
 
       matchResult match {
         case Some((maker, Left(failure))) ⇒ failure match {
           case ORDERS_NOT_TRADABLE ⇒
-            skippedOrders :+= maker
+            makerOrdersRecyclable :+= maker
 
           case INCOME_TOO_SMALL ⇒
-            skippedOrders :+= maker
+            makerOrdersRecyclable :+= maker
             recursivelyMatchOrder()
         }
 
@@ -93,57 +115,47 @@ class MarketManagerImpl(
           taker = ring.taker.order
           val updatedMaker = ring.maker.order
 
-          if (isDust(updatedMaker)) {
+          if (dustOrderEvaluator.isDust(updatedMaker)) {
             fullyMatchedOrderIds :+= updatedMaker.id
           } else {
-            skippedOrders :+= updatedMaker
+            makerOrdersRecyclable :+= updatedMaker
           }
 
-          if (isDust(taker)) {
+          if (dustOrderEvaluator.isDust(taker)) {
             fullyMatchedOrderIds :+= taker.id
           } else {
             recursivelyMatchOrder()
           }
 
         case None ⇒
-          if (!isDust(taker)) {
-            skippedOrders :+= taker
+          if (!dustOrderEvaluator.isDust(taker)) {
+            addToSide(taker)
           }
       }
     }
 
-    // TODO(hongyu): choose side
-    val side = bids // or ask
-    skippedOrders.foreach(side += _)
+    recursivelyMatchOrder()
+
+    makerOrdersRecyclable.foreach(addToSide)
+
+    rings.foreach(pendingRingPool.addRing)
 
     SubmitOrderResult(rings, fullyMatchedOrderIds)
   }
 
-  private def isDust(order: Order): Boolean = false
+  private def addToSide(order: Order) = {
+    sides(order.tokenS).add(order)
+  }
 
   private def takeTopMaker(order: Order): Option[Order] = {
-    None
-    // var matchableAmountS: Amount = 0
+    val orders = sides(order.tokenB)
 
-    // def filterMethod(order: Order) = {
-    //   val pendingAmountS = pendingRingPool.getOrderPendingAmountS(order.id)
-    //   matchableAmountS = order.actual.amountS - pendingAmountS
-    //   matchableAmountS > 0
-    // }
+    orders.headOption.map {
+      head ⇒
+        orders.remove(head)
+        head
+    }
 
-    // orders.collectFirst {
-    //   case order: Order if filterMethod(order) ⇒
-    //     val r = Rational(matchableAmountS, order.amountS)
-
-    //     val updatedOrder = order.copy(_matchable = Some(OrderState(
-    //       matchableAmountS,
-    //       (r * Rational(order.amountB)).bigintValue,
-    //       (r * Rational(order.amountFee)).bigintValue
-    //     )))
-
-    //     log.debug(s"top maker order: $updatedOrder")
-    //     updatedOrder
-    // }
   }
 
 }

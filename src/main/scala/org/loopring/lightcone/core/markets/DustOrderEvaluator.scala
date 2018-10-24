@@ -16,22 +16,18 @@
 
 package org.loopring.lightcone.core
 
-trait OrderStateManager {
-  def hasTokenManager(token: Address): Boolean
-  def addTokenManager(tm: TokenManager): TokenManager
-  def getTokenManager(token: Address): TokenManager
-
-  def submitOrder(order: Order): Boolean
-  def cancelOrder(orderId: ID): Boolean
-  def adjustOrder(orderId: ID, outstandingAmountS: Amount): Boolean
+trait DustOrderEvaluator {
+  def isDust(order: Order): Boolean
 }
 
-object OrderStateManager {
-  def default(
-    maxNumOrders: Int = 1000
-  )(
+class DustOrderEvaluatorImpl(threshold: Double)(
     implicit
-    orderPool: OrderPool
-  ): OrderStateManager =
-    new OrderStateManagerImpl(maxNumOrders)
+    tve: TokenValueEstimator
+)
+  extends DustOrderEvaluator {
+
+  def isDust(order: Order): Boolean = {
+    val fiatValue = tve.getFiatValue(order.tokenS, order.matchable.amountS)
+    fiatValue < threshold
+  }
 }

@@ -16,30 +16,17 @@
 
 package org.loopring.lightcone.core
 
+import helper._
 import org.scalatest._
 
 class ReleaseOrderSpec extends FlatSpec with Matchers {
 
   info("[sbt core/'testOnly *ReleseOrderSpec']")
 
-  implicit val dustEvaluator = new DustEvaluatorImpl()
-  implicit val orderPool = new OrderPool()
-
-  val manager = OrderStateManager.default()
-  val lrc = "LRC"
-  val xyz = "XYZ"
-  val gto = "GTO"
-
-  manager.addTokenManager(new TokenManager(lrc))
-  manager.addTokenManager(new TokenManager(xyz))
-  manager.addTokenManager(new TokenManager(gto))
-
-  val lrcTokenManager = manager.getTokenManager(lrc)
-  val xyzTokenManager = manager.getTokenManager(xyz)
-  val gtoTokenManager = manager.getTokenManager(gto)
-
   // 提交订单后完全成交,看订单是否在tokenS&tokenFee manager中是否都删除了
   "simpleTest2" should "submit order and fill partitial" in {
+    val (manager, orderPool, lrcTokenManager, xyzTokenManager, gtoTokenManager) = prepare
+
     lrcTokenManager.init(200, 200)
     xyzTokenManager.init(200, 200)
     gtoTokenManager.init(200, 200)

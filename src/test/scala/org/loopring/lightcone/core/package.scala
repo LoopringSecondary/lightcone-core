@@ -26,7 +26,7 @@ package object helper {
     implicit val dustEvaluator = new DustEvaluatorImpl()
     implicit val orderPool = new OrderPool()
 
-    val manager = OrderStateManager.default()
+    val manager = OrderManager.default()
 
     manager.addTokenManager(new TokenManager(lrc))
     manager.addTokenManager(new TokenManager(xyz))

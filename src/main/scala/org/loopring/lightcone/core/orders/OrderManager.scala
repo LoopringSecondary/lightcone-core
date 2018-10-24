@@ -16,10 +16,22 @@
 
 package org.loopring.lightcone.core
 
-final object MatchingFailure extends Enumeration {
-  type MatchingFailure = Value
+trait OrderManager {
+  def hasTokenManager(token: Address): Boolean
+  def addTokenManager(tm: TokenManager): TokenManager
+  def getTokenManager(token: Address): TokenManager
 
-  val ORDERS_NOT_TRADABLE = Value
-  val INCOME_TOO_SMALL = Value
-  val HAS_BEEN_FULL_FILLED = Value
+  def submitOrder(order: Order): Boolean
+  def cancelOrder(orderId: ID): Boolean
+  def adjustOrder(orderId: ID, outstandingAmountS: Amount): Boolean
+}
+
+object OrderManager {
+  def default(
+    maxNumOrders: Int = 1000
+  )(
+    implicit
+    orderPool: OrderPool
+  ): OrderManager =
+    new OrderManagerImpl(maxNumOrders)
 }
