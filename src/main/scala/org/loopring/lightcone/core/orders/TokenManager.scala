@@ -154,6 +154,7 @@ private[core] class TokenManager(
       val status = validateOrderStatus(order, requestedAmount)
       if (status != OrderStatus.PENDING) {
         ordersToDelete += order.id -> status
+        idxMap -= order.id
       } else {
         val reserved =
           if (availableAllowance >= requestedAmount) requestedAmount

@@ -125,7 +125,9 @@ final private[core] class OrderManagerImpl(
       method: TM ⇒ Map[ID, OrderStatus]
     ): Boolean = {
 
-      val released = callTokenS_(method) ++ callTokenFee_(method)
+      val releasedS = callTokenS_(method)
+      val releasedFee = callTokenFee_(method)
+      val released = releasedS ++ releasedFee
       released.map(x ⇒ {
         val id = x._1
         callTokenS_(_.release(id))
