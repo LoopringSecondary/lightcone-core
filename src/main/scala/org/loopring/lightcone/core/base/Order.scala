@@ -48,20 +48,17 @@ case class Order(
     _matchable: Option[OrderState] = None
 ) {
 
-  lazy val outstanding = _outstanding.getOrElse(OrderState(amountS, amountB, amountFee))
-  lazy val reserved = _reserved.getOrElse(OrderState())
-  lazy val actual = _actual.getOrElse(OrderState())
-  lazy val matchable = _matchable.getOrElse(OrderState())
+  def original = OrderState(amountS, amountB, amountFee)
+  def outstanding = _outstanding.getOrElse(OrderState(amountS, amountB, amountFee))
+  def reserved = _reserved.getOrElse(OrderState())
+  def actual = _actual.getOrElse(OrderState())
+  def matchable = _matchable.getOrElse(OrderState())
 
   lazy val rate = Rational(amountB, amountS)
 
   def withOutstandingAmountS(v: Amount) = {
     val r = Rational(v, amountS)
-    copy(_outstanding = Some(OrderState(
-      (r * Rational(amountS)).bigintValue,
-      (r * Rational(amountB)).bigintValue,
-      (r * Rational(amountFee)).bigintValue
-    )))
+    copy(_outstanding = Some(original.scaleBy(r)))
   }
 
   // Advance methods with implicit contextual arguments
@@ -119,12 +116,7 @@ case class Order(
     if (amountFee > 0) {
       r = r min Rational(reserved.amountFee, amountFee)
     }
-
-    copy(_actual = Some(OrderState(
-      (r * Rational(amountS)).bigintValue,
-      (r * Rational(amountB)).bigintValue,
-      (r * Rational(amountFee)).bigintValue
-    )))
+    copy(_actual = Some(original.scaleBy(r)))
   }
 
 }
