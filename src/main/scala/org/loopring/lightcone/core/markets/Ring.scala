@@ -47,11 +47,8 @@ case class Ring(
 ) {
   // Switching maker and taker should have the same id.
   lazy val id: RingID = {
-    Hash.sha3(maker.id)
-      .zip(Hash.sha3(taker.id))
-      .map(p ⇒ p._1 ^ p._2)
-      .map(_.toByte)
-      .toArray
+    val id1 = BigInt(Hash.sha3(maker.id.getBytes)) ^ BigInt(Hash.sha3(taker.id.getBytes()))
+    Numeric.toHexString(id1.toByteArray)
   }
 
   //中间价格，可以在显示深度价格时使用,简单的中间价
