@@ -17,7 +17,9 @@
 package org.loopring.lightcone.core
 
 import org.slf4s.Logging
+
 import scala.annotation.tailrec
+import scala.collection.mutable
 import scala.collection.mutable.SortedSet
 
 // For ABC-XYZ market, ABC is secondary, XYZ is primary
@@ -29,8 +31,6 @@ case class MarketId(
 case class MarketManagerConfig(
     maxNumBuys: Int,
     maxNumSells: Int,
-    maxNumHiddenBuys: Int,
-    maxNumHiddenSells: Int
 )
 
 object MarketManagerImpl {
@@ -52,7 +52,6 @@ class MarketManagerImpl(
 )(
     implicit
     pendingRingPool: PendingRingPool,
-    orderPool: OrderPool,
     dustOrderEvaluator: DustOrderEvaluator
 ) extends MarketManager with Logging {
 
@@ -143,19 +142,54 @@ class MarketManagerImpl(
     SubmitOrderResult(rings, fullyMatchedOrderIds)
   }
 
+  def deleteOrder(order: Order): Boolean = {
+    sides(order.tokenS).remove(order) //pending应该不用清除，而是等待以太坊事件回调或过期
+  }
+
+  def triggerMatch(): Unit = {
+    val maxBidsPrice = (bids.headOption map {
+      head ⇒ Rational(head.amountS, head.amountB)
+    }).getOrElse(Rational(0))
+    val rationalOne = Rational(1)
+
+    @tailrec
+    def recursivelyReMatch(): Unit = {
+      popOrder(asks) match {
+        case Some(taker) if Rational(taker.amountS, taker.amountB) * maxBidsPrice >= rationalOne ⇒
+          submitOrder(taker)
+          recursivelyReMatch()
+        case Some(taker) ⇒ submitOrder(taker)
+        case _           ⇒
+      }
+    }
+    recursivelyReMatch()
+  }
+
   private def addToSide(order: Order) = {
-    sides(order.tokenS).add(order)
+    val side = sides(order.tokenS)
+    //添加到side
+    side.add(order)
+    //是否需要删除
+    val maxNum = if (marketId.primary == order.tokenS) config.maxNumBuys else config.maxNumSells
+    if (maxNum > 0 && maxNum < side.size) {
+      side.lastOption map {
+        last ⇒
+          log.debug(s"due to too many orders,order:${last.id} will be removed.")
+          side.remove(last)
+      }
+    }
   }
 
   private def takeTopMaker(order: Order): Option[Order] = {
-    val orders = sides(order.tokenB)
+    popOrder(sides(order.tokenB))
+  }
 
-    orders.headOption.map {
+  private def popOrder(side: mutable.SortedSet[Order]) = {
+    side.headOption.map {
       head ⇒
-        orders.remove(head)
+        side.remove(head)
         head
     }
-
   }
 
 }

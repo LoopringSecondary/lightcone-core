@@ -34,8 +34,10 @@ trait MarketManager {
 
   case class SubmitOrderResult(rings: Seq[Ring], fullyMatchedOrderIds: Seq[ID])
   def submitOrder(order: Order): SubmitOrderResult
-  // def deleteOrder(orderId: ID): Set[RingID]
 
-  // def trigerMatch(): Set[Ring]
+  def deleteOrder(order: Order): Boolean
+
+  def triggerMatch(): Unit
+
   // def getMetadata(): OrderBookMetadata
 }
