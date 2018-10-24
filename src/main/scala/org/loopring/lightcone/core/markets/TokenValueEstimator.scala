@@ -20,4 +20,36 @@ trait TokenValueEstimator {
   def getFiatValue(token: Address, amount: Amount): Double
 
   def getBurnRate(token: Address): Double
+
+  def canGetMarketCap(token: Address): Boolean
 }
+
+class TokenValueEstimatorImpl extends TokenValueEstimator {
+
+  var tokens = Map[Address, BigInt]()
+  var marketcaps = Map[Address, Double]()
+  var burnRates = Map[Address, Double]()
+
+  def setTokens(tokens: Map[Address, BigInt]): Unit = {
+    this.tokens = tokens
+  }
+
+  def setMarketCaps(marketcaps: Map[Address, Double]): Unit = {
+    this.marketcaps = marketcaps
+  }
+
+  def setBurnRates(burnRates: Map[Address, Double]): Unit = {
+    this.burnRates = burnRates
+  }
+
+  def getFiatValue(token: Address, amount: Amount): Double = {
+    val decimal = tokens.getOrElse(token, BigInt(1))
+    val price = marketcaps.getOrElse(token, 0.0)
+    price * amount.doubleValue() / decimal.doubleValue()
+  }
+
+  def getBurnRate(token: Address): Double = burnRates.getOrElse(token, 0.05)
+
+  def canGetMarketCap(token: Address): Boolean = tokens.contains(token) && marketcaps.contains(token)
+}
+

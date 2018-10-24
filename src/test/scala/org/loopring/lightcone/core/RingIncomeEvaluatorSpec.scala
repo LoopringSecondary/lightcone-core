@@ -23,21 +23,9 @@ class RingIncomeEvaluatorSpec extends FlatSpec with Matchers {
   val lrc = "LRC"
   val eth = "ETH"
 
-  implicit val tve = new TokenValueEstimator {
-    val decimal = BigInt("1")
-
-    override def getFiatValue(token: Address, amount: Amount): Double = {
-      if (token == lrc) {
-        0.8 * (amount / decimal).doubleValue()
-      } else {
-        1400 * (amount / decimal).doubleValue()
-      }
-    }
-
-    override def getBurnRate(token: Address): Double = {
-      0.05
-    }
-  }
+  implicit val tve = new TokenValueEstimatorImpl()
+  tve.setMarketCaps(Map[Address, Double](lrc → 0.8, eth → 1400))
+  tve.setTokens(Map[Address, BigInt](lrc → BigInt(1), eth → BigInt(1)))
 
   val incomeEvaluator = new RingIncomeEstimatorImpl(10)
   val makerExpectFill = ExpectedFill(
@@ -116,7 +104,7 @@ class RingIncomeEvaluatorSpec extends FlatSpec with Matchers {
       ),
       takerExpectFill.copy(
         amountMargin = 0,
-        pending = OrderState(amountS = 100, amountFee = 0)
+        pending = OrderState(amountS = 100, amountFee = 10)
       )
     )
     val income1 = incomeEvaluator.getIncomeFiatValue(ring)
