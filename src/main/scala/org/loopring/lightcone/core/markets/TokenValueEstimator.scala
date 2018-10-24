@@ -26,9 +26,9 @@ trait TokenValueEstimator {
 
 class TokenValueEstimatorImpl extends TokenValueEstimator {
 
-  var tokens = Map[Address, BigInt]()
-  var marketcaps = Map[Address, Double]()
-  var burnRates = Map[Address, Double]()
+  var tokens = Map[Address, BigInt]() // map[Address, Decimal]
+  var marketcaps = Map[Address, Double]() // map[Address, price]
+  var burnRates = Map[Address, Double]() // ma[Address, burnRate]
 
   def setTokens(tokens: Map[Address, BigInt]): Unit = {
     this.tokens = tokens

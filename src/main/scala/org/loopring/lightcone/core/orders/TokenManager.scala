@@ -38,7 +38,7 @@ class TokenManager(
 )(
     implicit
     orderPool: OrderPool,
-    dustEvaluator: DustEvaluator
+    dustEvaluator: DustOrderEvaluator
 ) extends Object with Logging {
   implicit private val _t = token
 

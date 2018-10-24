@@ -32,8 +32,7 @@ class DustOrderEvaluatorImpl(threshold: Double)(
     fiatValue < threshold
   }
 
-  // todo: 判断订单余额/账户金额是否可用
-  def isDust(token: Address, amount: Amount): Boolean = {
-    amount <= 0
+  def isDust(tokenS: Address, amount: Amount): Boolean = {
+    tve.getFiatValue(tokenS, amount) <= 0
   }
 }

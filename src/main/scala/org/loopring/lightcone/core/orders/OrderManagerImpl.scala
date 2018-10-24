@@ -124,18 +124,12 @@ final private[core] class OrderManagerImpl(
     def callTokenSAndFeeThenRemoveOrders(
       method: TM ⇒ Map[ID, OrderStatus]
     ): Boolean = {
-
-      val releasedS = callTokenS_(method)
-      val releasedFee = callTokenFee_(method)
-      val released = releasedS ++ releasedFee
-      released.map(x ⇒ {
+      (callTokenS_(method) ++ callTokenFee_(method)).map(x ⇒ {
         val id = x._1
         callTokenS_(_.release(id))
         callTokenFee_(_.release(id))
         tryRemoveOrder(id, x._2)
-      })
-
-      released.size > 0
+      }).size > 0
     }
 
   }

@@ -23,7 +23,19 @@ package object helper {
   val gto = "GTO"
 
   def prepare = {
-    implicit val dustEvaluator = new DustEvaluatorImpl()
+    implicit val tokenValueEstimator = new TokenValueEstimatorImpl()
+    tokenValueEstimator.setTokens(Map(
+      lrc -> 1,
+      xyz -> 1,
+      gto -> 1
+    ))
+    tokenValueEstimator.setMarketCaps(Map(
+      lrc -> 1,
+      xyz -> 1,
+      gto -> 1
+    ))
+
+    implicit val dustEvaluator = new DustOrderEvaluatorImpl(0)
     implicit val orderPool = new OrderPool()
 
     val manager = OrderManager.default()
