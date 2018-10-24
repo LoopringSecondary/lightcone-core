@@ -90,7 +90,7 @@ class PendingRingPoolSpec extends FlatSpec with Matchers {
     assert(pendingRingPool.getOrderPendingAmountS("maker-1") == 100)
     assert(pendingRingPool.getOrderPendingAmountS("maker-2") == 100)
 
-    info("使用新的taker-new-1, 将maker-1完全吃掉") //或者可以改变，继续相加
+    info("使用新的taker-new-1, 将maker-1完全吃掉")
     val takerExpectFillNew1 = ExpectedFill(
       order = Order(id = "taker-new-1", tokenS = eth, tokenB = lrc, tokenFee = lrc, walletSplitPercentage = 0.2),
       pending = OrderState(amountS = 100, amountFee = 100),
@@ -128,13 +128,13 @@ class PendingRingPoolSpec extends FlatSpec with Matchers {
       amountMargin = 100
     )
     val ring1 = Ring(
-      makerExpectFill.copy(
-        amountMargin = 0,
-        pending = OrderState(amountS = 100, amountFee = 10)
-      ),
       takerExpectFillNew1.copy(
         amountMargin = 0,
         pending = OrderState(amountS = 100, amountFee = 0)
+      ),
+      makerExpectFill.copy(
+        amountMargin = 0,
+        pending = OrderState(amountS = 100, amountFee = 10)
       )
     )
     pendingRingPool.removeRing(ring1.id)
@@ -150,18 +150,5 @@ class PendingRingPoolSpec extends FlatSpec with Matchers {
     assert(pendingRingPool.orderMap.isEmpty && pendingRingPool.ringMap.isEmpty)
     assert(pendingRingPool.getOrderPendingAmountS("taker-1") == 0)
   }
-
-  //  "testBaseOperation" should "remove ring " in {
-  //    val ring = Ring(
-  //      makerExpectFill.copy(
-  //        amountMargin = 0,
-  //        pending = OrderState(amountS = 100, amountFee = 10)
-  //      ),
-  //      takerExpectFill.copy(
-  //        amountMargin = 0,
-  //        pending = OrderState(amountS = 100, amountFee = 0)
-  //      )
-  //    )
-  //  }
 
 }
