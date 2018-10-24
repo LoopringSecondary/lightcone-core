@@ -41,7 +41,6 @@ private[core] class TokenManager(
     dustEvaluator: DustEvaluator
 ) extends Object with Logging {
   implicit private val _t = token
-  import OrderStatus._
 
   private[core] var balance: Amount = 0
   private[core] var allowance: Amount = 0
@@ -64,7 +63,7 @@ private[core] class TokenManager(
     availableAllowance
   )
 
-  def init(balance_ : Amount, allowance_ : Amount): Set[ID] = {
+  def init(balance_ : Amount, allowance_ : Amount): Map[ID, OrderStatus] = {
     val cursor1 =
       if (balance_ >= balance) cursor
       else {
@@ -95,10 +94,10 @@ private[core] class TokenManager(
   }
 
   // returns orders to be deleted
-  def reserve(orderId: ID): Set[ID] = {
+  def reserve(orderId: ID): Map[ID, OrderStatus] = {
     assert(orderPool.contains(orderId))
     idxMap.get(orderId) match {
-      case Some(_) ⇒ Set.empty
+      case Some(_) ⇒ Map.empty
       case None ⇒
         reservations :+= Reservation(orderId, 0, 0)
         rebalance()
@@ -106,21 +105,21 @@ private[core] class TokenManager(
   }
 
   // returns orders to be deleted
-  def release(orderId: ID): Set[ID] = {
+  def release(orderId: ID): Map[ID, OrderStatus] = {
     idxMap.get(orderId) match {
-      case None ⇒ Set.empty
+      case None ⇒ Map.empty
       case Some(idx) ⇒
         reservations = reservations.patch(idx, Nil, 1)
         idxMap -= orderId
         cursor = idx - 1
-        rebalance() + orderId
+        rebalance()
     }
   }
 
   // returns orders to be deleted
-  def adjust(id: ID): Set[ID] = {
+  def adjust(id: ID): Map[ID, OrderStatus] = {
     idxMap.get(id) match {
-      case None ⇒ Set.empty
+      case None ⇒ Map.empty
       case Some(idx) ⇒
         assert(orderPool.contains(id))
         val order = orderPool(id)
@@ -137,7 +136,7 @@ private[core] class TokenManager(
     }
   }
 
-  private[core] def rebalance(): Set[ID] = {
+  private[core] def rebalance(): Map[ID, OrderStatus] = {
     val (goodOnes, badOnes) = reservations.splitAt(cursor + 1)
     reservations = goodOnes
 
@@ -146,14 +145,15 @@ private[core] class TokenManager(
     availableBalance = balance - accumulatedBalance
     availableAllowance = allowance - accumulatedAllowance
 
-    var ordersToDelete = Set.empty[ID]
+    var ordersToDelete = Map.empty[ID, OrderStatus]
 
     badOnes.foreach { r ⇒
       val order = orderPool(r.orderId)
       val requestedAmount = order.requestedAmount
 
-      if (orderInvalid(token, order.tokenS, availableBalance, requestedAmount)) {
-        ordersToDelete += order.id
+      val status = validateOrderStatus(order, requestedAmount)
+      if (status != OrderStatus.PENDING) {
+        ordersToDelete += order.id -> status
       } else {
         val reserved =
           if (availableAllowance >= requestedAmount) requestedAmount
@@ -186,19 +186,24 @@ private[core] class TokenManager(
     (localOrders, reservations, idxMap, cursor)
   }
 
+  // 判断订单状态
   // 注意:按照比例计算订单requestAmountS, requestAmountFee
   // requestAmountFee最终的法币价值/币币价值都远小于requestAmountS
   // 如果requestAmountS是灰尘,那么requestAmountFee也应该是灰尘
   // 反过来, 如果requestAmountFee是灰尘单，requestAmountS却不一定是灰尘单
   // 这里, 我们对灰尘单的判定仅限于tokenS, 同时考虑账户余额是否充足的问题
-  private def orderInvalid(token: Address, tokenS: Address, availableBalance: Amount, requestedAmount: Amount): Boolean = {
+  private def validateOrderStatus(order: Order, requestedAmount: Amount): OrderStatus =
     if (availableBalance < requestedAmount) {
-      return true
+      if (token == order.tokenS)
+        OrderStatus.CANCELLED_LOW_BALANCE
+      else
+        OrderStatus.CANCELLED_LOW_FEE_BALANCE
+    } else if (token == order.tokenS && dustEvaluator.isDust(token, availableBalance)) {
+      OrderStatus.CANCELLED_LOW_BALANCE
+    } else if (token == order.tokenS && dustEvaluator.isDust(token, requestedAmount)) {
+      OrderStatus.FINISHED
+    } else {
+      OrderStatus.PENDING
     }
-    if (token == tokenS && (dustEvaluator.isDust(token, requestedAmount) || dustEvaluator.isDust(token, availableBalance))) {
-      return true
-    }
-    return false
-  }
 
 }

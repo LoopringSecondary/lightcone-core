@@ -23,6 +23,64 @@ class ReleaseOrderSpec extends FlatSpec with Matchers {
 
   info("[sbt core/'testOnly *ReleseOrderSpec']")
 
+  // 用户下多个订单然后取消其中两个
+  "simpleTest1" should "submit order and fill partitial" in {
+    val (manager, orderPool, lrcTokenManager, xyzTokenManager, gtoTokenManager) = prepare
+
+    lrcTokenManager.init(300, 300)
+    xyzTokenManager.init(300, 300)
+    gtoTokenManager.init(300, 300)
+
+    val order1 = Order(
+      "order1",
+      lrc,
+      xyz,
+      gto,
+      100,
+      100,
+      100
+    )
+    val order2 = Order(
+      "order2",
+      lrc,
+      xyz,
+      gto,
+      100,
+      100,
+      100
+    )
+    val order3 = Order(
+      "order3",
+      lrc,
+      xyz,
+      gto,
+      100,
+      100,
+      100
+    )
+
+    manager.submitOrder(order1)
+    manager.submitOrder(order2)
+    manager.submitOrder(order3)
+
+    manager.cancelOrder(order1.id)
+    manager.cancelOrder(order2.id)
+
+    lrcTokenManager.availableBalance should be(200)
+    lrcTokenManager.availableAllowance should be(200)
+    gtoTokenManager.availableBalance should be(200)
+    gtoTokenManager.availableAllowance should be(200)
+
+    lrcTokenManager.idxMap.size should be(1)
+    gtoTokenManager.idxMap.size should be(1)
+
+    lrcTokenManager.cursor should be(0)
+    gtoTokenManager.cursor should be(0)
+
+    lrcTokenManager.reservations.size should be(1)
+    gtoTokenManager.reservations.size should be(1)
+  }
+
   // 提交订单后完全成交,看订单是否在tokenS&tokenFee manager中是否都删除了
   "simpleTest2" should "submit order and fill partitial" in {
     val (manager, orderPool, lrcTokenManager, xyzTokenManager, gtoTokenManager) = prepare

@@ -22,7 +22,7 @@ final object OrderStatus extends Enumeration {
   val NEW = Value
   val PENDING = Value
   val EXPIRED = Value
-  val CANCELLED_ADJUST = Value
+  val FINISHED = Value // 完全成交
   val CANCELLED_BY_USER = Value
   val CANCELLED_LOW_BALANCE = Value
   val CANCELLED_LOW_FEE_BALANCE = Value
