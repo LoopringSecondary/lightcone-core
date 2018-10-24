@@ -19,7 +19,6 @@ package org.loopring.lightcone.core
 import org.slf4s.Logging
 
 trait PendingRingPool {
-
   def getOrderPendingAmountS(orderId: ID): Amount
   def hasRing(ringId: RingID): Boolean
 
