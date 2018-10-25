@@ -37,7 +37,7 @@ trait MarketManager {
 
   def deleteOrder(order: Order): Boolean
 
-  def triggerMatch(): Unit
+  def triggerMatch(): SubmitOrderResult
 
   // def getMetadata(): OrderBookMetadata
 }
