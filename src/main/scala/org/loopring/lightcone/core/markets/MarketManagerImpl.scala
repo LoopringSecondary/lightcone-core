@@ -71,7 +71,7 @@ class MarketManagerImpl(
     var fullyMatchedOrderIds = Seq.empty[ID]
 
     val subedPendingAmountS =
-      order.matchable.amountS -
+      order.actual.amountS -
         pendingRingPool.getOrderPendingAmountS(order.id)
 
     var taker = order.copy(_matchable = Some(OrderState(
