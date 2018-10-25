@@ -145,23 +145,32 @@ class MarketManagerImpl(
     sides(order.tokenS).remove(order) //pending应该不用清除，而是等待以太坊事件回调或过期
   }
 
-  def triggerMatch(): Unit = {
+  def triggerMatch(): SubmitOrderResult = {
     val maxBidsPrice = (bids.headOption map {
       head ⇒ Rational(head.amountS, head.amountB)
     }).getOrElse(Rational(0))
     val rationalOne = Rational(1)
 
+    var rings = Seq.empty[Ring]
+    var fullyMatchedOrderIds = Set.empty[ID]
+
     @tailrec
     def recursivelyReMatch(): Unit = {
       popOrder(asks) match {
-        case Some(taker) if Rational(taker.amountS, taker.amountB) * maxBidsPrice >= rationalOne ⇒
-          submitOrder(taker)
-          recursivelyReMatch()
-        case Some(taker) ⇒ submitOrder(taker)
-        case _           ⇒
+        case Some(taker)  ⇒
+          val submitRes = submitOrder(taker)
+          rings ++= submitRes.rings
+          fullyMatchedOrderIds ++= submitRes.fullyMatchedOrderIds
+          if (Rational(taker.amountS, taker.amountB) * maxBidsPrice >= rationalOne) {
+            recursivelyReMatch()
+          }
+        case _ ⇒
       }
     }
+
     recursivelyReMatch()
+
+    SubmitOrderResult(rings = rings, fullyMatchedOrderIds = fullyMatchedOrderIds.toSeq)
   }
 
   private def addToSide(order: Order) = {
