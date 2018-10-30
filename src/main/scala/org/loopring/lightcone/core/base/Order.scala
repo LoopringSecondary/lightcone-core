@@ -112,7 +112,13 @@ case class Order(
   private def updateActual() = {
     var r = Rational(reserved.amountS, amountS)
     if (amountFee > 0) {
-      r = r min Rational(reserved.amountFee, amountFee)
+      if (tokenFee == tokenB && reserved.amountFee > 0) {
+        r = r min Rational(reserved.amountFee, amountFee - amountB)
+      } else if (tokenFee == tokenB && reserved.amountFee == 0) {
+        r = r
+      } else {
+        r = r min Rational(reserved.amountFee, amountFee)
+      }
     }
     copy(_actual = Some(original.scaleBy(r)))
   }
