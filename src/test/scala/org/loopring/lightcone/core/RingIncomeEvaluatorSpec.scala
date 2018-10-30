@@ -123,8 +123,9 @@ class RingIncomeEvaluatorSpec extends FlatSpec with Matchers {
     )
     val income1 = incomeEvaluator.getIncomeFiatValue(ring)
     //    0.8*10*(1-0.2)*(1-0.05) = 6.08
-    println(income1)
+    info(income1.toString)
     assert(!incomeEvaluator.isProfitable(ring1))
+
   }
 
 }
