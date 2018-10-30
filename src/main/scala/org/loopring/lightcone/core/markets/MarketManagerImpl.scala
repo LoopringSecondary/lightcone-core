@@ -176,7 +176,7 @@ class MarketManagerImpl(
 
     var rings = Seq.empty[Ring]
     var fullyMatchedOrderIds = Set.empty[ID]
-    var affectedOrders = Map.empty[ID,Order]
+    var affectedOrders = Map.empty[ID, Order]
     var askOrdersRecyclable = Seq.empty[Order]
 
     @tailrec

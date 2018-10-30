@@ -384,7 +384,6 @@ class MarketManagerSpec extends FlatSpec with Matchers {
         assert(pendingRingPool.getOrderPendingAmountS("maker-" + i) == 100)
     }
 
-    //以maker、taker的顺序，最小订单应为taker，所以maker需要缩减，卖出应为199
     assert(marketManager.bids.isEmpty)
     assert(marketManager.asks.isEmpty)
   }
