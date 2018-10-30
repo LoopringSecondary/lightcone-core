@@ -69,6 +69,7 @@ class MarketManagerImpl(
     var rings = Seq.empty[Ring]
     var makerOrdersRecyclable = Seq.empty[Order]
     var fullyMatchedOrderIds = Seq.empty[ID]
+    var affectedOrders = Map[ID,Order]()
 
     val subedPendingAmountS =
       order.actual.amountS -
@@ -86,9 +87,12 @@ class MarketManagerImpl(
       ).bigintValue()
     )))
 
+    deleteOrder(taker)
+
     if (dustOrderEvaluator.isDust(taker)) {
       fullyMatchedOrderIds :+= taker.id
-      return SubmitOrderResult(rings, fullyMatchedOrderIds)
+      affectedOrders += taker.id → taker.copy(_matchable = Some(OrderState()))
+      return SubmitOrderResult(rings, fullyMatchedOrderIds, affectedOrders)
     }
 
     @tailrec
@@ -114,12 +118,16 @@ class MarketManagerImpl(
           val updatedMaker = ring.maker.order
 
           if (dustOrderEvaluator.isDust(updatedMaker)) {
+            affectedOrders += updatedMaker.id → updatedMaker.copy(_matchable = Some(OrderState()))
             fullyMatchedOrderIds :+= updatedMaker.id
+            deleteOrder(updatedMaker)
           } else {
+            affectedOrders += updatedMaker.id → updatedMaker
             makerOrdersRecyclable :+= updatedMaker
           }
 
           if (dustOrderEvaluator.isDust(taker)) {
+            affectedOrders += taker.id → taker.copy(_matchable = Some(OrderState()))
             fullyMatchedOrderIds :+= taker.id
           } else {
             recursivelyMatchOrder()
@@ -127,6 +135,7 @@ class MarketManagerImpl(
 
         case None ⇒
           if (!dustOrderEvaluator.isDust(taker)) {
+            affectedOrders += taker.id → taker
             addToSide(taker)
           }
       }
@@ -138,7 +147,7 @@ class MarketManagerImpl(
 
     rings.foreach(pendingRingPool.addRing)
 
-    SubmitOrderResult(rings, fullyMatchedOrderIds)
+    SubmitOrderResult(rings, fullyMatchedOrderIds, affectedOrders)
   }
 
   def deleteOrder(order: Order): Boolean = {
