@@ -16,7 +16,7 @@
 
 package org.loopring.lightcone.core
 
-import MatchingFailure._
+import org.loopring.lightcone.core.MatchingFailure._
 
 trait RingMatcher {
   def matchOrders(
@@ -27,7 +27,7 @@ trait RingMatcher {
 
 class SimpleRingMatcher(
     ringIncomeEstimator: RingIncomeEstimator
-) extends RingMatcher {
+) extends RingMatcher with Logging {
 
   def matchOrders(
     taker: Order,
@@ -76,6 +76,9 @@ class SimpleRingMatcher(
               )
           )
         }
+
+      log.debug(s"matchingVolume --- makerId:${maker.id}, amountS:${makerVolume.amountS}, amountB:${makerVolume.amountB} " +
+        s" takerId:${taker.id}, amountS:${takerVolume.amountS}, amountB:${takerVolume.amountB}")
 
       //fee 按照卖出的比例计算
       val makerFee = maker.matchable.amountFee * makerVolume.amountS / maker.matchable.amountS

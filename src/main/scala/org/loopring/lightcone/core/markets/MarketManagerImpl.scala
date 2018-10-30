@@ -63,13 +63,27 @@ class MarketManagerImpl(
 
   private val sides = Map(marketId.primary -> bids, marketId.secondary -> asks)
 
-  def submitOrder(order: Order): SubmitOrderResult = {
-    log.debug(s"taker order: $order")
+  def submitOrder(order:Order):SubmitOrderResult = {
+    deleteOrder(order) //首先删除订单，变为全新订单
+    val res = submitOrderInternal(order)
+    res.affectedOrders.get(order.id) match {
+      case None ⇒
+        addToSide(order)
+      case Some(o) if !dustOrderEvaluator.isDust(o) ⇒
+        addToSide(o)
+      case _ ⇒ //此时完全匹配，不需要再添加到订单薄
+    }
+    res
+  }
+
+  //在该函数中，taker不会被放入订单簿
+  private[core] def submitOrderInternal(order: Order): SubmitOrderResult = {
+    log.debug(s"taker order: $order , ${pendingRingPool.getOrderPendingAmountS(order.id)} ")
 
     var rings = Seq.empty[Ring]
     var makerOrdersRecyclable = Seq.empty[Order]
     var fullyMatchedOrderIds = Seq.empty[ID]
-    var affectedOrders = Map[ID,Order]()
+    var affectedOrders = Map.empty[ID, Order]
 
     val subedPendingAmountS =
       order.actual.amountS -
@@ -87,8 +101,6 @@ class MarketManagerImpl(
       ).bigintValue()
     )))
 
-    deleteOrder(taker)
-
     if (dustOrderEvaluator.isDust(taker)) {
       fullyMatchedOrderIds :+= taker.id
       affectedOrders += taker.id → taker.copy(_matchable = Some(OrderState()))
@@ -104,9 +116,11 @@ class MarketManagerImpl(
       matchResult match {
         case Some((maker, Left(failure))) ⇒ failure match {
           case ORDERS_NOT_TRADABLE ⇒
+            log.debug(s"match failed:$ORDERS_NOT_TRADABLE --taker:$taker, maker:$maker")
             makerOrdersRecyclable :+= maker
 
           case INCOME_TOO_SMALL ⇒
+            log.debug(s"match failed:$INCOME_TOO_SMALL --taker:$taker, maker:$maker")
             makerOrdersRecyclable :+= maker
             recursivelyMatchOrder()
         }
@@ -136,7 +150,8 @@ class MarketManagerImpl(
         case None ⇒
           if (!dustOrderEvaluator.isDust(taker)) {
             affectedOrders += taker.id → taker
-            addToSide(taker)
+          } else {
+            affectedOrders += taker.id → taker.copy(_matchable = Some(OrderState()))
           }
       }
     }
@@ -162,14 +177,27 @@ class MarketManagerImpl(
 
     var rings = Seq.empty[Ring]
     var fullyMatchedOrderIds = Set.empty[ID]
+    var affectedOrders = Map.empty[ID,Order]
+    var askOrdersRecyclable = Seq.empty[Order]
 
     @tailrec
     def recursivelyReMatch(): Unit = {
       popOrder(asks) match {
         case Some(taker)  ⇒
-          val submitRes = submitOrder(taker)
+          log.debug(s"triggerMatch --- ask:${taker.id}")
+          //submitOrder会在在taker最后不为灰尘单时，会重新放入首部，
+          //因此需要保证不会taker再放入asks
+          val submitRes = submitOrderInternal(taker)
+          submitRes.affectedOrders.get(taker.id) match {
+            case None ⇒
+              askOrdersRecyclable :+= taker
+            case Some(o) if !dustOrderEvaluator.isDust(o) ⇒
+              askOrdersRecyclable :+= o
+            case _ ⇒
+          }
           rings ++= submitRes.rings
           fullyMatchedOrderIds ++= submitRes.fullyMatchedOrderIds
+          affectedOrders ++= submitRes.affectedOrders
           if (Rational(taker.amountS, taker.amountB) * maxBidsPrice >= rationalOne) {
             recursivelyReMatch()
           }
@@ -179,7 +207,9 @@ class MarketManagerImpl(
 
     recursivelyReMatch()
 
-    SubmitOrderResult(rings = rings, fullyMatchedOrderIds = fullyMatchedOrderIds.toSeq)
+    askOrdersRecyclable.foreach(asks.add)
+
+    SubmitOrderResult(rings, fullyMatchedOrderIds.toSeq, affectedOrders)
   }
 
   private def addToSide(order: Order) = {
