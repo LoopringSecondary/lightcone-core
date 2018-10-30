@@ -134,7 +134,6 @@ class MarketManagerImpl(
           if (dustOrderEvaluator.isDust(updatedMaker)) {
             affectedOrders += updatedMaker.id → updatedMaker.copy(_matchable = Some(OrderState()))
             fullyMatchedOrderIds :+= updatedMaker.id
-            deleteOrder(updatedMaker)
           } else {
             affectedOrders += updatedMaker.id → updatedMaker
             makerOrdersRecyclable :+= updatedMaker
