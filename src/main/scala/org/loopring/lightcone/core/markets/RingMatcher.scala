@@ -18,6 +18,8 @@ package org.loopring.lightcone.core
 
 import org.loopring.lightcone.core.MatchingFailure._
 
+import org.slf4s.Logging
+
 trait RingMatcher {
   def matchOrders(
     taker: Order,
