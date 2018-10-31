@@ -218,11 +218,8 @@ class MarketManagerImpl(
     //是否需要删除
     val maxNum = if (marketId.primary == order.tokenS) config.maxNumBuys else config.maxNumSells
     if (maxNum > 0 && maxNum < side.size) {
-      side.lastOption map {
-        last ⇒
-          log.debug(s"due to too many orders,order:${last.id} will be removed.")
-          side.remove(last)
-      }
+      log.debug(s"due to too many orders,the last order will be removed.")
+      side.dropRight(1)
     }
   }
 
