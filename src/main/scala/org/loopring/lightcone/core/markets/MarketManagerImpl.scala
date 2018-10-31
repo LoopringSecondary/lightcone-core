@@ -168,7 +168,7 @@ class MarketManagerImpl(
     sides(order.tokenS).remove(order) //pending应该不用清除，而是等待以太坊事件回调或过期
   }
 
-  def blockedRing(ring: Ring): Unit = {
+  def deletePendingRing(ring: Ring): Unit = {
     pendingRingPool.removeRing(ring.id)
   }
 

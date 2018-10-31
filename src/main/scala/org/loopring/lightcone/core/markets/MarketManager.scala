@@ -36,6 +36,6 @@ trait MarketManager {
   def submitOrder(order: Order): SubmitOrderResult
   def deleteOrder(order: Order): Boolean
   def triggerMatch(): SubmitOrderResult
-  def blockedRing(ring: Ring): Unit
+  def deletePendingRing(ring: Ring): Unit
   // def getMetadata(): OrderBookMetadata
 }
