@@ -18,13 +18,7 @@ package org.loopring.lightcone.core
 
 import org.slf4s.Logging
 
-case class DepthOrder(
-    id: ID,
-    price: Rational,
-    amountS: Amount
-)
-
-class DepthOrderPoolImpl(maxLength: Int) extends OrderPool[DepthOrder] with Logging {
+class DepthOrderPoolImpl extends OrderPool[DepthOrder] with Logging {
 
   // amount为订单剩余量
   def +=(order: DepthOrder): Unit = {

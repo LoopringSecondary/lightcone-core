@@ -16,7 +16,22 @@
 
 package org.loopring.lightcone.core
 
-case class Entry(
+case class DepthOrder(
+    id: ID,
     tokenS: Address,
+    tokenB: Address,
+    price: Rational = Rational(0),
     amountS: Amount = 0
-)
+) {
+
+  assert(tokenS != tokenB)
+  assert(price.doubleValue() > 0)
+
+  def isAsk(marketId: MarketId): Boolean = {
+    val tokenSet = Set(marketId.primary, marketId.secondary)
+    assert(tokenSet.contains(tokenS) && tokenSet.contains(tokenB))
+
+    tokenS == marketId.sellDirection
+  }
+
+}

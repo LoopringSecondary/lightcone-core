@@ -27,8 +27,8 @@ trait OrderPool[T] extends Object {
   def getOrder(id: ID): Option[T] = orderMap.get(id)
   def contains(id: ID): Boolean = orderMap.contains(id)
   def orders() = orderMap.values
-  def add(id: ID, order: T) = orderMap += id -> order
-  def del(id: ID) = orderMap -= id
+  def add(id: ID, order: T): Unit = orderMap += id -> order
+  def del(id: ID): Unit = orderMap -= id
 
   def addCallback(callback: Callback) = {
     callbacks :+= callback
