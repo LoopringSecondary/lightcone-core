@@ -16,14 +16,7 @@
 
 package org.loopring.lightcone.core
 
-import math._
 import scala.collection.mutable
-
-// decimal为小数点后精确位数
-case class Granularity(
-    value: Double = 0.1d,
-    decimal: Int = 1
-)
 
 case class DepthEntry(
     price: Double = 0d,
@@ -32,14 +25,15 @@ case class DepthEntry(
 
 class DepthView(
     marketId: MarketId,
-    granularity: Granularity,
-    maxLength: Int
+    granularity: Double,
+    maxLength: Int = 1000
 )(
     implicit
     orderPool: OrderPool[DepthOrder]
 ) {
 
   assert(maxLength > 0)
+  assert(granularity > 0)
 
   // asks是卖出,bids是买入
   private var asks = mutable.SortedMap.empty[Double, DepthEntry]
@@ -63,29 +57,26 @@ class DepthView(
     (asks, bids)
   }
 
-  private def calculate(prev: DepthOrder, next: DepthOrder): Unit = this.synchronized {
+  private[core] def calculate(prev: DepthOrder, next: DepthOrder): Unit = this.synchronized {
     val isAsk = next.isAsk(marketId)
     val orderPrice = next.price.doubleValue()
     val updatedAmount = next.amountS - prev.amountS
 
-    var src = if (isAsk) asks else bids
-    var dest = mutable.SortedMap.empty[Double, DepthEntry]
+    var dest = if (isAsk) asks else bids
 
-    src.map { a ⇒
-      val price = middlePrice(a._1)
-      val entry = dest.getOrElse(price, DepthEntry(price, 0))
-      val amount = entry.amountS + updatedAmount
-      dest += price -> entry.copy(price, amount)
-    }
+    val price = middlePrice(orderPrice)
+    val entry = if (isAsk) asks.getOrElse(price, DepthEntry(price, 0)) else bids.getOrElse(price, DepthEntry(price, 0))
+    val amount = entry.amountS + updatedAmount
+    val newentry = entry.copy(price, amount)
 
-    if (isAsk) asks = dest else bids = dest
+    if (isAsk) asks += price -> newentry else bids += price -> newentry
   }
 
-  private def middlePrice(price: Double): Double = {
-    if (price <= granularity.value) {
-      granularity.value
+  private[core] def middlePrice(price: Double): Double = {
+    if (price <= granularity) {
+      granularity
     } else {
-      ((price / granularity.value).round * granularity.value).scaled(granularity.decimal)
+      (price / granularity).ceil * granularity
     }
   }
 }

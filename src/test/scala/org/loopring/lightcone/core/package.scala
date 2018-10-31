@@ -21,6 +21,7 @@ package object helper {
   val lrc = "LRC"
   val xyz = "XYZ"
   val gto = "GTO"
+  val eth = "WETH"
 
   def prepare = {
     implicit val tokenValueEstimator = new TokenValueEstimatorImpl()
