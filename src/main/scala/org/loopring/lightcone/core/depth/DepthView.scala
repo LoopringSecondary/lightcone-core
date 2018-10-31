@@ -43,8 +43,8 @@ class DepthView(
   assert(granularity.value >= 0.00000001d)
 
   // asks是卖出,bids是买入
-  private var asks = mutable.SortedMap.empty[Double, DepthEntry]
-  private var bids = mutable.SortedMap.empty[Double, DepthEntry]
+  private[core] var asks = mutable.SortedMap.empty[Double, DepthEntry]
+  private[core] var bids = mutable.SortedMap.empty[Double, DepthEntry]
 
   def set(order: DepthOrder) = {
     orderPool.getOrder(order.id) match {
@@ -60,8 +60,26 @@ class DepthView(
     }
   }
 
-  def get() = {
-    (asks, bids)
+  // 获取链上最近一次成交价对应的固定长度非交叉数据
+  // asks&bids交叉部分,分别计算出对应的深度,并去除深度小的部分
+  def get(middlePrice: Double, length: Int) = {
+    val midAsks = asks.takeWhile(_._1 <= middlePrice)
+    val midBids = bids.takeWhile(_._1 >= middlePrice)
+
+    val midAsksDepth = midAsks.map(_._2.amountS).sum
+    var midBidsDepth = midBids.map(_._2.amountS).sum
+
+    if (midAsksDepth > midBidsDepth) {
+      (
+        asks.take(length),
+        bids.from(middlePrice + granularity.value).takeRight(length)
+      )
+    } else {
+      (
+        asks.from(middlePrice + granularity.value).take(length),
+        bids.takeRight(length)
+      )
+    }
   }
 
   private[core] def calculate(prev: DepthOrder, next: DepthOrder): Unit = this.synchronized {
@@ -69,14 +87,18 @@ class DepthView(
     val orderPrice = next.price.doubleValue()
     val updatedAmount = next.amountS - prev.amountS
 
-    var dest = if (isAsk) asks else bids
-
     val price = middlePrice(orderPrice)
     val entry = if (isAsk) asks.getOrElse(price, DepthEntry(price, 0)) else bids.getOrElse(price, DepthEntry(price, 0))
     val amount = entry.amountS + updatedAmount
     val newentry = entry.copy(price, amount)
 
-    if (isAsk) asks += price -> newentry else bids += price -> newentry
+    if (isAsk) {
+      asks += price -> newentry
+      if (asks.size > maxLength) asks = asks.dropRight(1)
+    } else {
+      bids += price -> newentry
+      if (bids.size > maxLength) bids = bids.drop(1)
+    }
   }
 
   private[core] def middlePrice(price: Double): Double = {
