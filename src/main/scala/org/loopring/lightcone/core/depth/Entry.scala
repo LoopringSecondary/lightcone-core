@@ -16,22 +16,7 @@
 
 package org.loopring.lightcone.core
 
-trait OrderManager {
-  def hasTokenManager(token: Address): Boolean
-  def addTokenManager(tm: TokenManager): TokenManager
-  def getTokenManager(token: Address): TokenManager
-
-  def submitOrder(order: Order): Boolean
-  def cancelOrder(orderId: ID): Boolean
-  def adjustOrder(orderId: ID, outstandingAmountS: Amount): Boolean
-}
-
-object OrderManager {
-  def default(
-    maxNumOrders: Int = 1000
-  )(
-    implicit
-    orderPool: OrderPool[Order]
-  ): OrderManager =
-    new OrderManagerImpl(maxNumOrders)
-}
+case class Entry(
+    tokenS: Address,
+    amountS: Amount = 0
+)

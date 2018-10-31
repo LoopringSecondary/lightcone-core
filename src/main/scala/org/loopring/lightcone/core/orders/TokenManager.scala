@@ -37,7 +37,7 @@ class TokenManager(
     val maxNumOrders: Int = 1000
 )(
     implicit
-    orderPool: OrderPool,
+    orderPool: OrderPool[Order],
     dustEvaluator: DustOrderEvaluator
 ) extends Object with Logging {
   implicit private val _t = token

@@ -16,19 +16,19 @@
 
 package org.loopring.lightcone.core
 
-import org.slf4s.Logging
+trait OrderPool[T] extends Object {
 
-class OrderPool extends Object with Logging {
-
-  type Callback = Order ⇒ Unit
+  type Callback = T ⇒ Unit
 
   private var callbacks = Seq.empty[Callback]
-  private var orderMap = Map.empty[ID, Order]
+  private var orderMap = Map.empty[ID, T]
 
-  def apply(id: ID): Order = orderMap(id)
-  def getOrder(id: ID): Option[Order] = orderMap.get(id)
+  def apply(id: ID): T = orderMap(id)
+  def getOrder(id: ID): Option[T] = orderMap.get(id)
   def contains(id: ID): Boolean = orderMap.contains(id)
   def orders() = orderMap.values
+  def add(id: ID, order: T) = orderMap += id -> order
+  def del(id: ID) = orderMap -= id
 
   def addCallback(callback: Callback) = {
     callbacks :+= callback
@@ -40,23 +40,7 @@ class OrderPool extends Object with Logging {
     callbacks
   }
 
-  private[core] def +=(order: Order) = {
-    orderMap.get(order.id) match {
-      case Some(existing) if existing == order ⇒
+  def callback(t: T): Unit = callbacks.foreach(_(t))
 
-      case _ ⇒ order.status match {
-        case OrderStatus.NEW ⇒
-          orderMap += order.id -> order
-
-        case OrderStatus.PENDING ⇒
-          orderMap += order.id -> order
-          callbacks.foreach(_(order))
-
-        case _ ⇒
-          log.debug("drop_order_from_pool: " + order)
-          orderMap -= order.id
-          callbacks.foreach(_(order))
-      }
-    }
-  }
+  def +=(t: T): Unit
 }
