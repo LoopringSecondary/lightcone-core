@@ -45,7 +45,7 @@ object MarketManagerImpl {
 }
 
 class MarketManagerImpl(
-    marketId: MarketId,
+    val marketId: MarketId,
     config: MarketManagerConfig,
     ringMatcher: RingMatcher
 )(
