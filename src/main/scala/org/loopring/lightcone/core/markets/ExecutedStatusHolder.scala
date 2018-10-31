@@ -35,7 +35,7 @@ trait ExecutedStatusHolder {
   def getPreFailedCount(hash: ID): Int
 }
 
-class ExecutedStatusHolderImp extends ExecutedStatusHolder {
+class ExecutedStatusHolderImpl extends ExecutedStatusHolder {
   val ringOrOrderOnChainFailed = HashMap.empty[ID, Int]
   val ringOrOrderPreFailed = HashMap.empty[ID, Int]
 
