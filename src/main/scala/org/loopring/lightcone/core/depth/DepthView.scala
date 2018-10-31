@@ -23,9 +23,15 @@ case class DepthEntry(
     amountS: Amount = 0
 )
 
+// decimal为小数点后精确位数
+case class Granularity(
+    value: Double = 0.1d,
+    decimal: Int = 1
+)
+
 class DepthView(
     marketId: MarketId,
-    granularity: Double,
+    granularity: Granularity,
     maxLength: Int = 1000
 )(
     implicit
@@ -33,7 +39,8 @@ class DepthView(
 ) {
 
   assert(maxLength > 0)
-  assert(granularity > 0)
+  // todo: 注意:订单价格使用double表示,极限值:小数点后8位,是否需要改动
+  assert(granularity.value >= 0.00000001d)
 
   // asks是卖出,bids是买入
   private var asks = mutable.SortedMap.empty[Double, DepthEntry]
@@ -73,10 +80,10 @@ class DepthView(
   }
 
   private[core] def middlePrice(price: Double): Double = {
-    if (price <= granularity) {
-      granularity
+    if (price <= granularity.value) {
+      granularity.value
     } else {
-      (price / granularity).ceil * granularity
+      ((price / granularity.value).ceil * granularity.value).scaled(granularity.decimal)
     }
   }
 }

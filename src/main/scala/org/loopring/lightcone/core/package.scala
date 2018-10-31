@@ -28,4 +28,9 @@ package object core {
     def min(that: Amount): Amount = if (this_ < that) this_ else that
     def max(that: Amount): Amount = if (this_ > that) this_ else that
   }
+
+  implicit class RichDouble(d: Double) {
+    def scaled(s: Int) = BigDecimal(d).setScale(s, BigDecimal.RoundingMode.HALF_UP).toDouble
+  }
+
 }

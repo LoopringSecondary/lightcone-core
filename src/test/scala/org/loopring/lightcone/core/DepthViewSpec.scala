@@ -25,14 +25,23 @@ class DepthViewSpec extends FlatSpec with Matchers {
     info("[sbt core/'testOnly *DepthViewSpec -- -z priceTest']")
 
     implicit val orderPool = new DepthOrderPoolImpl()
-    val granularity = 0.01d
     val marketId = MarketId(lrc, eth) // market == eth
-    val depthView = new DepthView(marketId, granularity)
 
-    depthView.middlePrice(0.001) should be(0.01)
-    depthView.middlePrice(0.02) should be(0.02)
-    depthView.middlePrice(0.021) should be(0.03)
-    depthView.middlePrice(0.029) should be(0.03)
+    val granularity1 = Granularity(0.01, 2)
+    val depthView1 = new DepthView(marketId, granularity1)
+
+    depthView1.middlePrice(0.001) should be(0.01)
+    depthView1.middlePrice(0.02) should be(0.02)
+    depthView1.middlePrice(0.021) should be(0.03)
+    depthView1.middlePrice(0.029) should be(0.03)
+
+    val granularity2 = Granularity(0.00000001d, 8)
+    val depthView2 = new DepthView(marketId, granularity2) // 10 -8次方
+
+    depthView2.middlePrice(0.0000000001d) should be(0.00000001d)
+    depthView2.middlePrice(120.00000002d) should be(120.00000002d)
+    depthView2.middlePrice(120.000000021d) should be(120.00000003d)
+    depthView2.middlePrice(120.000000029d) should be(120.00000003d)
   }
 
   "simpleTest1" should "set new orders" in {
@@ -40,7 +49,7 @@ class DepthViewSpec extends FlatSpec with Matchers {
     info("[sbt core/'testOnly *DepthViewSpec -- -z simpleTest1']")
 
     implicit val orderPool = new DepthOrderPoolImpl()
-    val granularity = 0.01d
+    val granularity = Granularity(0.01d, 2)
     val marketId = MarketId(lrc, eth) // market == eth
     val depthView = new DepthView(marketId, granularity)
 
