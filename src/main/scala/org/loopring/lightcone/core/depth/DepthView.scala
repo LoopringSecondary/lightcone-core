@@ -67,7 +67,7 @@ class DepthView(
     val midBids = bids.takeWhile(_._1 >= middlePrice)
 
     val midAsksDepth = midAsks.map(_._2.amountS).sum
-    var midBidsDepth = midBids.map(_._2.amountS).sum
+    val midBidsDepth = midBids.map(_._2.amountS).sum
 
     if (midAsksDepth > midBidsDepth) {
       (
@@ -88,15 +88,15 @@ class DepthView(
     val updatedAmount = next.amountS - prev.amountS
 
     val price = middlePrice(orderPrice)
-    val entry = if (isAsk) asks.getOrElse(price, DepthEntry(price, 0)) else bids.getOrElse(price, DepthEntry(price, 0))
-    val amount = entry.amountS + updatedAmount
-    val newentry = entry.copy(price, amount)
+    val _entry = if (isAsk) asks.getOrElse(price, DepthEntry(price, 0)) else bids.getOrElse(price, DepthEntry(price, 0))
+    val amount = _entry.amountS + updatedAmount
+    val entry = _entry.copy(price, amount)
 
     if (isAsk) {
-      asks += price -> newentry
+      asks += price -> entry
       if (asks.size > maxLength) asks = asks.dropRight(1)
     } else {
-      bids += price -> newentry
+      bids += price -> entry
       if (bids.size > maxLength) bids = bids.drop(1)
     }
   }
