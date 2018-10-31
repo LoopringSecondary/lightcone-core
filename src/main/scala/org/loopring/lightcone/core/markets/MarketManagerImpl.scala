@@ -168,6 +168,10 @@ class MarketManagerImpl(
     sides(order.tokenS).remove(order) //pending应该不用清除，而是等待以太坊事件回调或过期
   }
 
+  def blockedRing(ring: Ring): Unit = {
+    pendingRingPool.removeRing(ring.id)
+  }
+
   def triggerMatch(): SubmitOrderResult = {
     val maxBidsPrice = (bids.headOption map {
       head ⇒ Rational(head.amountS, head.amountB)
