@@ -63,21 +63,20 @@ class DepthView(
   // todo: 后续是不是改成约定交叉部分只用asks/bids
   // 获取链上最近一次成交价对应的固定长度非交叉数据
   // asks&bids交叉部分,分别计算出对应的深度,并去除深度小的部分
-  def get(middlePrice: Double, length: Int) = {
-    val midAsks = asks.takeWhile(_._1 <= middlePrice)
-    val midBids = bids.takeWhile(_._1 >= middlePrice)
+  def get(_middlePrice: Double, length: Int) = {
+    val midPrice = middlePrice(_middlePrice)
 
-    val midAsksDepth = midAsks.map(_._2.amountS).sum
-    val midBidsDepth = midBids.map(_._2.amountS).sum
+    val midAsksDepth = asks.filter(_._1 <= midPrice).map(_._2.amountS).sum
+    val midBidsDepth = bids.filter(_._1 >= midPrice).map(_._2.amountS).sum
 
     if (midAsksDepth > midBidsDepth) {
       (
         asks.take(length),
-        bids.from(middlePrice + granularity.value).takeRight(length)
+        bids.until(midPrice).takeRight(length)
       )
     } else {
       (
-        asks.from(middlePrice + granularity.value).take(length),
+        asks.from(midPrice + granularity.value).take(length),
         bids.takeRight(length)
       )
     }

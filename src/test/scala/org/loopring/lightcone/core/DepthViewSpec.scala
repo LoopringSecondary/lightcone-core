@@ -211,29 +211,61 @@ class DepthViewSpec extends FlatSpec with Matchers {
     orderPool.contains(order2.id) should be(false)
   }
 
-  "simpleTest1" should "set new orders" in {
+  // 构造asks&bids以及交叉部分,
+  // 交叉部分asks > bids 最终展示asks的交叉部分
+  "getTest" should "get asks and bids" in {
 
-    info("[sbt core/'testOnly *DepthViewSpec -- -z simpleTest1']")
+    info("[sbt core/'testOnly *DepthViewSpec -- -z getTest']")
 
     implicit val orderPool = new DepthOrderPoolImpl()
-    val granularity = Granularity(0.01d, 2)
+    val granularity = Granularity(0.1d, 1)
     val marketId = MarketId(lrc, eth) // market == eth
-    val depthView = new DepthView(marketId, granularity)
+    val depth = new DepthView(marketId, granularity)
 
-    info(depthView.middlePrice(0.023).toString)
+    val order1 = DepthOrder("1", eth, lrc, Rational(1.15), 100)
+    val order2 = order1.copy(id = "2", price = Rational(1.09), amountS = 100)
+    val order3 = order1.copy(id = "3", price = Rational(0.93), amountS = 200)
+    val order4 = order1.copy(id = "4", price = Rational(0.95), amountS = 100)
 
-    //    val orders = Seq[DepthOrder](
-    //      DepthOrder("1", lrc, eth, Rational(0.01), 100),
-    //      DepthOrder("2", lrc, eth, Rational(0.02), 100),
-    //      DepthOrder("3", lrc, eth, Rational(0.03), 100)
-    //    )
-    //
-    //    orders.map(depthView.set)
-    //
-    //    val (asks, bids) = depthView.get()
-    //
-    //    info("asks:" + asks.toString())
-    //    info("bids:" + bids.toString())
+    depth.set(order1)
+    depth.set(order2)
+    depth.set(order3)
+    depth.set(order4)
+
+    depth.asks.size should be(3)
+    depth.asks.get(1.2).map(_.amountS should be(100))
+    depth.asks.get(1.1).map(_.amountS should be(100))
+    depth.asks.get(1.0).map(_.amountS should be(300))
+
+    val order11 = DepthOrder("11", lrc, eth, Rational(0.76), 100)
+    val order21 = order11.copy(id = "21", price = Rational(0.86), amountS = 100)
+    val order31 = order11.copy(id = "31", price = Rational(0.93), amountS = 100)
+    val order41 = order11.copy(id = "41", price = Rational(0.93), amountS = 100)
+
+    depth.set(order11)
+    depth.set(order21)
+    depth.set(order31)
+    depth.set(order41)
+
+    depth.bids.size should be(3)
+    depth.bids.get(1.0).map(_.amountS should be(200))
+    depth.bids.get(0.9).map(_.amountS should be(100))
+    depth.bids.get(0.8).map(_.amountS should be(100))
+
+    val (asks1, bids1) = depth.get(0.94, 10)
+    asks1.size should be(3)
+    asks1.get(1.2).map(_.amountS should be(100))
+    asks1.get(1.1).map(_.amountS should be(100))
+    asks1.get(1.0).map(_.amountS should be(300))
+    bids1.size should be(2)
+    bids1.get(0.9).map(_.amountS should be(100))
+    bids1.get(0.8).map(_.amountS should be(100))
+
+    val (asks2, bids2) = depth.get(0.94, 1)
+    asks2.size should be(1)
+    asks2.get(1.0).map(_.amountS should be(300))
+    bids2.size should be(1)
+    bids2.get(0.9).map(_.amountS should be(100))
   }
 
 }
