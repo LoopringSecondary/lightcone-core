@@ -32,7 +32,7 @@ case class Granularity(
 class DepthView(
     marketId: MarketId,
     granularity: Granularity,
-    maxLength: Int = 1000
+    maxLength: Int = 100000
 )(
     implicit
     orderPool: OrderPool[DepthOrder]
