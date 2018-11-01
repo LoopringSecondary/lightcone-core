@@ -32,7 +32,7 @@ case class OrderBookMetadata(
 
 trait MarketManager {
 
-  case class SubmitOrderResult(rings: Seq[Ring], fullyMatchedOrderIds: Seq[ID])
+  case class SubmitOrderResult(rings: Seq[Ring], fullyMatchedOrderIds: Seq[ID], affectedOrders: Map[ID, Order])
   def submitOrder(order: Order): SubmitOrderResult
 
   def deleteOrder(order: Order): Boolean
