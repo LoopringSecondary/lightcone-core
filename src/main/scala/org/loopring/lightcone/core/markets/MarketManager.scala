@@ -31,13 +31,11 @@ case class OrderBookMetadata(
 }
 
 trait MarketManager {
-
+  val marketId: MarketId
   case class SubmitOrderResult(rings: Seq[Ring], fullyMatchedOrderIds: Seq[ID], affectedOrders: Map[ID, Order])
   def submitOrder(order: Order): SubmitOrderResult
-
   def deleteOrder(order: Order): Boolean
-
   def triggerMatch(): SubmitOrderResult
-
+  def deletePendingRing(ring: Ring): Unit
   // def getMetadata(): OrderBookMetadata
 }
