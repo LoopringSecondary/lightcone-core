@@ -45,7 +45,7 @@ object MarketManagerImpl {
 }
 
 class MarketManagerImpl(
-    marketId: MarketId,
+    val marketId: MarketId,
     config: MarketManagerConfig,
     ringMatcher: RingMatcher
 )(
@@ -166,6 +166,10 @@ class MarketManagerImpl(
 
   def deleteOrder(order: Order): Boolean = {
     sides(order.tokenS).remove(order) //pending应该不用清除，而是等待以太坊事件回调或过期
+  }
+
+  def deletePendingRing(ring: Ring): Unit = {
+    pendingRingPool.removeRing(ring.id)
   }
 
   def triggerMatch(): SubmitOrderResult = {
