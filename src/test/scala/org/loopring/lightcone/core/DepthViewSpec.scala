@@ -184,6 +184,33 @@ class DepthViewSpec extends FlatSpec with Matchers {
     orderPool.contains(order7.id) should be(true)
   }
 
+  "delOrderTest" should "del order while amountS is 0" in {
+    info("[sbt core/'testOnly *DepthViewSpec -- -z delOrderTest']")
+
+    implicit val orderPool = new DepthOrderPoolImpl()
+    val marketId = MarketId(lrc, eth) // market == eth
+
+    val granularity = Granularity(0.01, 2)
+    val depth = new DepthView(marketId, granularity, 3)
+
+    val order1 = DepthOrder("1", eth, lrc, Rational(0.001), 50)
+    val order2 = order1.copy(id = "2", price = Rational(0.031), amountS = 100)
+    depth.set(order1)
+    depth.set(order2)
+    orderPool.contains(order1.id) should be(true)
+    orderPool.contains(order2.id) should be(true)
+
+    val delOrder1 = order1.copy(amountS = 0)
+    depth.set(delOrder1)
+    orderPool.contains(order1.id) should be(false)
+    orderPool.contains(order2.id) should be(true)
+
+    val delOrder2 = order2.copy(amountS = 0)
+    depth.set(delOrder2)
+    orderPool.contains(order1.id) should be(false)
+    orderPool.contains(order2.id) should be(false)
+  }
+
   "simpleTest1" should "set new orders" in {
 
     info("[sbt core/'testOnly *DepthViewSpec -- -z simpleTest1']")
