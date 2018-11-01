@@ -16,22 +16,29 @@
 
 package org.loopring.lightcone.core
 
-trait OrderManager {
-  def hasTokenManager(token: Address): Boolean
-  def addTokenManager(tm: TokenManager): TokenManager
-  def getTokenManager(token: Address): TokenManager
+import org.slf4s.Logging
 
-  def submitOrder(order: Order): Boolean
-  def cancelOrder(orderId: ID): Boolean
-  def adjustOrder(orderId: ID, outstandingAmountS: Amount): Boolean
-}
+class DepthOrderPoolImpl extends OrderPool[DepthOrder] with Logging {
 
-object OrderManager {
-  def default(
-    maxNumOrders: Int = 1000
-  )(
-    implicit
-    orderPool: OrderPool[Order]
-  ): OrderManager =
-    new OrderManagerImpl(maxNumOrders)
+  // amount为订单剩余量
+  def +=(order: DepthOrder): Unit = {
+    getOrder(order.id) match {
+      case Some(existing) ⇒
+        if (order.amountS > 0) {
+          add(order.id, order)
+        } else {
+          log.debug("drop_order_from_pool: " + order.id)
+          del(order.id)
+        }
+        callback(order)
+
+      case _ ⇒
+        if (order.amountS > 0) {
+          add(order.id, order)
+          callback(order)
+        } else {
+          log.debug("order not exist:" + order.id + "while del")
+        }
+    }
+  }
 }

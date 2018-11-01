@@ -33,7 +33,7 @@ class OrderManagerSpec extends FlatSpec with Matchers {
       "GTO" -> 1
     ))
     implicit val dustEvaluator = new DustOrderEvaluatorImpl(0)
-    implicit val orderPool = new OrderPool()
+    implicit val orderPool = new OrderPoolImpl()
 
     var receivedOrders = Map.empty[String, Order]
 

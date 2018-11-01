@@ -21,12 +21,6 @@ import org.slf4s.Logging
 import scala.annotation.tailrec
 import scala.collection.mutable.SortedSet
 
-// For ABC-XYZ market, ABC is secondary, XYZ is primary
-case class MarketId(
-    primary: Address,
-    secondary: Address
-)
-
 case class MarketManagerConfig(
     maxNumBuys: Int,
     maxNumSells: Int,

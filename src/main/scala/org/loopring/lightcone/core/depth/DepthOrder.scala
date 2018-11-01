@@ -16,22 +16,22 @@
 
 package org.loopring.lightcone.core
 
-trait OrderManager {
-  def hasTokenManager(token: Address): Boolean
-  def addTokenManager(tm: TokenManager): TokenManager
-  def getTokenManager(token: Address): TokenManager
+case class DepthOrder(
+    id: ID,
+    tokenS: Address,
+    tokenB: Address,
+    price: Rational = Rational(0),
+    amountS: Amount = 0
+) {
 
-  def submitOrder(order: Order): Boolean
-  def cancelOrder(orderId: ID): Boolean
-  def adjustOrder(orderId: ID, outstandingAmountS: Amount): Boolean
-}
+  assert(tokenS != tokenB)
+  assert(price.doubleValue() > 0)
 
-object OrderManager {
-  def default(
-    maxNumOrders: Int = 1000
-  )(
-    implicit
-    orderPool: OrderPool[Order]
-  ): OrderManager =
-    new OrderManagerImpl(maxNumOrders)
+  def isAsk(marketId: MarketId): Boolean = {
+    val tokenSet = Set(marketId.primary, marketId.secondary)
+    assert(tokenSet.contains(tokenS) && tokenSet.contains(tokenB))
+
+    tokenS == marketId.sellDirection
+  }
+
 }

@@ -21,6 +21,7 @@ package object helper {
   val lrc = "LRC"
   val xyz = "XYZ"
   val gto = "GTO"
+  val eth = "WETH"
 
   def prepare = {
     implicit val tokenValueEstimator = new TokenValueEstimatorImpl()
@@ -36,7 +37,7 @@ package object helper {
     ))
 
     implicit val dustEvaluator = new DustOrderEvaluatorImpl(0)
-    implicit val orderPool = new OrderPool()
+    implicit val orderPool = new OrderPoolImpl()
 
     val manager = OrderManager.default()
 

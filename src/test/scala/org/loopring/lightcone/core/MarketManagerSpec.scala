@@ -32,7 +32,7 @@ class MarketManagerSpec extends FlatSpec with Matchers {
 
   implicit val dustEvaluator = new DustOrderEvaluatorImpl(5)
 
-  implicit val orderPool = new OrderPool()
+  implicit val orderPool = new OrderPoolImpl()
   implicit val timeProvider = new SystemTimeProvider()
   implicit val pendingRingPool = new PendingRingPoolImpl()
   var marketManager = new MarketManagerImpl(
