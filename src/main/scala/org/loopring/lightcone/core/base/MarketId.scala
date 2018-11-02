@@ -20,9 +20,4 @@ package org.loopring.lightcone.core
 case class MarketId(
     primary: Address,
     secondary: Address
-) {
-
-  def sellDirection: Address = secondary
-  def buyDirection: Address = primary
-
-}
+)
