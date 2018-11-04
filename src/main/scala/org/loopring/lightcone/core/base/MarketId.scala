@@ -16,7 +16,7 @@
 
 package org.loopring.lightcone.core
 
-// For ABC-XYZ market, ABC is secondary, XYZ is primary
+// For ABC/XYZ market, ABC is secondary, XYZ is primary
 case class MarketId(
     primary: Address,
     secondary: Address

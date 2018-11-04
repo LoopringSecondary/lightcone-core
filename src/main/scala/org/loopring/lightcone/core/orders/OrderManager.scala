@@ -31,7 +31,7 @@ object OrderManager {
     maxNumOrders: Int = 1000
   )(
     implicit
-    orderPool: OrderPool[Order]
+    orderPool: OrderPool
   ): OrderManager =
     new OrderManagerImpl(maxNumOrders)
 }

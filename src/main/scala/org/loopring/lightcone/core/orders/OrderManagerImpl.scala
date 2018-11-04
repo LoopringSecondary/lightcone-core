@@ -22,7 +22,7 @@ final private[core] class OrderManagerImpl(
     maxNumOrders: Int
 )(
     implicit
-    orderPool: OrderPool[Order]
+    orderPool: OrderPool
 ) extends OrderManager with Logging {
 
   assert(maxNumOrders > 0)

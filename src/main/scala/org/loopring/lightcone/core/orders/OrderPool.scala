@@ -18,7 +18,33 @@ package org.loopring.lightcone.core
 
 import org.slf4s.Logging
 
-class OrderPoolImpl extends OrderPool[Order] with Logging {
+class OrderPool extends Object with Logging {
+
+  type Callback = Order ⇒ Unit
+
+  private var callbacks = Seq.empty[Callback]
+  private var orderMap = Map.empty[ID, Order]
+
+  def apply(id: ID): Order = orderMap(id)
+  def getOrder(id: ID): Option[Order] = orderMap.get(id)
+  def contains(id: ID): Boolean = orderMap.contains(id)
+  def orders() = orderMap.values
+  def add(id: ID, order: Order): Unit = orderMap += id -> order
+  def del(id: ID): Unit = orderMap -= id
+  def size: Int = orderMap.size
+  def toMap = orderMap
+
+  def addCallback(callback: Callback) = {
+    callbacks :+= callback
+    callbacks
+  }
+
+  def removeCallback(callback: Callback) = {
+    callbacks = callbacks.dropWhile(_ == callback)
+    callbacks
+  }
+
+  def callback(order: Order): Unit = callbacks.foreach(_(order))
 
   def +=(order: Order) = {
     getOrder(order.id) match {

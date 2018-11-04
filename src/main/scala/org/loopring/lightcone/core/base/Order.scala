@@ -54,6 +54,7 @@ case class Order(
   def actual = _actual.getOrElse(OrderState())
   def matchable = _matchable.getOrElse(OrderState())
 
+  // rate is the price of this sell-order
   lazy val rate = Rational(amountB, amountS)
 
   def withOutstandingAmountS(v: Amount) = {

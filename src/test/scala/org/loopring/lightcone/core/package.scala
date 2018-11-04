@@ -37,7 +37,7 @@ package object helper {
     ))
 
     implicit val dustEvaluator = new DustOrderEvaluatorImpl(0)
-    implicit val orderPool = new OrderPoolImpl()
+    implicit val orderPool = new OrderPool()
 
     val manager = OrderManager.default()
 
