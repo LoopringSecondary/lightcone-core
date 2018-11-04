@@ -22,7 +22,7 @@ trait PendingRingPool {
   def getOrderPendingAmountS(orderId: ID): Amount
   def hasRing(ringId: RingID): Boolean
 
-  def addRing(ring: Ring): Unit
+  def addRing(ring: OrderRing): Unit
   def removeRing(ringId: RingID): Unit
   def removeAllRings(): Unit
   def removeRingsBefore(timestamp: Long): Unit
@@ -70,7 +70,7 @@ class PendingRingPoolImpl()(
 
   def hasRing(ringId: RingID) = ringMap.contains(ringId)
 
-  def addRing(ring: Ring) = {
+  def addRing(ring: OrderRing) = {
     ringMap.get(ring.id) match {
       case Some(_) ⇒
       case None ⇒

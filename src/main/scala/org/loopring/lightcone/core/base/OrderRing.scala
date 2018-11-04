@@ -43,7 +43,7 @@ case class ExpectedFill(
   }
 }
 
-case class Ring(
+case class OrderRing(
     maker: ExpectedFill,
     taker: ExpectedFill
 ) {

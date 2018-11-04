@@ -32,7 +32,8 @@ class OrderPool extends Object with Logging {
   def add(id: ID, order: Order): Unit = orderMap += id -> order
   def del(id: ID): Unit = orderMap -= id
   def size: Int = orderMap.size
-  def toMap = orderMap
+
+  private[core] def toMap = orderMap
 
   def addCallback(callback: Callback) = {
     callbacks :+= callback

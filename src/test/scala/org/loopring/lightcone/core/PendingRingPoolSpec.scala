@@ -42,7 +42,7 @@ class PendingRingPoolSpec extends FlatSpec with Matchers {
           pending = OrderState(amountS = 100, amountFee = 100),
           amountMargin = 100
         )
-        val ring = Ring(
+        val ring = OrderRing(
           makerExpectFill.copy(
             amountMargin = 0,
             pending = OrderState(amountS = 100, amountFee = 10)
@@ -73,7 +73,7 @@ class PendingRingPoolSpec extends FlatSpec with Matchers {
       pending = OrderState(amountS = 100, amountFee = 100),
       amountMargin = 100
     )
-    val ring = Ring(
+    val ring = OrderRing(
       makerExpectFill.copy(
         amountMargin = 0,
         pending = OrderState(amountS = 100, amountFee = 10)
@@ -96,7 +96,7 @@ class PendingRingPoolSpec extends FlatSpec with Matchers {
       pending = OrderState(amountS = 100, amountFee = 100),
       amountMargin = 100
     )
-    val ring1 = Ring(
+    val ring1 = OrderRing(
       makerExpectFill.copy(
         amountMargin = 0,
         pending = OrderState(amountS = 100, amountFee = 10)
@@ -127,7 +127,7 @@ class PendingRingPoolSpec extends FlatSpec with Matchers {
       pending = OrderState(amountS = 100, amountFee = 100),
       amountMargin = 100
     )
-    val ring1 = Ring(
+    val ring1 = OrderRing(
       takerExpectFillNew1.copy(
         amountMargin = 0,
         pending = OrderState(amountS = 100, amountFee = 0)

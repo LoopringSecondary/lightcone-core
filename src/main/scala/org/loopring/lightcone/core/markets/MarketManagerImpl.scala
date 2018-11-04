@@ -74,7 +74,7 @@ class MarketManagerImpl(
   private[core] def submitOrderInternal(order: Order): SubmitOrderResult = {
     log.debug(s"taker order: $order , ${pendingRingPool.getOrderPendingAmountS(order.id)} ")
 
-    var rings = Seq.empty[Ring]
+    var rings = Seq.empty[OrderRing]
     var makerOrdersRecyclable = Seq.empty[Order]
     var fullyMatchedOrderIds = Seq.empty[ID]
     var affectedOrders = Map.empty[ID, Order]
@@ -162,7 +162,7 @@ class MarketManagerImpl(
     sides(order.tokenS).remove(order) //pending应该不用清除，而是等待以太坊事件回调或过期
   }
 
-  def deletePendingRing(ring: Ring): Unit = {
+  def deletePendingRing(ring: OrderRing): Unit = {
     pendingRingPool.removeRing(ring.id)
   }
 
@@ -172,7 +172,7 @@ class MarketManagerImpl(
     }).getOrElse(Rational(0))
     val rationalOne = Rational(1)
 
-    var rings = Seq.empty[Ring]
+    var rings = Seq.empty[OrderRing]
     var fullyMatchedOrderIds = Set.empty[ID]
     var affectedOrders = Map.empty[ID, Order]
     var askOrdersRecyclable = Seq.empty[Order]

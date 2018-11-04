@@ -42,7 +42,7 @@ class RingIncomeEvaluatorSpec extends FlatSpec with Matchers {
   //info("[sbt core/'testOnly *RingIncomeEvaluatorSpec -- -z incomeEvaluator']")
   "getFiatValue" should "only lrcfee" in {
     //只计算lrcfee时的收益,amountMargin = 0, amountFee = 100
-    val ring = Ring(
+    val ring = OrderRing(
       makerExpectFill.copy(
         amountMargin = 0,
         pending = OrderState(amountS = 100, amountFee = 100)
@@ -61,7 +61,7 @@ class RingIncomeEvaluatorSpec extends FlatSpec with Matchers {
   //
   "getFiatValue" should "only margin" in {
     //只计算lrcfee时的收益,amountMargin = 0, amountFee = 100
-    val ring = Ring(
+    val ring = OrderRing(
       makerExpectFill.copy(
         amountMargin = 100,
         pending = OrderState(amountS = 100, amountFee = 0)
@@ -79,7 +79,7 @@ class RingIncomeEvaluatorSpec extends FlatSpec with Matchers {
 
   "getFiatValue" should "mix lrc and margin" in {
     //只计算lrcfee时的收益,amountMargin = 0, amountFee = 100
-    val ring = Ring(
+    val ring = OrderRing(
       makerExpectFill.copy(
         amountMargin = 100,
         pending = OrderState(amountS = 100, amountFee = 100)
@@ -96,7 +96,7 @@ class RingIncomeEvaluatorSpec extends FlatSpec with Matchers {
   }
 
   "isProfitable" should "test isProfitable" in {
-    val ring = Ring(
+    val ring = OrderRing(
       makerExpectFill.copy(
         amountMargin = 0,
         pending = OrderState(amountS = 100, amountFee = 10)
@@ -111,7 +111,7 @@ class RingIncomeEvaluatorSpec extends FlatSpec with Matchers {
     println(income)
     assert(incomeEvaluator.isProfitable(ring))
 
-    val ring1 = Ring(
+    val ring1 = OrderRing(
       makerExpectFill.copy(
         amountMargin = 0,
         pending = OrderState(amountS = 100, amountFee = 10)

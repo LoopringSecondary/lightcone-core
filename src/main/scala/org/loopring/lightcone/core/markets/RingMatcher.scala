@@ -24,7 +24,7 @@ trait RingMatcher {
   def matchOrders(
     taker: Order,
     maker: Order
-  ): Either[MatchingFailure, Ring]
+  ): Either[MatchingFailure, OrderRing]
 }
 
 class SimpleRingMatcher(
@@ -34,7 +34,7 @@ class SimpleRingMatcher(
   def matchOrders(
     taker: Order,
     maker: Order
-  ): Either[MatchingFailure, Ring] = {
+  ): Either[MatchingFailure, OrderRing] = {
     makeRing(maker, taker) match {
       case Some(ring) if ringIncomeEstimator.isProfitable(ring) ⇒ Right(ring)
       case Some(ring) ⇒ Left(INCOME_TOO_SMALL)
@@ -42,7 +42,7 @@ class SimpleRingMatcher(
     }
   }
 
-  private def makeRing(maker: Order, taker: Order): Option[Ring] = {
+  private def makeRing(maker: Order, taker: Order): Option[OrderRing] = {
     if (maker.amountS * taker.amountS < maker.amountB * taker.amountB) {
       None
     } else {
@@ -88,7 +88,7 @@ class SimpleRingMatcher(
 
       val makerMargin = (makerVolume.amountS - takerVolume.amountB).max(BigInt(0))
       val takerMargin = (takerVolume.amountS - makerVolume.amountB).max(BigInt(0))
-      val ring = Ring(
+      val ring = OrderRing(
         maker = ExpectedFill(
           order = maker.copy(
             _matchable = Some(OrderState(
