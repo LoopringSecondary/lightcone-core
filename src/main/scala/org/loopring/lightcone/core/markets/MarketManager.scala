@@ -36,7 +36,7 @@ trait MarketManager {
   case class SubmitOrderResult(
       rings: Set[OrderRing],
       // fullyMatchedOrders: Set[Order],
-      affectedOrders: Map[ID, Order],
+      matchedMakers: Map[ID, Order],
       taker: Option[Order]
   )
 

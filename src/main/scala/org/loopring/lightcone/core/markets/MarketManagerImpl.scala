@@ -63,11 +63,11 @@ class MarketManagerImpl(
   def submitOrder(order: Order): SubmitOrderResult = {
     // Allow re-submission of an existing order. In such case, we need to remove the original
     // copy of the order first.
-    removeOrderFromSide(order)
+    deleteOrder(order.id)
 
     val res = matchOrders(order)
 
-    res.affectedOrders.get(order.id) match {
+    res.matchedMakers.get(order.id) match {
       case None ⇒
         addOrderToSide(order) // why none???
       case Some(o) if !dustOrderEvaluator.isDust(o) ⇒
@@ -84,19 +84,19 @@ class MarketManagerImpl(
 
     var rings = Set.empty[OrderRing]
     var makersToAddBack = Set.empty[Order]
-    var affectedOrders = Map.empty[ID, Order]
+    var matchedMakers = Map.empty[ID, Order]
 
     var taker = updateOrderMatchable(order)
 
     if (dustOrderEvaluator.isDust(taker)) {
-      affectedOrders += taker.id → taker.copy(_matchable = Some(OrderState()))
+      matchedMakers += taker.id → taker.copy(_matchable = Some(OrderState()))
 
-      return SubmitOrderResult(rings, affectedOrders, Some(taker))
+      return SubmitOrderResult(rings, matchedMakers, Some(taker))
     }
 
     @tailrec
     def recursivelyMatchOrders(): Unit = {
-      popTopMakerOrder(taker).map { maker ⇒
+      popBestMakerOrder(taker).map { maker ⇒
         val updatdMaker = updateOrderMatchable(maker)
         (updatdMaker, ringMatcher.matchOrders(taker, updatdMaker))
       } match {
@@ -123,14 +123,14 @@ class MarketManagerImpl(
           rings += ring
 
           if (dustOrderEvaluator.isMatchableDust(updatedMaker)) {
-            affectedOrders += updatedMaker.id → updatedMaker.copy(_matchable = Some(OrderState()))
+            matchedMakers += updatedMaker.id → updatedMaker.copy(_matchable = Some(OrderState()))
           } else {
-            affectedOrders += updatedMaker.id → updatedMaker
+            matchedMakers += updatedMaker.id → updatedMaker
             makersToAddBack += updatedMaker
           }
 
           if (dustOrderEvaluator.isMatchableDust(taker)) {
-            affectedOrders += taker.id → taker.copy(_matchable = Some(OrderState()))
+            matchedMakers += taker.id → taker.copy(_matchable = Some(OrderState()))
           } else {
             recursivelyMatchOrders()
           }
@@ -150,7 +150,7 @@ class MarketManagerImpl(
     // put rings to the pendign pool
     rings.foreach(pendingRingPool.addRing)
 
-    SubmitOrderResult(rings, affectedOrders, Some(taker))
+    SubmitOrderResult(rings, matchedMakers, Some(taker))
   }
 
   def triggerMatch(): SubmitOrderResult = {
@@ -161,7 +161,7 @@ class MarketManagerImpl(
 
     var rings = Set.empty[OrderRing]
     var makersToAddBack = Set.empty[Order]
-    var affectedOrders = Map.empty[ID, Order]
+    var matchedMakers = Map.empty[ID, Order]
 
     @tailrec
     def recursivelyReMatch(): Unit = {
@@ -171,7 +171,7 @@ class MarketManagerImpl(
           //submitOrder会在在taker最后不为灰尘单时，会重新放入首部，
           //因此需要保证不会taker再放入secondaries
           val submitRes = matchOrders(taker)
-          submitRes.affectedOrders.get(taker.id) match {
+          submitRes.matchedMakers.get(taker.id) match {
             case None ⇒
               makersToAddBack += taker
             case Some(o) if !dustOrderEvaluator.isDust(o) ⇒
@@ -179,7 +179,7 @@ class MarketManagerImpl(
             case _ ⇒
           }
           rings ++= submitRes.rings
-          affectedOrders ++= submitRes.affectedOrders
+          matchedMakers ++= submitRes.matchedMakers
           if (Rational(taker.amountS, taker.amountB) * maxBidsPrice >= rationalOne) {
             recursivelyReMatch()
           }
@@ -191,14 +191,15 @@ class MarketManagerImpl(
 
     makersToAddBack.foreach(secondaries.add)
 
-    SubmitOrderResult(rings, affectedOrders, None)
+    SubmitOrderResult(rings, matchedMakers, None)
   }
 
   def deleteOrder(orderId: ID): Boolean = {
     orderMap.get(orderId) match {
       case None ⇒ false
       case Some(order) ⇒
-        removeOrderFromSide(order)
+        orderMap -= order.id
+        sides(order.tokenS) -= order
         true
     }
   }
@@ -209,17 +210,14 @@ class MarketManagerImpl(
 
   // Add an order to its side.
   private def addOrderToSide(order: Order) = {
-    orderMap += order.id -> order
-    sides(order.tokenS) += order
-  }
-
-  private def removeOrderFromSide(order: Order) = {
-    orderMap -= order.id
-    sides(order.tokenS) -= order
+    // always make sure _matchable is None.
+    val order_ = order.copy(_matchable = None)
+    orderMap += order.id -> order_
+    sides(order.tokenS) += order_
   }
 
   // Remove and return the top taker order for a taker order.
-  private def popTopMakerOrder(order: Order): Option[Order] =
+  private def popBestMakerOrder(order: Order): Option[Order] =
     popOrder(sides(order.tokenB))
 
   // Remove and return the top order from one side.

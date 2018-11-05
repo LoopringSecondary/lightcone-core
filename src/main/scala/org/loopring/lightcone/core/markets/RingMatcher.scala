@@ -78,15 +78,13 @@ class SimpleRingMatcher(
           )
         }
 
-      log.debug(s"matchingVolume --- makerId:${maker.id}, amountS:${makerVolume.amountS}, amountB:${makerVolume.amountB} " +
-        s" takerId:${taker.id}, amountS:${takerVolume.amountS}, amountB:${takerVolume.amountB}")
-
       //fee 按照卖出的比例计算
       val makerFee = maker.matchable.amountFee * makerVolume.amountS / maker.matchable.amountS
       val takerFee = taker.matchable.amountFee * takerVolume.amountS / taker.matchable.amountS
 
       val makerMargin = (makerVolume.amountS - takerVolume.amountB).max(BigInt(0))
       val takerMargin = (takerVolume.amountS - makerVolume.amountB).max(BigInt(0))
+
       val ring = OrderRing(
         maker = ExpectedFill(
           order = maker.copy(
@@ -111,6 +109,8 @@ class SimpleRingMatcher(
           amountMargin = takerMargin
         )
       )
+
+      log.debug(s"makeRing: ${ring}")
 
       Some(ring)
     }
