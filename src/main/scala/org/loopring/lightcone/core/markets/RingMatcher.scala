@@ -52,6 +52,7 @@ class SimpleRingMatcher(
     因此生成订单时，按照maker,taker的顺序
      */
       //taker的卖出大于maker的买入时，taker需要缩减，则认为最小交易量为maker的卖出，否则为taker的买入
+
       val (makerVolume, takerVolume) =
         if (taker.matchable.amountS > maker.matchable.amountB) {
           (
@@ -61,21 +62,19 @@ class SimpleRingMatcher(
             ),
             OrderState(
               amountS = maker.matchable.amountB,
-              amountB = (Rational(maker.matchable.amountB) *
-                Rational(taker.amountB, taker.amountS)).bigintValue
+              amountB = Rational(maker.matchable.amountB) * Rational(taker.amountB, taker.amountS)
             )
           )
         } else {
           (
             OrderState(
               amountS = taker.matchable.amountB,
-              amountB = (Rational(taker.matchable.amountB) *
-                Rational(maker.amountB, maker.amountS)).bigintValue
+              amountB = Rational(taker.matchable.amountB) * Rational(maker.amountB, maker.amountS)
             ),
-              OrderState(
-                amountS = taker.matchable.amountS,
-                amountB = taker.matchable.amountB
-              )
+            OrderState(
+              amountS = taker.matchable.amountS,
+              amountB = taker.matchable.amountB
+            )
           )
         }
 

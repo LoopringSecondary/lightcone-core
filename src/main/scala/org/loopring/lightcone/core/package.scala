@@ -33,4 +33,5 @@ package object core {
     def scaled(s: Int) = BigDecimal(d).setScale(s, BigDecimal.RoundingMode.HALF_UP).toDouble
   }
 
+  implicit def rational2BigInt(r: Rational) = r.bigintValue
 }
