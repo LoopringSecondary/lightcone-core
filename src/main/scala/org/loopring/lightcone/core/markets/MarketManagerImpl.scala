@@ -59,6 +59,7 @@ class MarketManagerImpl(
 
   def submitOrder(order:Order):SubmitOrderResult = {
     deleteOrder(order) //首先删除订单，变为全新订单,否则第二次收到订单，并被匹配之后，可能会一直存在
+
     val res = submitOrderInternal(order)
     res.affectedOrders.get(order.id) match {
       case None ⇒
@@ -98,6 +99,7 @@ class MarketManagerImpl(
     if (dustOrderEvaluator.isDust(taker)) {
       fullyMatchedOrderIds :+= taker.id
       affectedOrders += taker.id → taker.copy(_matchable = Some(OrderState()))
+
       return SubmitOrderResult(rings, fullyMatchedOrderIds, affectedOrders)
     }
 

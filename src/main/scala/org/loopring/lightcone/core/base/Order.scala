@@ -116,7 +116,7 @@ case class Order(
       if (tokenFee == tokenB && reserved.amountFee > 0) {
         r = r min Rational(reserved.amountFee, amountFee - amountB)
       } else if (tokenFee == tokenB && reserved.amountFee == 0) {
-        r = r
+        // r = r
       } else {
         r = r min Rational(reserved.amountFee, amountFee)
       }
