@@ -107,7 +107,7 @@ class MarketManagerImpl(
       fullyMatchedOrders += taker
       affectedOrders += taker.id → taker.copy(_matchable = Some(OrderState()))
 
-      return SubmitOrderResult(rings, fullyMatchedOrders, affectedOrders)
+      return SubmitOrderResult(rings, fullyMatchedOrders, affectedOrders, Some(taker))
     }
 
     @tailrec
@@ -155,10 +155,8 @@ class MarketManagerImpl(
           }
 
         case None ⇒
-          if (!dustOrderEvaluator.isMatchableDust(taker)) {
-            affectedOrders += taker.id → taker
-          } else {
-            affectedOrders += taker.id → taker.copy(_matchable = Some(OrderState()))
+          if (dustOrderEvaluator.isMatchableDust(taker)) {
+            taker = taker.copy(status = COMPLETELY_FILLED)
           }
       }
     }
@@ -169,7 +167,7 @@ class MarketManagerImpl(
 
     rings.foreach(pendingRingPool.addRing)
 
-    SubmitOrderResult(rings, fullyMatchedOrders, affectedOrders)
+    SubmitOrderResult(rings, fullyMatchedOrders, affectedOrders, Some(taker))
   }
 
   def triggerMatch(): SubmitOrderResult = {
@@ -212,7 +210,7 @@ class MarketManagerImpl(
 
     makersToAddBack.foreach(secondaries.add)
 
-    SubmitOrderResult(rings, fullyMatchedOrders, affectedOrders)
+    SubmitOrderResult(rings, fullyMatchedOrders, affectedOrders, None)
   }
 
   def deleteOrder(orderId: ID): Boolean = {

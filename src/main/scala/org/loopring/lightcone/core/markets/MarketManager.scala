@@ -36,7 +36,8 @@ trait MarketManager {
   case class SubmitOrderResult(
       rings: Set[OrderRing],
       fullyMatchedOrders: Set[Order],
-      affectedOrders: Map[ID, Order]
+      affectedOrders: Map[ID, Order],
+      taker: Option[Order]
   )
 
   def submitOrder(order: Order): SubmitOrderResult
