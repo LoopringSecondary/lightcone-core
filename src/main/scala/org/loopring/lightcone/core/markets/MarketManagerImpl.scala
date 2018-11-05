@@ -61,7 +61,7 @@ class MarketManagerImpl(
   )
 
   def submitOrder(order: Order): SubmitOrderResult = {
-    // Allow re-submission of an existing order. In such a case, we need to remove the original
+    // Allow re-submission of an existing order. In such case, we need to remove the original
     // copy of the order first.
     removeOrderFromSide(order)
 
@@ -83,7 +83,7 @@ class MarketManagerImpl(
     log.debug(s"taker order: $order , ${pendingRingPool.getOrderPendingAmountS(order.id)} ")
 
     var rings = Seq.empty[OrderRing]
-    var makerOrdersRecyclable = Seq.empty[Order]
+    var makersToAddBack = Seq.empty[Order]
     var fullyMatchedOrderIds = Seq.empty[ID]
     var affectedOrders = Map.empty[ID, Order]
 
@@ -111,46 +111,51 @@ class MarketManagerImpl(
     }
 
     @tailrec
-    def recursivelyMatchOrder(): Unit = {
-      val matchResult = for {
-        maker ← popTopMakerOrder(taker)
-      } yield (maker, ringMatcher.matchOrders(taker, maker))
+    def recursivelyMatchOrders(): Unit = {
+      val matchResult = popTopMakerOrder(taker).map { maker ⇒
+        (maker, ringMatcher.matchOrders(taker, maker))
+      }
 
       matchResult match {
-        case Some((maker, Left(failure))) ⇒ failure match {
-          case ORDERS_NOT_TRADABLE ⇒
-            log.debug(s"match failed:$ORDERS_NOT_TRADABLE --taker:$taker, maker:$maker")
-            makerOrdersRecyclable :+= maker
+        case Some((maker, Left(failure))) ⇒
+          log.debug(s"match failure $failure, taker: $taker, maker: $maker")
+          makersToAddBack :+= maker
 
-          case INCOME_TOO_SMALL ⇒
-            log.debug(s"match failed:$INCOME_TOO_SMALL --taker:$taker, maker:$maker")
-            makerOrdersRecyclable :+= maker
-            recursivelyMatchOrder()
-        }
+          if (failure == INCOME_TOO_SMALL) {
+            recursivelyMatchOrders()
+          }
 
         case Some((maker, Right(ring))) ⇒
+          val _taker = taker
+          taker = ring.taker.order // update the taker order
+          val updatedMaker = ring.maker.order
+          log.debug(s"""
+            match success.
+            taker: ${_taker}
+            maker: $maker
+            updatedTaker: $taker
+            updatedMaker: $updatedMaker
+            ring: $ring """)
+
           rings :+= ring
 
-          taker = ring.taker.order
-          val updatedMaker = ring.maker.order
-
-          if (dustOrderEvaluator.isDust(updatedMaker)) {
+          if (dustOrderEvaluator.isMatchableDust(updatedMaker)) {
             affectedOrders += updatedMaker.id → updatedMaker.copy(_matchable = Some(OrderState()))
             fullyMatchedOrderIds :+= updatedMaker.id
           } else {
             affectedOrders += updatedMaker.id → updatedMaker
-            makerOrdersRecyclable :+= updatedMaker
+            makersToAddBack :+= updatedMaker
           }
 
-          if (dustOrderEvaluator.isDust(taker)) {
+          if (dustOrderEvaluator.isMatchableDust(taker)) {
             affectedOrders += taker.id → taker.copy(_matchable = Some(OrderState()))
             fullyMatchedOrderIds :+= taker.id
           } else {
-            recursivelyMatchOrder()
+            recursivelyMatchOrders()
           }
 
         case None ⇒
-          if (!dustOrderEvaluator.isDust(taker)) {
+          if (!dustOrderEvaluator.isMatchableDust(taker)) {
             affectedOrders += taker.id → taker
           } else {
             affectedOrders += taker.id → taker.copy(_matchable = Some(OrderState()))
@@ -158,9 +163,9 @@ class MarketManagerImpl(
       }
     }
 
-    recursivelyMatchOrder()
+    recursivelyMatchOrders()
 
-    makerOrdersRecyclable.foreach(addOrderToSide)
+    makersToAddBack.foreach(addOrderToSide)
 
     rings.foreach(pendingRingPool.addRing)
 

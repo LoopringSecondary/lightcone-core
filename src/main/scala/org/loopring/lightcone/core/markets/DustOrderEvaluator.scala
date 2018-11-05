@@ -22,7 +22,7 @@ trait DustOrderEvaluator {
   def isOriginalDust(order: Order): Boolean
   def isOutstandingDust(order: Order): Boolean
   def isActualDust(order: Order): Boolean
-  def isMathcableDust(order: Order): Boolean
+  def isMatchableDust(order: Order): Boolean
 }
 
 class DustOrderEvaluatorImpl(threshold: Double)(
@@ -36,7 +36,7 @@ class DustOrderEvaluatorImpl(threshold: Double)(
   def isOriginalDust(order: Order) = _isDust(order.tokenS, order.matchable.amountS)
   def isOutstandingDust(order: Order) = _isDust(order.tokenS, order.matchable.amountS)
   def isActualDust(order: Order) = _isDust(order.tokenS, order.matchable.amountS)
-  def isMathcableDust(order: Order) = _isDust(order.tokenS, order.matchable.amountS)
+  def isMatchableDust(order: Order) = _isDust(order.tokenS, order.matchable.amountS)
 
   private def _isDust(tokenS: Address, amountS: Amount): Boolean = {
     tve.getFiatValue(tokenS, amountS) < threshold
