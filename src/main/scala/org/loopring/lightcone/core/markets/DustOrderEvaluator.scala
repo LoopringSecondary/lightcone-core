@@ -17,7 +17,12 @@
 package org.loopring.lightcone.core
 
 trait DustOrderEvaluator {
-  def isDust(order: Order): Boolean
+  def isDust(order: Order): Boolean // TODO(dong): this method is confusing and should be removed.
+
+  def isOriginalDust(order: Order): Boolean
+  def isOutstandingDust(order: Order): Boolean
+  def isActualDust(order: Order): Boolean
+  def isMathcableDust(order: Order): Boolean
 }
 
 class DustOrderEvaluatorImpl(threshold: Double)(
@@ -26,8 +31,14 @@ class DustOrderEvaluatorImpl(threshold: Double)(
 )
   extends DustOrderEvaluator {
 
-  def isDust(order: Order): Boolean = {
-    val fiatValue = tve.getFiatValue(order.tokenS, order.original.amountS)
-    fiatValue < threshold
+  def isDust(order: Order): Boolean = isOriginalDust(order)
+
+  def isOriginalDust(order: Order) = _isDust(order.tokenS, order.matchable.amountS)
+  def isOutstandingDust(order: Order) = _isDust(order.tokenS, order.matchable.amountS)
+  def isActualDust(order: Order) = _isDust(order.tokenS, order.matchable.amountS)
+  def isMathcableDust(order: Order) = _isDust(order.tokenS, order.matchable.amountS)
+
+  private def _isDust(tokenS: Address, amountS: Amount): Boolean = {
+    tve.getFiatValue(tokenS, amountS) < threshold
   }
 }

@@ -40,7 +40,7 @@ trait MarketManager {
   )
 
   def submitOrder(order: Order): SubmitOrderResult
-  def deleteOrder(order: Order): Boolean
+  def cancelOrder(orderId: ID): Boolean
   def triggerMatch(): SubmitOrderResult
   def deletePendingRing(ring: OrderRing): Unit
   // def getMetadata(): OrderBookMetadata

@@ -17,13 +17,11 @@
 package org.loopring.lightcone.core
 
 import org.slf4s.Logging
-
 import scala.annotation.tailrec
 import scala.collection.mutable.SortedSet
 
 case class MarketManagerConfig(
-    maxNumBuys: Int,
-    maxNumSells: Int,
+    maxNumbersOfOrders: Int // how many orders can be mainained on EACH side of the order book.
 )
 
 object MarketManagerImpl {
@@ -56,9 +54,11 @@ class MarketManagerImpl(
   private[core] val asks = SortedSet.empty[Order]
 
   private val sides = Map(marketId.primary -> bids, marketId.secondary -> asks)
+  private var orderMap = Map.empty[ID, Order]
 
-  def submitOrder(order:Order):SubmitOrderResult = {
-    deleteOrder(order) //首先删除订单，变为全新订单,否则第二次收到订单，并被匹配之后，可能会一直存在
+  def submitOrder(order: Order): SubmitOrderResult = {
+    orderMap -= order.id
+    sides(order.tokenS).remove(order) //首先删除订单，变为全新订单,否则第二次收到订单，并被匹配之后，可能会一直存在
 
     val res = submitOrderInternal(order)
     res.affectedOrders.get(order.id) match {
@@ -160,8 +160,14 @@ class MarketManagerImpl(
     SubmitOrderResult(rings, fullyMatchedOrderIds, affectedOrders)
   }
 
-  def deleteOrder(order: Order): Boolean = {
-    sides(order.tokenS).remove(order) //pending应该不用清除，而是等待以太坊事件回调或过期
+  def cancelOrder(orderId: ID): Boolean = {
+    orderMap.get(orderId) match {
+      case Some(order) ⇒
+        bids.remove(order)
+        asks.remove(order)
+        true
+      case None ⇒ false
+    }
   }
 
   def deletePendingRing(ring: OrderRing): Unit = {
@@ -182,7 +188,7 @@ class MarketManagerImpl(
     @tailrec
     def recursivelyReMatch(): Unit = {
       popOrder(asks) match {
-        case Some(taker)  ⇒
+        case Some(taker) ⇒
           log.debug(s"triggerMatch --- ask:${taker.id}")
           //submitOrder会在在taker最后不为灰尘单时，会重新放入首部，
           //因此需要保证不会taker再放入asks
@@ -211,31 +217,27 @@ class MarketManagerImpl(
     SubmitOrderResult(rings, fullyMatchedOrderIds.toSeq, affectedOrders)
   }
 
-  private def addToSide(order: Order) = {
+  private def addToSide(order: Order): Option[Order] = {
+    orderMap += order.id -> order
+
     val side = sides(order.tokenS)
-    //添加到side
     side.add(order)
+
     //是否需要删除
-    val maxNum = if (marketId.primary == order.tokenS) config.maxNumBuys else config.maxNumSells
-    if (maxNum > 0 && maxNum < side.size) {
-      side.lastOption map {
-        last ⇒
-          log.debug(s"due to too many orders,order:${last.id} will be removed.")
-          side.remove(last)
-      }
+    if (config.maxNumbersOfOrders <= 0 || config.maxNumbersOfOrders >= side.size) None
+    else side.lastOption map { last ⇒
+      log.debug(s"due to too many orders,order:${last.id} will be removed.")
+      cancelOrder(last.id)
+      last.copy(status = OrderStatus.CANCELLED_TOO_MANY_ORDERS)
     }
   }
 
-  private def takeTopMaker(order: Order): Option[Order] = {
-    popOrder(sides(order.tokenB))
-  }
+  private def takeTopMaker(order: Order): Option[Order] = popOrder(sides(order.tokenB))
 
   private def popOrder(side: SortedSet[Order]) = {
-    side.headOption.map {
-      head ⇒
-        side.remove(head)
-        head
+    side.headOption.map { head ⇒
+      side.remove(head)
+      head
     }
   }
-
 }
