@@ -18,10 +18,10 @@ package org.loopring.lightcone.core
 
 import org.slf4s.Logging
 import scala.annotation.tailrec
-import scala.collection.mutable.SortedSet
+import scala.collection.mutable.{ SortedSet, Map ⇒ MMap }
 
 case class MarketManagerConfig(
-    maxNumbersOfOrders: Int // how many orders can be mainained on EACH side of the order book.
+    maxNumbersOfOrders: Int // TODO(daniel): this is not supported yet.
 )
 
 object MarketManagerImpl {
@@ -38,8 +38,8 @@ object MarketManagerImpl {
 
 class MarketManagerImpl(
     val marketId: MarketId,
-    config: MarketManagerConfig,
-    ringMatcher: RingMatcher
+    val config: MarketManagerConfig,
+    val ringMatcher: RingMatcher
 )(
     implicit
     pendingRingPool: PendingRingPool,
@@ -48,31 +48,38 @@ class MarketManagerImpl(
 
   import MarketManagerImpl._
   import MatchingFailure._
+  import OrderStatus._
 
   private implicit val ordering = defaultOrdering()
-  private[core] val bids = SortedSet.empty[Order]
-  private[core] val asks = SortedSet.empty[Order]
+  private[core] val primaries = SortedSet.empty[Order] // order.tokenS == marketId.primary
+  private[core] val secondaries = SortedSet.empty[Order] // order.tokenS == marketId.secondary
+  private[core] val orderMap = MMap.empty[ID, Order]
 
-  private val sides = Map(marketId.primary -> bids, marketId.secondary -> asks)
-  private var orderMap = Map.empty[ID, Order]
+  private[core] val sides = Map(
+    marketId.primary -> primaries,
+    marketId.secondary -> secondaries
+  )
 
   def submitOrder(order: Order): SubmitOrderResult = {
-    orderMap -= order.id
-    sides(order.tokenS).remove(order) //首先删除订单，变为全新订单,否则第二次收到订单，并被匹配之后，可能会一直存在
+    // Allow re-submission of an existing order. In such a case, we need to remove the original
+    // copy of the order first.
+    removeOrderFromSide(order)
 
-    val res = submitOrderInternal(order)
+    val res = matchOrders(order)
+
     res.affectedOrders.get(order.id) match {
       case None ⇒
-        addToSide(order)
+        addOrderToSide(order) // why none???
       case Some(o) if !dustOrderEvaluator.isDust(o) ⇒
-        addToSide(o)
+        addOrderToSide(o)
       case _ ⇒ //此时完全匹配，不需要再添加到订单薄
     }
     res
   }
 
-  //在该函数中，taker不会被放入订单簿
-  private[core] def submitOrderInternal(order: Order): SubmitOrderResult = {
+  // Recursively match the taker with makers. The taker order will NOT be added to its side
+  // by this method.
+  private[core] def matchOrders(order: Order): SubmitOrderResult = {
     log.debug(s"taker order: $order , ${pendingRingPool.getOrderPendingAmountS(order.id)} ")
 
     var rings = Seq.empty[OrderRing]
@@ -106,7 +113,7 @@ class MarketManagerImpl(
     @tailrec
     def recursivelyMatchOrder(): Unit = {
       val matchResult = for {
-        maker ← takeTopMaker(taker)
+        maker ← popTopMakerOrder(taker)
       } yield (maker, ringMatcher.matchOrders(taker, maker))
 
       matchResult match {
@@ -153,29 +160,15 @@ class MarketManagerImpl(
 
     recursivelyMatchOrder()
 
-    makerOrdersRecyclable.foreach(addToSide)
+    makerOrdersRecyclable.foreach(addOrderToSide)
 
     rings.foreach(pendingRingPool.addRing)
 
     SubmitOrderResult(rings, fullyMatchedOrderIds, affectedOrders)
   }
 
-  def cancelOrder(orderId: ID): Boolean = {
-    orderMap.get(orderId) match {
-      case Some(order) ⇒
-        bids.remove(order)
-        asks.remove(order)
-        true
-      case None ⇒ false
-    }
-  }
-
-  def deletePendingRing(ring: OrderRing): Unit = {
-    pendingRingPool.removeRing(ring.id)
-  }
-
   def triggerMatch(): SubmitOrderResult = {
-    val maxBidsPrice = (bids.headOption map {
+    val maxBidsPrice = (primaries.headOption map {
       head ⇒ Rational(head.amountS, head.amountB)
     }).getOrElse(Rational(0))
     val rationalOne = Rational(1)
@@ -187,12 +180,12 @@ class MarketManagerImpl(
 
     @tailrec
     def recursivelyReMatch(): Unit = {
-      popOrder(asks) match {
+      popOrder(secondaries) match {
         case Some(taker) ⇒
           log.debug(s"triggerMatch --- ask:${taker.id}")
           //submitOrder会在在taker最后不为灰尘单时，会重新放入首部，
-          //因此需要保证不会taker再放入asks
-          val submitRes = submitOrderInternal(taker)
+          //因此需要保证不会taker再放入secondaries
+          val submitRes = matchOrders(taker)
           submitRes.affectedOrders.get(taker.id) match {
             case None ⇒
               askOrdersRecyclable :+= taker
@@ -212,32 +205,45 @@ class MarketManagerImpl(
 
     recursivelyReMatch()
 
-    askOrdersRecyclable.foreach(asks.add)
+    askOrdersRecyclable.foreach(secondaries.add)
 
     SubmitOrderResult(rings, fullyMatchedOrderIds.toSeq, affectedOrders)
   }
 
-  private def addToSide(order: Order): Option[Order] = {
-    orderMap += order.id -> order
-
-    val side = sides(order.tokenS)
-    side.add(order)
-
-    //是否需要删除
-    if (config.maxNumbersOfOrders <= 0 || config.maxNumbersOfOrders >= side.size) None
-    else side.lastOption map { last ⇒
-      log.debug(s"due to too many orders,order:${last.id} will be removed.")
-      cancelOrder(last.id)
-      last.copy(status = OrderStatus.CANCELLED_TOO_MANY_ORDERS)
+  def deleteOrder(orderId: ID): Boolean = {
+    orderMap.get(orderId) match {
+      case None ⇒ false
+      case Some(order) ⇒
+        removeOrderFromSide(order)
+        true
     }
   }
 
-  private def takeTopMaker(order: Order): Option[Order] = popOrder(sides(order.tokenB))
+  def deletePendingRing(ring: OrderRing): Unit = {
+    pendingRingPool.removeRing(ring.id)
+  }
 
-  private def popOrder(side: SortedSet[Order]) = {
-    side.headOption.map { head ⇒
-      side.remove(head)
-      head
+  // Add an order to its side.
+  private def addOrderToSide(order: Order) = {
+    orderMap += order.id -> order
+    sides(order.tokenS) += order
+  }
+
+  private def removeOrderFromSide(order: Order) = {
+    orderMap -= order.id
+    sides(order.tokenS) -= order
+  }
+
+  // Remove and return the top taker order for a taker order.
+  private def popTopMakerOrder(order: Order): Option[Order] =
+    popOrder(sides(order.tokenB))
+
+  // Remove and return the top order from one side.
+  private def popOrder(side: SortedSet[Order]): Option[Order] = {
+    side.headOption.map { order ⇒
+      orderMap -= order.id
+      side -= order
+      order
     }
   }
 }
