@@ -34,8 +34,8 @@ trait MarketManager {
   val marketId: MarketId
 
   case class SubmitOrderResult(
-      rings: Seq[OrderRing],
-      fullyMatchedOrderIds: Seq[ID],
+      rings: Set[OrderRing],
+      fullyMatchedOrders: Set[Order],
       affectedOrders: Map[ID, Order]
   )
 

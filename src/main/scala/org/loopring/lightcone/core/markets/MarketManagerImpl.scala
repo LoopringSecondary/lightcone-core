@@ -82,9 +82,9 @@ class MarketManagerImpl(
   private[core] def matchOrders(order: Order): SubmitOrderResult = {
     log.debug(s"taker order: $order , ${pendingRingPool.getOrderPendingAmountS(order.id)} ")
 
-    var rings = Seq.empty[OrderRing]
-    var makersToAddBack = Seq.empty[Order]
-    var fullyMatchedOrderIds = Seq.empty[ID]
+    var rings = Set.empty[OrderRing]
+    var makersToAddBack = Set.empty[Order]
+    var fullyMatchedOrders = Set.empty[Order]
     var affectedOrders = Map.empty[ID, Order]
 
     val subedPendingAmountS =
@@ -104,10 +104,10 @@ class MarketManagerImpl(
     )))
 
     if (dustOrderEvaluator.isDust(taker)) {
-      fullyMatchedOrderIds :+= taker.id
+      fullyMatchedOrders += taker
       affectedOrders += taker.id → taker.copy(_matchable = Some(OrderState()))
 
-      return SubmitOrderResult(rings, fullyMatchedOrderIds, affectedOrders)
+      return SubmitOrderResult(rings, fullyMatchedOrders, affectedOrders)
     }
 
     @tailrec
@@ -119,7 +119,7 @@ class MarketManagerImpl(
       matchResult match {
         case Some((maker, Left(failure))) ⇒
           log.debug(s"match failure $failure, taker: $taker, maker: $maker")
-          makersToAddBack :+= maker
+          makersToAddBack += maker
 
           if (failure == INCOME_TOO_SMALL) {
             recursivelyMatchOrders()
@@ -137,19 +137,19 @@ class MarketManagerImpl(
             updatedMaker: $updatedMaker
             ring: $ring """)
 
-          rings :+= ring
+          rings += ring
 
           if (dustOrderEvaluator.isMatchableDust(updatedMaker)) {
             affectedOrders += updatedMaker.id → updatedMaker.copy(_matchable = Some(OrderState()))
-            fullyMatchedOrderIds :+= updatedMaker.id
+            fullyMatchedOrders += updatedMaker
           } else {
             affectedOrders += updatedMaker.id → updatedMaker
-            makersToAddBack :+= updatedMaker
+            makersToAddBack += updatedMaker
           }
 
           if (dustOrderEvaluator.isMatchableDust(taker)) {
             affectedOrders += taker.id → taker.copy(_matchable = Some(OrderState()))
-            fullyMatchedOrderIds :+= taker.id
+            fullyMatchedOrders += taker
           } else {
             recursivelyMatchOrders()
           }
@@ -169,7 +169,7 @@ class MarketManagerImpl(
 
     rings.foreach(pendingRingPool.addRing)
 
-    SubmitOrderResult(rings, fullyMatchedOrderIds, affectedOrders)
+    SubmitOrderResult(rings, fullyMatchedOrders, affectedOrders)
   }
 
   def triggerMatch(): SubmitOrderResult = {
@@ -178,10 +178,10 @@ class MarketManagerImpl(
     }).getOrElse(Rational(0))
     val rationalOne = Rational(1)
 
-    var rings = Seq.empty[OrderRing]
-    var fullyMatchedOrderIds = Set.empty[ID]
+    var rings = Set.empty[OrderRing]
+    var makersToAddBack = Set.empty[Order]
+    var fullyMatchedOrders = Set.empty[Order]
     var affectedOrders = Map.empty[ID, Order]
-    var askOrdersRecyclable = Seq.empty[Order]
 
     @tailrec
     def recursivelyReMatch(): Unit = {
@@ -193,13 +193,13 @@ class MarketManagerImpl(
           val submitRes = matchOrders(taker)
           submitRes.affectedOrders.get(taker.id) match {
             case None ⇒
-              askOrdersRecyclable :+= taker
+              makersToAddBack += taker
             case Some(o) if !dustOrderEvaluator.isDust(o) ⇒
-              askOrdersRecyclable :+= o
+              makersToAddBack += o
             case _ ⇒
           }
           rings ++= submitRes.rings
-          fullyMatchedOrderIds ++= submitRes.fullyMatchedOrderIds
+          fullyMatchedOrders ++= submitRes.fullyMatchedOrders
           affectedOrders ++= submitRes.affectedOrders
           if (Rational(taker.amountS, taker.amountB) * maxBidsPrice >= rationalOne) {
             recursivelyReMatch()
@@ -210,9 +210,9 @@ class MarketManagerImpl(
 
     recursivelyReMatch()
 
-    askOrdersRecyclable.foreach(secondaries.add)
+    makersToAddBack.foreach(secondaries.add)
 
-    SubmitOrderResult(rings, fullyMatchedOrderIds.toSeq, affectedOrders)
+    SubmitOrderResult(rings, fullyMatchedOrders, affectedOrders)
   }
 
   def deleteOrder(orderId: ID): Boolean = {
