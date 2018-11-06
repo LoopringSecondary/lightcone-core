@@ -36,7 +36,6 @@ final class RingIncomeEstimatorImpl(
 
   def isProfitable(ring: Ring) = {
     val usedEth = costGasEstimator.getCostGas(ring) * gasPriceProvider.getGasPrice()
-    println(getIncomeFiatValue(ring), tve.getEthFiatValue(usedEth))
     getIncomeFiatValue(ring) - tve.getEthFiatValue(usedEth) >= threshold
   }
 }
