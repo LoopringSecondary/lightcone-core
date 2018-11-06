@@ -16,8 +16,6 @@
 
 package org.loopring.lightcone.core
 
-import org.loopring.lightcone.core.markets.{ GasPriceProvider, RingCostGasEstimator }
-
 trait RingIncomeEstimator {
   def getIncomeFiatValue(ring: Ring): Double
   def isProfitable(ring: Ring): Boolean

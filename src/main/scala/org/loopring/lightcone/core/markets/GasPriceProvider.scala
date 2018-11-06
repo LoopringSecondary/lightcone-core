@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.loopring.lightcone.core.markets
+package org.loopring.lightcone.core
 
 trait GasPriceProvider {
   def setGasPrice(gasPrice: BigInt)
