@@ -16,7 +16,6 @@
 
 package org.loopring.lightcone.core
 
-import org.loopring.lightcone.core.markets.{ GasPriceProviderImpl, SimpleRingCostGasEstimator }
 import org.scalatest._
 
 class RingMatcherSpec extends FlatSpec with Matchers {
