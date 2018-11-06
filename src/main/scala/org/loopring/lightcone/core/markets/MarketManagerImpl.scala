@@ -95,9 +95,7 @@ class MarketManagerImpl(
       ).bigintValue()
     )))
 
-    println("####", taker)
     if (dustOrderEvaluator.isDust(taker)) {
-      println("isDust",taker)
       fullyMatchedOrderIds :+= taker.id
       affectedOrders += taker.id → taker.copy(_matchable = Some(OrderState()))
       return SubmitOrderResult(rings, fullyMatchedOrderIds, affectedOrders)
