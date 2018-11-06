@@ -16,6 +16,7 @@
 
 package org.loopring.lightcone.core
 
+import org.loopring.lightcone.core.markets.{ GasPriceProviderImpl, SimpleRingCostGasEstimator }
 import org.scalatest._
 
 class MarketManagerSpec extends FlatSpec with Matchers {
@@ -24,13 +25,16 @@ class MarketManagerSpec extends FlatSpec with Matchers {
   val eth = "ETH"
 
   implicit val tve = new TokenValueEstimatorImpl()
-  tve.setMarketCaps(Map[Address, Double](lrc → 0.8, eth → 1400))
+  tve.setMarketCaps(Map[Address, Double](lrc → 8, eth → 1400))
   tve.setTokens(Map[Address, BigInt](lrc → BigInt(1), eth → BigInt(1)))
 
-  val incomeEvaluator = new RingIncomeEstimatorImpl(10)
+  implicit val gasPriceProvider = new GasPriceProviderImpl(1)
+  implicit val costGasEstimator = new SimpleRingCostGasEstimator(1)
+
+  val incomeEvaluator = new RingIncomeEstimatorImpl(1)
   val simpleMatcher = new SimpleRingMatcher(incomeEvaluator)
 
-  implicit val dustEvaluator = new DustOrderEvaluatorImpl(5)
+  implicit val dustEvaluator = new DustOrderEvaluatorImpl(10)
 
   implicit val orderPool = new OrderPoolImpl()
   implicit val timeProvider = new SystemTimeProvider()
@@ -49,10 +53,10 @@ class MarketManagerSpec extends FlatSpec with Matchers {
       tokenFee = lrc,
       amountS = 100,
       amountB = 10,
-      amountFee = 10,
+      amountFee = 200,
       walletSplitPercentage = 0.2,
       createdAt = 1,
-      _actual = Some(OrderState(amountS = 100, amountB = 10, amountFee = 10))
+      _actual = Some(OrderState(amountS = 100, amountB = 10, amountFee = 200))
     )
     val maker2 = Order(
       id = "maker2",
@@ -61,10 +65,10 @@ class MarketManagerSpec extends FlatSpec with Matchers {
       tokenFee = lrc,
       amountS = 100,
       amountB = 10,
-      amountFee = 10,
+      amountFee = 200,
       walletSplitPercentage = 0.2,
       createdAt = 2,
-      _actual = Some(OrderState(amountS = 100, amountB = 10, amountFee = 10))
+      _actual = Some(OrderState(amountS = 100, amountB = 10, amountFee = 200))
     )
     val maker3 = Order(
       id = "maker3",
@@ -73,10 +77,10 @@ class MarketManagerSpec extends FlatSpec with Matchers {
       tokenFee = lrc,
       amountS = 100,
       amountB = 10,
-      amountFee = 10,
+      amountFee = 200,
       walletSplitPercentage = 0.2,
       createdAt = 3,
-      _actual = Some(OrderState(amountS = 100, amountB = 10, amountFee = 10))
+      _actual = Some(OrderState(amountS = 100, amountB = 10, amountFee = 200))
     )
     val res1 = marketManager.submitOrder(maker1)
     assert(res1.rings.isEmpty && res1.fullyMatchedOrderIds.isEmpty && res1.affectedOrders.size == 1)
@@ -100,10 +104,10 @@ class MarketManagerSpec extends FlatSpec with Matchers {
       lrc,
       10,
       100,
-      10,
+      200,
       walletSplitPercentage = 0.2,
       createdAt = 4,
-      _actual = Some(OrderState(amountS = 10, amountB = 100, amountFee = 10))
+      _actual = Some(OrderState(amountS = 10, amountB = 100, amountFee = 200))
     )
 
     val res = marketManager.submitOrder(taker)
@@ -131,9 +135,9 @@ class MarketManagerSpec extends FlatSpec with Matchers {
       lrc,
       20,
       200,
-      20,
+      400,
       walletSplitPercentage = 0.2,
-      _actual = Some(OrderState(amountS = 20, amountB = 200, amountFee = 20))
+      _actual = Some(OrderState(amountS = 20, amountB = 200, amountFee = 400))
     )
 
     val res = marketManager.submitOrder(taker)
@@ -156,10 +160,10 @@ class MarketManagerSpec extends FlatSpec with Matchers {
       tokenFee = lrc,
       amountS = 100,
       amountB = 10,
-      amountFee = 10,
+      amountFee = 200,
       walletSplitPercentage = 0.2,
       createdAt = 4,
-      _actual = Some(OrderState(amountS = 100, amountB = 10, amountFee = 10))
+      _actual = Some(OrderState(amountS = 100, amountB = 10, amountFee = 200))
     )
     val maker5 = Order(
       id = "maker5",
@@ -168,10 +172,10 @@ class MarketManagerSpec extends FlatSpec with Matchers {
       tokenFee = lrc,
       amountS = 200,
       amountB = 20,
-      amountFee = 20,
+      amountFee = 400,
       walletSplitPercentage = 0.2,
       createdAt = 5,
-      _actual = Some(OrderState(amountS = 200, amountB = 20, amountFee = 20))
+      _actual = Some(OrderState(amountS = 200, amountB = 20, amountFee = 400))
     )
 
     marketManager.submitOrder(maker4)
@@ -184,9 +188,9 @@ class MarketManagerSpec extends FlatSpec with Matchers {
       lrc,
       20,
       200,
-      20,
+      400,
       walletSplitPercentage = 0.2,
-      _actual = Some(OrderState(amountS = 20, amountB = 200, amountFee = 20))
+      _actual = Some(OrderState(amountS = 20, amountB = 200, amountFee = 400))
     )
 
     val res = marketManager.submitOrder(taker)
@@ -207,12 +211,12 @@ class MarketManagerSpec extends FlatSpec with Matchers {
       tokenS = lrc,
       tokenB = eth,
       tokenFee = lrc,
-      amountS = 5,
+      amountS = 1,
       amountB = 1,
-      amountFee = 10,
+      amountFee = 200,
       walletSplitPercentage = 0.2,
       createdAt = 6,
-      _actual = Some(OrderState(amountS = 5, amountB = 1, amountFee = 10))
+      _actual = Some(OrderState(amountS = 1, amountB = 1, amountFee = 200))
     )
     val res = marketManager.submitOrder(maker6)
 
@@ -231,9 +235,9 @@ class MarketManagerSpec extends FlatSpec with Matchers {
       lrc,
       10,
       99,
-      20,
+      400,
       walletSplitPercentage = 0.2,
-      _actual = Some(OrderState(amountS = 10, amountB = 99, amountFee = 20))
+      _actual = Some(OrderState(amountS = 10, amountB = 99, amountFee = 400))
     )
     val res = marketManager.submitOrder(taker)
 
@@ -263,9 +267,9 @@ class MarketManagerSpec extends FlatSpec with Matchers {
           tokenFee = lrc,
           amountS = 100,
           amountB = 10,
-          amountFee = 10,
+          amountFee = 200,
           walletSplitPercentage = 0.2,
-          _actual = Some(OrderState(amountS = 100, amountB = 10, amountFee = 10))
+          _actual = Some(OrderState(amountS = 100, amountB = 10, amountFee = 200))
         )
         marketManager.submitOrder(maker)
       }
@@ -280,9 +284,9 @@ class MarketManagerSpec extends FlatSpec with Matchers {
       lrc,
       8,
       100,
-      20,
+      400,
       walletSplitPercentage = 0.2,
-      _actual = Some(OrderState(amountS = 8, amountB = 100, amountFee = 20))
+      _actual = Some(OrderState(amountS = 8, amountB = 100, amountFee = 400))
     )
 
     val res = marketManager.submitOrder(taker)
@@ -306,9 +310,9 @@ class MarketManagerSpec extends FlatSpec with Matchers {
           tokenFee = lrc,
           amountS = 100,
           amountB = 10,
-          amountFee = 10,
+          amountFee = 200,
           walletSplitPercentage = 0.2,
-          _actual = Some(OrderState(amountS = 100, amountB = 10, amountFee = 10))
+          _actual = Some(OrderState(amountS = 100, amountB = 10, amountFee = 200))
         )
         marketManager.submitOrder(maker)
       }
@@ -320,9 +324,9 @@ class MarketManagerSpec extends FlatSpec with Matchers {
       tokenFee = lrc,
       amountS = 100,
       amountB = 10,
-      amountFee = 10,
+      amountFee = 200,
       walletSplitPercentage = 0.2,
-      _actual = Some(OrderState(amountS = 100, amountB = 10, amountFee = 10))
+      _actual = Some(OrderState(amountS = 100, amountB = 10, amountFee = 200))
     )
     val res = marketManager.deleteOrder(order)
     info(res.toString)
@@ -348,10 +352,10 @@ class MarketManagerSpec extends FlatSpec with Matchers {
           tokenFee = lrc,
           amountS = 100,
           amountB = 10,
-          amountFee = 10,
+          amountFee = 200,
           walletSplitPercentage = 0.2,
-          _matchable = Some(OrderState(amountS = 100, amountB = 10, amountFee = 10)),
-          _actual = Some(OrderState(amountS = 100, amountB = 10, amountFee = 10))
+          _matchable = Some(OrderState(amountS = 100, amountB = 10, amountFee = 200)),
+          _actual = Some(OrderState(amountS = 100, amountB = 10, amountFee = 200))
         )
         val taker = Order(
           id = "taker-" + i,
@@ -360,10 +364,10 @@ class MarketManagerSpec extends FlatSpec with Matchers {
           tokenFee = lrc,
           amountS = 10,
           amountB = 100,
-          amountFee = 10,
+          amountFee = 200,
           walletSplitPercentage = 0.2,
-          _matchable = Some(OrderState(amountS = 10, amountB = 100, amountFee = 10)),
-          _actual = Some(OrderState(amountS = 10, amountB = 100, amountFee = 10))
+          _matchable = Some(OrderState(amountS = 10, amountB = 100, amountFee = 200)),
+          _actual = Some(OrderState(amountS = 10, amountB = 100, amountFee = 200))
         )
         marketManager.bids.add(maker)
         marketManager.asks.add(taker)

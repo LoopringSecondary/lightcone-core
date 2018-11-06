@@ -16,6 +16,8 @@
 
 package org.loopring.lightcone.core
 
+import org.loopring.lightcone.core.markets.{ GasPriceProvider, RingCostGasEstimator }
+
 trait RingIncomeEstimator {
   def getIncomeFiatValue(ring: Ring): Double
   def isProfitable(ring: Ring): Boolean
@@ -23,9 +25,18 @@ trait RingIncomeEstimator {
 
 final class RingIncomeEstimatorImpl(
     threshold: Double
-)(implicit tve: TokenValueEstimator) extends RingIncomeEstimator {
+)(
+    implicit
+    tve: TokenValueEstimator,
+    gasPriceProvider: GasPriceProvider,
+    costGasEstimator: RingCostGasEstimator
+) extends RingIncomeEstimator {
 
   def getIncomeFiatValue(ring: Ring) = ring.maker.getIncomeFiatValue() + ring.taker.getIncomeFiatValue()
 
-  def isProfitable(ring: Ring) = getIncomeFiatValue(ring) >= threshold
+  def isProfitable(ring: Ring) = {
+    val usedEth = costGasEstimator.getCostGas(ring) * gasPriceProvider.getGasPrice()
+    println(getIncomeFiatValue(ring), tve.getEthFiatValue(usedEth))
+    getIncomeFiatValue(ring) - tve.getEthFiatValue(usedEth) >= threshold
+  }
 }

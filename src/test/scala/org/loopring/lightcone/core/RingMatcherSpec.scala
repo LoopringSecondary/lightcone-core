@@ -16,6 +16,7 @@
 
 package org.loopring.lightcone.core
 
+import org.loopring.lightcone.core.markets.{ GasPriceProviderImpl, SimpleRingCostGasEstimator }
 import org.scalatest._
 
 class RingMatcherSpec extends FlatSpec with Matchers {
@@ -24,10 +25,12 @@ class RingMatcherSpec extends FlatSpec with Matchers {
   val eth = "ETH"
 
   implicit val tve = new TokenValueEstimatorImpl()
-  tve.setMarketCaps(Map[Address, Double](lrc → 0.8, eth → 1400))
+  tve.setMarketCaps(Map[Address, Double](lrc → 8, eth → 1400))
   tve.setTokens(Map[Address, BigInt](lrc → BigInt(1), eth → BigInt(1)))
+  implicit val gasPriceProvider = new GasPriceProviderImpl(1)
+  implicit val costGasEstimator = new SimpleRingCostGasEstimator(1) //todo:测试，暂时为1
 
-  val incomeEvaluator = new RingIncomeEstimatorImpl(10)
+  val incomeEvaluator = new RingIncomeEstimatorImpl(0)
   val simpleMatcher = new SimpleRingMatcher(incomeEvaluator)
 
   //info("[sbt core/'testOnly *RingMatcherSpec -- -z simpleMatcher']")
@@ -63,7 +66,7 @@ class RingMatcherSpec extends FlatSpec with Matchers {
       lrc,
       amountS = BigInt("10000000000"),
       amountB = 10,
-      amountFee = 10,
+      amountFee = 200,
       walletSplitPercentage = 0.2
     )
     val taker = Order(
@@ -78,9 +81,10 @@ class RingMatcherSpec extends FlatSpec with Matchers {
 
     //放开交易规模，收益足够
     val res = simpleMatcher.matchOrders(
-      taker.copy(_matchable = Some(OrderState(amountS = 10, amountB = BigInt("10000000000"), amountFee = 10))),
-      maker.copy(_matchable = Some(OrderState(amountS = BigInt("10000000000"), amountB = 10, amountFee = 10)))
+      taker.copy(_matchable = Some(OrderState(amountS = 10, amountB = BigInt("10000000000"), amountFee = 100))),
+      maker.copy(_matchable = Some(OrderState(amountS = BigInt("10000000000"), amountB = 10, amountFee = 200)))
     )
+    println(res)
     val testRes = res.right.toOption.nonEmpty && res.left.toOption.isEmpty
     assert(testRes)
 
@@ -94,7 +98,7 @@ class RingMatcherSpec extends FlatSpec with Matchers {
       tokenFee = lrc,
       amountS = 100,
       amountB = 10,
-      amountFee = 10,
+      amountFee = 200,
       walletSplitPercentage = 0.2
     )
 
@@ -105,13 +109,13 @@ class RingMatcherSpec extends FlatSpec with Matchers {
       lrc,
       10,
       100,
-      10,
+      200,
       walletSplitPercentage = 0.2
     )
     //限制交易规模，收益不足
     val res = simpleMatcher.matchOrders(
-      taker.copy(_matchable = Some(OrderState(amountS = 5, amountB = 50, amountFee = 5))),
-      maker.copy(_matchable = Some(OrderState(amountS = 50, amountB = 5, amountFee = 5)))
+      taker.copy(_matchable = Some(OrderState(amountS = 5, amountB = 50, amountFee = 100))),
+      maker.copy(_matchable = Some(OrderState(amountS = 50, amountB = 5, amountFee = 100)))
     )
     val testRes = res.right.toOption.isEmpty && res.left.get == MatchingFailure.INCOME_TOO_SMALL
     info("收益不足的测试结果:" + testRes)
@@ -119,8 +123,8 @@ class RingMatcherSpec extends FlatSpec with Matchers {
 
     //放开交易规模，收益足够
     val res1 = simpleMatcher.matchOrders(
-      taker.copy(_matchable = Some(OrderState(amountS = 10, amountB = 100, amountFee = 10))),
-      maker.copy(_matchable = Some(OrderState(amountS = 100, amountB = 10, amountFee = 10)))
+      taker.copy(_matchable = Some(OrderState(amountS = 10, amountB = 100, amountFee = 200))),
+      maker.copy(_matchable = Some(OrderState(amountS = 100, amountB = 10, amountFee = 200)))
     )
     val testRes1 = res1.right.toOption.nonEmpty && res1.left.toOption.isEmpty
     info("收益足够时的测试结果:" + testRes1)

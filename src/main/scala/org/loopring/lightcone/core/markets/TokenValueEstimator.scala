@@ -18,6 +18,8 @@ package org.loopring.lightcone.core
 trait TokenValueEstimator {
   def getFiatValue(token: Address, amount: Amount): Double
 
+  def getEthFiatValue(amount: Amount): Double
+
   def getBurnRate(token: Address): Double
 
   def canGetMarketCap(token: Address): Boolean
@@ -47,6 +49,16 @@ class TokenValueEstimatorImpl extends TokenValueEstimator {
     } else {
       val decimal = tokens.getOrElse(token, BigInt(1))
       val price = marketcaps.getOrElse(token, 0.0)
+      price * amount.doubleValue() / decimal.doubleValue()
+    }
+  }
+
+  def getEthFiatValue(amount: Amount): Double = {
+    if (amount.signum <= 0) {
+      0
+    } else {
+      val decimal = tokens.getOrElse("ETH", BigInt(1)) //todo:需要确定eth的地址
+      val price = marketcaps.getOrElse("ETH", 0.0)
       price * amount.doubleValue() / decimal.doubleValue()
     }
   }
