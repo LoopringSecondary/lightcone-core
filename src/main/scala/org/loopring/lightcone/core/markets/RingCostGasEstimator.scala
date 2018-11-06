@@ -16,24 +16,16 @@
 
 package org.loopring.lightcone.core
 
-trait RingIncomeEstimator {
-  def getIncomeFiatValue(ring: Ring): Double
-  def isProfitable(ring: Ring): Boolean
+import org.loopring.lightcone.core.Ring
+
+trait RingCostGasEstimator {
+  def getCostGas(ring: Ring): BigInt
+  def getCostGas(rings: Seq[Ring]): BigInt
 }
 
-final class RingIncomeEstimatorImpl(
-    threshold: Double
-)(
-    implicit
-    tve: TokenValueEstimator,
-    gasPriceProvider: GasPriceProvider,
-    costGasEstimator: RingCostGasEstimator
-) extends RingIncomeEstimator {
-
-  def getIncomeFiatValue(ring: Ring) = ring.maker.getIncomeFiatValue() + ring.taker.getIncomeFiatValue()
-
-  def isProfitable(ring: Ring) = {
-    val usedEth = costGasEstimator.getCostGas(ring) * gasPriceProvider.getGasPrice()
-    getIncomeFiatValue(ring) - tve.getEthFiatValue(usedEth) >= threshold
-  }
+final class SimpleRingCostGasEstimator(
+    costGasBySingle: BigInt
+) extends RingCostGasEstimator {
+  def getCostGas(ring: Ring): BigInt = costGasBySingle
+  def getCostGas(rings: Seq[Ring]): BigInt = rings.size * costGasBySingle
 }
