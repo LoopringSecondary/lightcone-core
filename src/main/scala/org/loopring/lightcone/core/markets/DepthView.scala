@@ -18,8 +18,8 @@ package org.loopring.lightcone.core
 
 import scala.collection.SortedMap
 
-case class DepthItem(price: Double, amount: Double, total: Double)
-case class Depth(sells: Seq[DepthItem], buys: Seq[DepthItem])
+case class DepthDataItem(price: Double, amount: Double, total: Double)
+case class DepthData(sells: Seq[DepthDataItem], buys: Seq[DepthDataItem])
 
 private[core] class DepthSide() {
   case class Size(amount: Double, total: Double) {
@@ -57,16 +57,16 @@ private[core] class DepthAggregator(priceDecimals: Int) {
     }
   }
 
-  def getDepths(middlePrice: Double, numItems: Int): Depth = {
+  def getDepths(middlePrice: Double, numItems: Int): DepthData = {
     val slotThreshold = (middlePrice * scaling).toLong
     val sells = sellDepthSide.getItems(slotThreshold, numItems).map {
-      case (p, size) ⇒ DepthItem(p / scaling, size.amount, size.total)
+      case (p, size) ⇒ DepthDataItem(p / scaling, size.amount, size.total)
     }
     val buys = buyDepthSide.getItems(slotThreshold, numItems).map {
-      case (p, size) ⇒ DepthItem(p / scaling, size.amount, size.total)
+      case (p, size) ⇒ DepthDataItem(p / scaling, size.amount, size.total)
     }
 
-    Depth(sells, buys)
+    DepthData(sells, buys)
   }
 }
 
@@ -78,10 +78,10 @@ class DepthView(priceDecimals: Int, levels: Int) {
     priceDecimals -> new DepthAggregator(priceDecimals)
   }.toMap
 
-  def getDepths(priceDecimals: Int, middlePrice: Double, numItems: Int): Depth = {
+  def getDepths(priceDecimals: Int, middlePrice: Double, numItems: Int): DepthData = {
     aggregatorMap.get(priceDecimals) match {
       case Some(aggregator) ⇒ aggregator.getDepths(middlePrice, numItems)
-      case None             ⇒ Depth(Nil, Nil)
+      case None             ⇒ DepthData(Nil, Nil)
     }
   }
 
