@@ -21,7 +21,14 @@ import scala.collection.SortedMap
 case class DepthDataItem(price: Double, amount: Double, total: Double)
 case class DepthData(sells: Seq[DepthDataItem], buys: Seq[DepthDataItem])
 
-private[core] class DepthSide() {
+private[core] class DepthSide(isSell: Boolean) {
+
+  private implicit val ordering = if (isSell) {
+    new Ordering[Long] { def compare(a: Long, b: Long) = a compare b }
+  } else {
+    new Ordering[Long] { def compare(a: Long, b: Long) = b compare a }
+  }
+
   case class Size(amount: Double, total: Double) {
     def +(another: Size) = Size(
       Math.max(amount + another.amount, 0),
@@ -36,14 +43,14 @@ private[core] class DepthSide() {
     items += slot -> newSize
   }
 
-  def getItems(slotThreshold: Long, numItems: Int): Seq[(Long, Size)] = {
-    items.filterKeys(_ > slotThreshold).take(numItems).toSeq
+  def getItems(numItems: Int)(filterKeyFunc: Long ⇒ Boolean): Seq[(Long, Size)] = {
+    items.filterKeys(filterKeyFunc).take(numItems).toSeq
   }
 }
 
 private[core] class DepthAggregator(priceDecimals: Int) {
-  private val sellDepthSide = new DepthSide
-  private val buyDepthSide = new DepthSide
+  private val sellDepthSide = new DepthSide(true)
+  private val buyDepthSide = new DepthSide(false)
 
   private val scaling = Math.pow(10, priceDecimals)
 
@@ -57,30 +64,40 @@ private[core] class DepthAggregator(priceDecimals: Int) {
     }
   }
 
-  def getDepths(middlePrice: Double, numItems: Int): DepthData = {
+  def getDepthData(middlePrice: Double, numItems: Int): DepthData = {
     val slotThreshold = (middlePrice * scaling).toLong
-    val sells = sellDepthSide.getItems(slotThreshold, numItems).map {
+    val sells = sellDepthSide.getItems(numItems)(_ >= slotThreshold).map {
       case (p, size) ⇒ DepthDataItem(p / scaling, size.amount, size.total)
     }
-    val buys = buyDepthSide.getItems(slotThreshold, numItems).map {
+    val buys = buyDepthSide.getItems(numItems)(_ < slotThreshold).map {
       case (p, size) ⇒ DepthDataItem(p / scaling, size.amount, size.total)
     }
 
-    DepthData(sells, buys)
+    DepthData(accumulate(sells), accumulate(buys))
+  }
+
+  private def accumulate(items: Seq[DepthDataItem]) = {
+    var amount: Double = 0
+    var total: Double = 0
+    items.map { item ⇒
+      amount += item.amount
+      total += item.total
+      DepthDataItem(item.price, amount, total)
+    }
   }
 }
 
 class DepthView(priceDecimals: Int, levels: Int) {
   assert(priceDecimals > levels)
 
-  private val priceDecimalsList = (priceDecimals - levels to priceDecimals)
-  private val aggregatorMap = priceDecimalsList.map { scale ⇒
+  private val priceDecimalsList = (priceDecimals - levels + 1 to priceDecimals)
+  private val aggregatorMap = priceDecimalsList.map { priceDecimals ⇒
     priceDecimals -> new DepthAggregator(priceDecimals)
   }.toMap
 
-  def getDepths(priceDecimals: Int, middlePrice: Double, numItems: Int): DepthData = {
+  def getDepthData(priceDecimals: Int, middlePrice: Double, numItems: Int): DepthData = {
     aggregatorMap.get(priceDecimals) match {
-      case Some(aggregator) ⇒ aggregator.getDepths(middlePrice, numItems)
+      case Some(aggregator) ⇒ aggregator.getDepthData(middlePrice, numItems)
       case None             ⇒ DepthData(Nil, Nil)
     }
   }
