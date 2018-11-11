@@ -111,4 +111,9 @@ class OrderManagerImplSpec_Basic extends CommonSpec {
     orderPool.size should be(0)
     updatedOrders(order.id).status should be(OrderStatus.UNSUPPORTED_MARKET)
   }
+
+  "cancel order" should "fail if the order does not exist" in {
+    cancelOrder("bad-id") should be(false)
+    updatedOrders.size should be(0)
+  }
 }

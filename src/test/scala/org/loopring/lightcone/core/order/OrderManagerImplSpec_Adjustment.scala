@@ -21,6 +21,12 @@ import org.loopring.lightcone.core._
 import org.scalatest._
 
 class OrderManagerImplSpec_Adjustment extends CommonSpec {
+
+  "adjustment of unexist order" should "return false" in {
+    adjustOrder("bad-id", 40) should be(false)
+    updatedOrders.size should be(0)
+  }
+
   "adjustment of single order upward and downward" should "just work" in {
     dai.init(1000, 1000)
     lrc.init(1000, 1000)
@@ -29,7 +35,7 @@ class OrderManagerImplSpec_Adjustment extends CommonSpec {
     submitOrder(order1) should be(true)
     orderPool.size should be(1)
 
-    adjustOrder(order1.id, 40)
+    adjustOrder(order1.id, 40) should be(true)
     updatedOrders.size should be(1)
 
     {
@@ -39,7 +45,7 @@ class OrderManagerImplSpec_Adjustment extends CommonSpec {
       order.actual should be(orderState(40, 4, 16))
     }
 
-    adjustOrder(order1.id, 140)
+    adjustOrder(order1.id, 140) should be(true)
     updatedOrders.size should be(1)
 
     {
