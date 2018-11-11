@@ -21,14 +21,7 @@ import scala.collection.SortedMap
 case class DepthItem(price: Double, amount: Double, total: Double)
 case class DepthData(sells: Seq[DepthItem], buys: Seq[DepthItem])
 
-private[core] class DepthSide(isSell: Boolean, trackChanges: Boolean) {
-
-  private implicit val ordering = if (isSell) {
-    new Ordering[Long] { def compare(a: Long, b: Long) = a compare b }
-  } else {
-    new Ordering[Long] { def compare(a: Long, b: Long) = b compare a }
-  }
-
+case object DepthSide {
   case class Size(amount: Double, total: Double) {
     def +(another: Size) = Size(
       Math.max(amount + another.amount, 0),
@@ -36,76 +29,141 @@ private[core] class DepthSide(isSell: Boolean, trackChanges: Boolean) {
     )
   }
 
+  def getOrdering(isSell: Boolean) = if (isSell) {
+    new Ordering[Long] { def compare(a: Long, b: Long) = a compare b }
+  } else {
+    new Ordering[Long] { def compare(a: Long, b: Long) = b compare a }
+  }
+}
+
+private[core] class DepthSide(
+    incrementMode: Boolean,
+    isSell: Boolean
+) {
+  import DepthSide._
+
+  private implicit val ordering = getOrdering(isSell)
   private[core] var items = SortedMap.empty[Long, Size]
   private[core] var changedItems = Map.empty[Long, Size]
 
-  def addItem(slot: Long, amount: Double, total: Double) {
-    val newSize = items.getOrElse(slot, Size(0, 0)) + Size(amount, total)
-    items += slot -> newSize
-    if (trackChanges) {
-      changedItems += slot -> newSize
+  def addDepthItem(slot: Long, amount: Double, total: Double) {
+    if (!incrementMode) {
+      throw new UnsupportedOperationException()
     }
+    val size = items.getOrElse(slot, Size(0, 0)) + Size(amount, total)
+    items += slot -> size
+    changedItems += slot -> size
   }
 
-  def setItem(slot: Long, amount: Double, total: Double) {
-    items += slot -> Size(amount, total)
-    if (trackChanges) {
-      changedItems += slot -> Size(amount, total)
+  def setDepthItem(slot: Long, amount: Double, total: Double) {
+    if (incrementMode) {
+      throw new UnsupportedOperationException()
     }
+    val size = Size(amount, total)
+    items += slot -> size
   }
 
-  def getItems(numItems: Int)(filterKeyFunc: Long ⇒ Boolean): Seq[(Long, Size)] = {
-    items.filterKeys(filterKeyFunc).take(numItems).toSeq
+  def getItems(slotThreshold: Double, numItems: Int) = {
+    val filterKeyFunc =
+      if (isSell) (x: Long) ⇒ x >= slotThreshold
+      else (x: Long) ⇒ x < slotThreshold
+
+    items.filterKeys(filterKeyFunc)
+      .take(numItems)
+      .toSeq
   }
 
-  def takeChangedItems(): Seq[(Long, Size)] = {
-    if (!trackChanges) {
+  def takeChangedItems() = {
+    if (!incrementMode) {
       throw new UnsupportedOperationException()
     }
     val items = changedItems.toSeq
     changedItems = Map.empty
     items
   }
+
 }
 
-private[core] class DepthAggregator(priceDecimals: Int, trackChanges: Boolean) {
-  private val sellDepthSide = new DepthSide(true, trackChanges)
-  private val buyDepthSide = new DepthSide(false, trackChanges)
+private[core] class DepthAggregator(
+    priceDecimals: Int,
+    incrementMode: Boolean,
+    aggregationLevel: Int
+) {
+  private val aggregationScaling = Math.pow(10, aggregationLevel)
+  private val priceScaling = Math.pow(10, priceDecimals)
+  private val sellDepthSide = new DepthSide(incrementMode, true)
+  private val buyDepthSide = new DepthSide(incrementMode, false)
 
-  private val scaling = Math.pow(10, priceDecimals)
+  def addDepthItem(
+    isSell: Boolean,
+    price: Long,
+    amount: Double,
+    total: Double
+  ): Unit = {
+    if (isSell) {
+      sellDepthSide.addDepthItem(price, amount, total)
+    } else {
+      buyDepthSide.addDepthItem(price, amount, total)
+    }
+  }
 
-  def addItem(isSell: Boolean, price: Double, amount: Double, total: Double) {
-    val p =
-      if (isSell) Math.ceil(price * scaling).toLong
-      else Math.floor(price * scaling).toLong
-    if (p > 0) {
-      val aggregator = if (isSell) sellDepthSide else buyDepthSide
-      aggregator.addItem(p, amount, total)
+  def addDepthItem(
+    isSell: Boolean,
+    price: Double,
+    amount: Double,
+    total: Double
+  ): Unit = {
+    if (isSell) {
+      val p = Math.ceil(price / aggregationScaling).toLong
+      sellDepthSide.addDepthItem(p, amount, total)
+    } else {
+      val p = Math.floor(price / aggregationScaling).toLong
+      buyDepthSide.addDepthItem(p, amount, total)
+    }
+  }
+
+  def setDepthItem(
+    isSell: Boolean,
+    price: Long,
+    amount: Double,
+    total: Double
+  ) {
+    if (isSell) {
+      sellDepthSide.setDepthItem(price, amount, total)
+    } else {
+      buyDepthSide.setDepthItem(price, amount, total)
+    }
+  }
+
+  def setDepthItem(
+    isSell: Boolean,
+    price: Double,
+    amount: Double,
+    total: Double
+  ) {
+    if (isSell) {
+      val p = Math.ceil(price / aggregationScaling).toLong
+      sellDepthSide.setDepthItem(p, amount, total)
+    } else {
+      val p = Math.floor(price / aggregationScaling).toLong
+      buyDepthSide.setDepthItem(p, amount, total)
     }
   }
 
   def getDepthData(middlePrice: Double, numItems: Int): DepthData = {
-    val slotThreshold = (middlePrice * scaling).toLong
-    val sells = sellDepthSide.getItems(numItems)(_ >= slotThreshold).map {
-      case (p, size) ⇒ DepthItem(p / scaling, size.amount, size.total)
-    }
-    val buys = buyDepthSide.getItems(numItems)(_ < slotThreshold).map {
-      case (p, size) ⇒ DepthItem(p / scaling, size.amount, size.total)
-    }
-
+    val slotThreshold = middlePrice * priceScaling / aggregationScaling
+    val sells = sellDepthSide.getItems(slotThreshold, numItems).map(toDepthItem)
+    val buys = buyDepthSide.getItems(slotThreshold, numItems).map(toDepthItem)
     DepthData(accumulate(sells), accumulate(buys))
   }
 
-  def takeChangedDepthData = {
-    val sells = sellDepthSide.takeChangedItems.map {
-      case (p, size) ⇒ DepthItem(p / scaling, size.amount, size.total)
-    }
-    val buys = buyDepthSide.takeChangedItems.map {
-      case (p, size) ⇒ DepthItem(p / scaling, size.amount, size.total)
-    }
+  def takeChangedDepthData = DepthData(
+    sellDepthSide.takeChangedItems.map(toDepthItem),
+    buyDepthSide.takeChangedItems.map(toDepthItem)
+  )
 
-    DepthData(sells, buys)
-  }
+  private def toDepthItem(tuple: (Long, DepthSide.Size)) =
+    DepthItem(tuple._1 / priceScaling, tuple._2.amount, tuple._2.total)
 
   private def accumulate(items: Seq[DepthItem]) = {
     var amount: Double = 0
@@ -118,22 +176,25 @@ private[core] class DepthAggregator(priceDecimals: Int, trackChanges: Boolean) {
   }
 }
 
-class DepthView(priceDecimals: Int, levels: Int) {
+final class Level0DepthAggregator(priceDecimals: Int)
+  extends DepthAggregator(priceDecimals, true, 0)
+
+final class DepthView(priceDecimals: Int, levels: Int) {
   assert(priceDecimals > levels)
 
-  private val priceDecimalsList = (priceDecimals - levels + 1 to priceDecimals)
-  private val aggregatorMap = priceDecimalsList.map { priceDecimals ⇒
-    priceDecimals -> new DepthAggregator(priceDecimals, false)
+  private val levels_ = (0 until levels)
+  private val aggregatorMap = levels_.map { level ⇒
+    level -> new DepthAggregator(priceDecimals, false, level)
   }.toMap
 
-  def getDepthData(priceDecimals: Int, middlePrice: Double, numItems: Int): DepthData = {
-    aggregatorMap.get(priceDecimals) match {
+  def getDepthData(level: Int, middlePrice: Double, numItems: Int): DepthData = {
+    aggregatorMap.get(level) match {
       case Some(aggregator) ⇒ aggregator.getDepthData(middlePrice, numItems)
       case None             ⇒ DepthData(Nil, Nil)
     }
   }
 
-  def addItem(isSell: Boolean, price: Double, amount: Double, total: Double) {
-    aggregatorMap.values.foreach(_.addItem(isSell, price, amount, total))
+  def setDepthItem(isSell: Boolean, price: Long, amount: Double, total: Double) {
+    aggregatorMap.values.foreach(_.addDepthItem(isSell, price, amount, total))
   }
 }

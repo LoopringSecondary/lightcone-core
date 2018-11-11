@@ -16,37 +16,37 @@
 
 package org.loopring.lightcone.core
 
-class MarketDepthView(
-    marketId: MarketId,
-    primaryTokenDecimals: Int,
-    secondaryTokenDecimals: Int,
-    priceDecimals: Int, levels: Int
-) extends DepthView(priceDecimals, levels) {
+// class MarketDepthView(
+//     marketId: MarketId,
+//     primaryTokenDecimals: Int,
+//     secondaryTokenDecimals: Int,
+//     priceDecimals: Int, levels: Int
+// ) extends DepthView2(priceDecimals, levels) {
 
-  private val primaryScaling = Rational(Math.pow(10, primaryTokenDecimals))
-  private val secondaryScaling = Rational(Math.pow(10, secondaryTokenDecimals))
+//   private val primaryScaling = Rational(Math.pow(10, primaryTokenDecimals))
+//   private val secondaryScaling = Rational(Math.pow(10, secondaryTokenDecimals))
 
-  def addOrder(order: Order) = handleOrder(order, false)
-  def removeOrder(order: Order) = handleOrder(order, true)
+//   def addOrder(order: Order) = handleOrder(order, false)
+//   def removeOrder(order: Order) = handleOrder(order, true)
 
-  private def handleOrder(order: Order, delete: Boolean) = {
-    val (isSell, amount, total) =
-      if (order.tokenS == marketId.secondary)
-        (true,
-          Rational(order.amountS) / secondaryScaling,
-          Rational(order.amountB) / primaryScaling)
-      else
-        (false,
-          Rational(order.amountS) / primaryScaling,
-          Rational(order.amountB) / secondaryScaling)
+//   private def handleOrder(order: Order, delete: Boolean) = {
+//     val (isSell, amount, total) =
+//       if (order.tokenS == marketId.secondary)
+//         (true,
+//           Rational(order.amountS) / secondaryScaling,
+//           Rational(order.amountB) / primaryScaling)
+//       else
+//         (false,
+//           Rational(order.amountS) / primaryScaling,
+//           Rational(order.amountB) / secondaryScaling)
 
-    val price = Rational(amount, total).doubleValue
-    val mul = if (delete) -1 else 1
-    addItem(
-      isSell,
-      price,
-      amount.doubleValue * mul,
-      total.doubleValue * mul
-    )
-  }
-}
+//     val price = Rational(amount, total).doubleValue
+//     val mul = if (delete) -1 else 1
+//     addItem(
+//       isSell,
+//       price,
+//       amount.doubleValue * mul,
+//       total.doubleValue * mul
+//     )
+//   }
+// }

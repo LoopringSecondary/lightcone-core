@@ -21,7 +21,8 @@ import scala.annotation.tailrec
 import scala.collection.mutable.{ SortedSet, Map ⇒ MMap }
 
 case class MarketManagerConfig(
-    maxNumbersOfOrders: Int // TODO(daniel): this is not supported yet.
+    maxNumbersOfOrders: Int, // TODO(daniel): this is not supported yet.
+    priceDecimals: Int
 )
 
 object MarketManagerImpl {
@@ -39,7 +40,7 @@ object MarketManagerImpl {
 class MarketManagerImpl(
     val marketId: MarketId,
     val config: MarketManagerConfig,
-    val ringMatcher: RingMatcher
+    val ringMatcher: RingMatcher,
 )(
     implicit
     pendingRingPool: PendingRingPool,
@@ -55,6 +56,8 @@ class MarketManagerImpl(
   private[core] val secondaries = SortedSet.empty[Order] // order.tokenS == marketId.secondary
   private[core] val orderMap = MMap.empty[ID, Order]
 
+  private[core] val depthAggregator = new Level0DepthAggregator(config.priceDecimals)
+
   private[core] val sides = Map(
     marketId.primary -> primaries,
     marketId.secondary -> secondaries
@@ -65,7 +68,7 @@ class MarketManagerImpl(
     // copy of the order first.
     deleteOrder(order.id)
 
-    val res = matchOrders(order)
+    val res = matchOrders(ordert)
 
     res.matchedMakers.get(order.id) match {
       case None ⇒
