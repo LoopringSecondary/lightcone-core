@@ -19,15 +19,10 @@ import org.loopring.lightcone.core.data._
 
 import org.slf4s.Logging
 
-final private[core] class OrderManagerImpl(
-    maxNumOrders: Int
-)(
+final private[core] class OrderManagerImpl()(
     implicit
     orderPool: OrderPool
 ) extends OrderManager with Logging {
-
-  assert(maxNumOrders > 0)
-
   import OrderStatus._
 
   private[core] implicit var tokens = Map.empty[String, TokenReserveManager]

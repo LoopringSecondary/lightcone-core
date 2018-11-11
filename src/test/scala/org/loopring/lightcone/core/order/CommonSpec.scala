@@ -107,6 +107,18 @@ class CommonSpec
     amountFee: Long = 0
   ) = newOrder(WETH, DAI, LRC, amountS, amountB, amountFee)
 
+  def sellGTO(
+    amountS: Long,
+    amountB: Long,
+    amountFee: Long = 0
+  ) = newOrder(GTO, WETH, LRC, amountS, amountB, amountFee)
+
+  def buyGTO(
+    amountS: Long,
+    amountB: Long,
+    amountFee: Long = 0
+  ) = newOrder(WETH, GTO, LRC, amountS, amountB, amountFee)
+
   def newOrder(
     tokenS: String,
     tokenB: String,

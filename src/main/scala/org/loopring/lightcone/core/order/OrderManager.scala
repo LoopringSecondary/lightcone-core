@@ -28,11 +28,5 @@ trait OrderManager {
 }
 
 object OrderManager {
-  def default(
-    maxNumOrders: Int = 1000
-  )(
-    implicit
-    orderPool: OrderPool
-  ): OrderManager =
-    new OrderManagerImpl(maxNumOrders)
+  def default()(implicit orderPool: OrderPool): OrderManager = new OrderManagerImpl()
 }
