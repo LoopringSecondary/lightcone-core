@@ -14,16 +14,11 @@
  * limitations under the License.
  */
 
-package org.loopring.lightcone.core.base
+package org.loopring.lightcone.core.data
 
-object TimeProvider {
-  val default = new SystemTimeProvider()
-}
+final object ExecutedStatus extends Enumeration {
+  type ExecutedStatus = Value
 
-trait TimeProvider {
-  def getCurrentTimeMillis(): Long
-}
-
-final class SystemTimeProvider extends TimeProvider {
-  def getCurrentTimeMillis() = System.currentTimeMillis
+  val FAILED = Value
+  val SUCCESS = Value
 }

@@ -14,16 +14,12 @@
  * limitations under the License.
  */
 
-package org.loopring.lightcone.core.base
+package org.loopring.lightcone.core.data
 
-object TimeProvider {
-  val default = new SystemTimeProvider()
-}
+final object MatchingFailure extends Enumeration {
+  type MatchingFailure = Value
 
-trait TimeProvider {
-  def getCurrentTimeMillis(): Long
-}
-
-final class SystemTimeProvider extends TimeProvider {
-  def getCurrentTimeMillis() = System.currentTimeMillis
+  val ORDERS_NOT_TRADABLE = Value
+  val INCOME_TOO_SMALL = Value
+  val HAS_BEEN_FULL_FILLED = Value
 }

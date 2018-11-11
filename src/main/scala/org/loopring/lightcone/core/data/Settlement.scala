@@ -14,16 +14,13 @@
  * limitations under the License.
  */
 
-package org.loopring.lightcone.core.base
+package org.loopring.lightcone.core.data
 
-object TimeProvider {
-  val default = new SystemTimeProvider()
-}
-
-trait TimeProvider {
-  def getCurrentTimeMillis(): Long
-}
-
-final class SystemTimeProvider extends TimeProvider {
-  def getCurrentTimeMillis() = System.currentTimeMillis
-}
+case class Settlement(
+    rings: Seq[OrderRing],
+    nonce: Int,
+    createdAt: Long,
+    txid: Option[String] = None,
+    committedAt: Option[Long] = None,
+    confirmedBlock: Option[Long] = None
+)

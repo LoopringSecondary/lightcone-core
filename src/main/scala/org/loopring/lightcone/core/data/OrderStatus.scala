@@ -14,16 +14,18 @@
  * limitations under the License.
  */
 
-package org.loopring.lightcone.core.base
+package org.loopring.lightcone.core.data
 
-object TimeProvider {
-  val default = new SystemTimeProvider()
-}
+final object OrderStatus extends Enumeration {
+  type OrderStatus = Value
 
-trait TimeProvider {
-  def getCurrentTimeMillis(): Long
-}
-
-final class SystemTimeProvider extends TimeProvider {
-  def getCurrentTimeMillis() = System.currentTimeMillis
+  val NEW = Value
+  val PENDING = Value
+  val EXPIRED = Value
+  val COMPLETELY_FILLED = Value // 完全成交
+  val CANCELLED_BY_USER = Value
+  val CANCELLED_LOW_BALANCE = Value
+  val CANCELLED_LOW_FEE_BALANCE = Value
+  val CANCELLED_TOO_MANY_ORDERS = Value
+  val CANCELLED_TOO_MANY_FAILED_SETTLEMENTS = Value
 }

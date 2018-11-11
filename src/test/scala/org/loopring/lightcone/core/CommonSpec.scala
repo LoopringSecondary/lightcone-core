@@ -14,16 +14,18 @@
  * limitations under the License.
  */
 
-package org.loopring.lightcone.core.base
+package org.loopring.lightcone.core
 
-object TimeProvider {
-  val default = new SystemTimeProvider()
-}
+import org.loopring.lightcone.core.base._
+import org.loopring.lightcone.core.data._
+import org.loopring.lightcone.core.order._
+import org.scalatest._
 
-trait TimeProvider {
-  def getCurrentTimeMillis(): Long
-}
+class CommonSpec extends FlatSpec with Matchers {
 
-final class SystemTimeProvider extends TimeProvider {
-  def getCurrentTimeMillis() = System.currentTimeMillis
+  val lrc = "LRC"
+  val xyz = "XYZ"
+  val gto = "GTO"
+  val eth = "WETH"
+
 }

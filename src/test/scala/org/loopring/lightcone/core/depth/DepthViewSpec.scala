@@ -14,16 +14,13 @@
  * limitations under the License.
  */
 
-package org.loopring.lightcone.core.base
+package org.loopring.lightcone.core.depth
 
-object TimeProvider {
-  val default = new SystemTimeProvider()
-}
+import org.scalatest._
 
-trait TimeProvider {
-  def getCurrentTimeMillis(): Long
-}
+class DepthViewSpec extends FlatSpec with Matchers {
 
-final class SystemTimeProvider extends TimeProvider {
-  def getCurrentTimeMillis() = System.currentTimeMillis
+  "DepthView" should "return list data" in {
+
+  }
 }
