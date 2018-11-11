@@ -49,20 +49,20 @@ class DepthViewSpec extends FlatSpec with Matchers {
 
     data = dv.getDepthData(6, 0.4, 100)
     data should be(DepthData(
-      Seq(DepthDataItem(0.456790, 4.0, 6.0)),
-      Seq(DepthDataItem(0.356789, 40.0, 60.0))
+      Seq(DepthItem(0.456790, 4.0, 6.0)),
+      Seq(DepthItem(0.356789, 40.0, 60.0))
     ))
 
     data = dv.getDepthData(5, 0.4, 100)
     data should be(DepthData(
-      Seq(DepthDataItem(0.45679, 4.0, 6.0)),
-      Seq(DepthDataItem(0.35678, 40.0, 60.0))
+      Seq(DepthItem(0.45679, 4.0, 6.0)),
+      Seq(DepthItem(0.35678, 40.0, 60.0))
     ))
 
     data = dv.getDepthData(4, 0.4, 100)
     data should be(DepthData(
-      Seq(DepthDataItem(0.4568, 4.0, 6.0)),
-      Seq(DepthDataItem(0.3567, 40.0, 60.0))
+      Seq(DepthItem(0.4568, 4.0, 6.0)),
+      Seq(DepthItem(0.3567, 40.0, 60.0))
     ))
   }
 
@@ -85,14 +85,14 @@ class DepthViewSpec extends FlatSpec with Matchers {
 
     data should be(DepthData(
       Seq(
-        DepthDataItem(0.1000111, 1, 2),
-        DepthDataItem(0.1000112, 2, 4),
-        DepthDataItem(0.1000113, 3, 6)
+        DepthItem(0.1000111, 1, 2),
+        DepthItem(0.1000112, 2, 4),
+        DepthItem(0.1000113, 3, 6)
       ),
       Seq(
-        DepthDataItem(0.1000009, 10, 20),
-        DepthDataItem(0.1000008, 20, 40),
-        DepthDataItem(0.1000007, 30, 60)
+        DepthItem(0.1000009, 10, 20),
+        DepthItem(0.1000008, 20, 40),
+        DepthItem(0.1000007, 30, 60)
       )
     ))
 
@@ -100,10 +100,10 @@ class DepthViewSpec extends FlatSpec with Matchers {
 
     data should be(DepthData(
       Seq(
-        DepthDataItem(0.100012, 5, 10)
+        DepthItem(0.100012, 5, 10)
       ),
       Seq(
-        DepthDataItem(0.100000, 50, 100)
+        DepthItem(0.100000, 50, 100)
       )
     ))
   }

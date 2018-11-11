@@ -18,10 +18,10 @@ package org.loopring.lightcone.core
 
 import scala.collection.SortedMap
 
-case class DepthDataItem(price: Double, amount: Double, total: Double)
-case class DepthData(sells: Seq[DepthDataItem], buys: Seq[DepthDataItem])
+case class DepthItem(price: Double, amount: Double, total: Double)
+case class DepthData(sells: Seq[DepthItem], buys: Seq[DepthItem])
 
-private[core] class DepthSide(isSell: Boolean) {
+private[core] class DepthSide(isSell: Boolean, trackChanges: Boolean) {
 
   private implicit val ordering = if (isSell) {
     new Ordering[Long] { def compare(a: Long, b: Long) = a compare b }
@@ -37,20 +37,40 @@ private[core] class DepthSide(isSell: Boolean) {
   }
 
   private[core] var items = SortedMap.empty[Long, Size]
+  private[core] var changedItems = Map.empty[Long, Size]
 
   def addItem(slot: Long, amount: Double, total: Double) {
     val newSize = items.getOrElse(slot, Size(0, 0)) + Size(amount, total)
     items += slot -> newSize
+    if (trackChanges) {
+      changedItems += slot -> newSize
+    }
+  }
+
+  def setItem(slot: Long, amount: Double, total: Double) {
+    items += slot -> Size(amount, total)
+    if (trackChanges) {
+      changedItems += slot -> Size(amount, total)
+    }
   }
 
   def getItems(numItems: Int)(filterKeyFunc: Long ⇒ Boolean): Seq[(Long, Size)] = {
     items.filterKeys(filterKeyFunc).take(numItems).toSeq
   }
+
+  def takeChangedItems(): Seq[(Long, Size)] = {
+    if (!trackChanges) {
+      throw new UnsupportedOperationException()
+    }
+    val items = changedItems.toSeq
+    changedItems = Map.empty
+    items
+  }
 }
 
-private[core] class DepthAggregator(priceDecimals: Int) {
-  private val sellDepthSide = new DepthSide(true)
-  private val buyDepthSide = new DepthSide(false)
+private[core] class DepthAggregator(priceDecimals: Int, trackChanges: Boolean) {
+  private val sellDepthSide = new DepthSide(true, trackChanges)
+  private val buyDepthSide = new DepthSide(false, trackChanges)
 
   private val scaling = Math.pow(10, priceDecimals)
 
@@ -67,22 +87,33 @@ private[core] class DepthAggregator(priceDecimals: Int) {
   def getDepthData(middlePrice: Double, numItems: Int): DepthData = {
     val slotThreshold = (middlePrice * scaling).toLong
     val sells = sellDepthSide.getItems(numItems)(_ >= slotThreshold).map {
-      case (p, size) ⇒ DepthDataItem(p / scaling, size.amount, size.total)
+      case (p, size) ⇒ DepthItem(p / scaling, size.amount, size.total)
     }
     val buys = buyDepthSide.getItems(numItems)(_ < slotThreshold).map {
-      case (p, size) ⇒ DepthDataItem(p / scaling, size.amount, size.total)
+      case (p, size) ⇒ DepthItem(p / scaling, size.amount, size.total)
     }
 
     DepthData(accumulate(sells), accumulate(buys))
   }
 
-  private def accumulate(items: Seq[DepthDataItem]) = {
+  def takeChangedDepthData = {
+    val sells = sellDepthSide.takeChangedItems.map {
+      case (p, size) ⇒ DepthItem(p / scaling, size.amount, size.total)
+    }
+    val buys = buyDepthSide.takeChangedItems.map {
+      case (p, size) ⇒ DepthItem(p / scaling, size.amount, size.total)
+    }
+
+    DepthData(sells, buys)
+  }
+
+  private def accumulate(items: Seq[DepthItem]) = {
     var amount: Double = 0
     var total: Double = 0
     items.map { item ⇒
       amount += item.amount
       total += item.total
-      DepthDataItem(item.price, amount, total)
+      DepthItem(item.price, amount, total)
     }
   }
 }
@@ -92,7 +123,7 @@ class DepthView(priceDecimals: Int, levels: Int) {
 
   private val priceDecimalsList = (priceDecimals - levels + 1 to priceDecimals)
   private val aggregatorMap = priceDecimalsList.map { priceDecimals ⇒
-    priceDecimals -> new DepthAggregator(priceDecimals)
+    priceDecimals -> new DepthAggregator(priceDecimals, false)
   }.toMap
 
   def getDepthData(priceDecimals: Int, middlePrice: Double, numItems: Int): DepthData = {
