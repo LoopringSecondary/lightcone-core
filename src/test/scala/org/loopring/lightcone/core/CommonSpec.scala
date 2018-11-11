@@ -125,4 +125,22 @@ class CommonSpec
     amountFee: Long
   ) = OrderState(BigInt(amountS), BigInt(amountB), BigInt(amountFee))
 
+  def submitOrder(order: Order) = {
+    updatedOrders = Map.empty[String, Order]
+    orderManager.submitOrder(order)
+  }
+
+  def cancelOrder(orderId: String) = {
+    updatedOrders = Map.empty[String, Order]
+    orderManager.cancelOrder(orderId)
+  }
+
+  def adjustOrder(orderId: String, outstandingAmountS: Long) = {
+    updatedOrders = Map.empty[String, Order]
+    orderManager.adjustOrder(orderId, BigInt(outstandingAmountS))
+  }
+
+  def resetUpdatedOrders() {
+    updatedOrders = Map.empty[String, Order]
+  }
 }

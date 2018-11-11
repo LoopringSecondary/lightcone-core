@@ -24,7 +24,7 @@ class OrderManagerImplSpec_Basic extends CommonSpec {
   "submit order" should "fail when tokenS balance is low" in {
     dai.init(0, 0)
     val order = sellDAI(100, 1)
-    orderManager.submitOrder(order) should be(false)
+    submitOrder(order) should be(false)
     orderPool.size should be(0)
     updatedOrders(order.id).status should be(OrderStatus.CANCELLED_LOW_BALANCE)
   }
@@ -32,7 +32,7 @@ class OrderManagerImplSpec_Basic extends CommonSpec {
   "submit order" should "fail when tokenFee balance is low" in {
     dai.init(100, 100)
     val order = sellDAI(100, 1000, 10)
-    orderManager.submitOrder(order) should be(false)
+    submitOrder(order) should be(false)
     orderPool.size should be(0)
     updatedOrders(order.id).status should be(OrderStatus.CANCELLED_LOW_FEE_BALANCE)
   }
@@ -41,7 +41,7 @@ class OrderManagerImplSpec_Basic extends CommonSpec {
     dai.init(100, 100)
     lrc.init(100, 100)
     val order = sellDAI(100, 1000, 10)
-    orderManager.submitOrder(order) should be(true)
+    submitOrder(order) should be(true)
     orderPool.size should be(1)
     val updated = orderPool(order.id)
     updatedOrders(order.id) should be(updated)
@@ -57,7 +57,7 @@ class OrderManagerImplSpec_Basic extends CommonSpec {
     dai.init(100, 100)
     lrc.init(100, 100)
     val order = sellDAI(50, 1000, 100)
-    orderManager.submitOrder(order) should be(true)
+    submitOrder(order) should be(true)
     orderPool.size should be(1)
     val updated = orderPool(order.id)
     updatedOrders(order.id) should be(updated)
@@ -73,7 +73,7 @@ class OrderManagerImplSpec_Basic extends CommonSpec {
     dai.init(100, 100)
     lrc.init(100, 100)
     val order = sellDAI(10, 1000, 20)
-    orderManager.submitOrder(order) should be(true)
+    submitOrder(order) should be(true)
     orderPool.size should be(1)
     val updated = orderPool(order.id)
     updatedOrders(order.id) should be(updated)
@@ -89,7 +89,7 @@ class OrderManagerImplSpec_Basic extends CommonSpec {
     dai.init(100, 100)
     lrc.init(100, 100)
     val order = sellDAI(0, 1000, 20)
-    orderManager.submitOrder(order) should be(false)
+    submitOrder(order) should be(false)
     orderPool.size should be(0)
     updatedOrders(order.id).status should be(OrderStatus.INVALID_DATA)
   }
@@ -98,7 +98,7 @@ class OrderManagerImplSpec_Basic extends CommonSpec {
     dai.init(100, 100)
     lrc.init(100, 100)
     val order = Order("id", "XYZ", WETH, LRC, BigInt(10), BigInt(10), BigInt(10))
-    orderManager.submitOrder(order) should be(false)
+    submitOrder(order) should be(false)
     orderPool.size should be(0)
     updatedOrders(order.id).status should be(OrderStatus.UNSUPPORTED_MARKET)
   }
@@ -107,7 +107,7 @@ class OrderManagerImplSpec_Basic extends CommonSpec {
     dai.init(100, 100)
     lrc.init(100, 100)
     val order = Order("id", DAI, WETH, "XYZ", BigInt(10), BigInt(10), BigInt(10))
-    orderManager.submitOrder(order) should be(false)
+    submitOrder(order) should be(false)
     orderPool.size should be(0)
     updatedOrders(order.id).status should be(OrderStatus.UNSUPPORTED_MARKET)
   }

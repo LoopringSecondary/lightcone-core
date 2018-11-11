@@ -28,16 +28,13 @@ class OrderManagerImplSpec_RestrictedByAllowance extends CommonSpec {
 
     val order = sellDAI(200, 1000, 20)
 
-    orderManager.submitOrder(order) should be(true)
+    submitOrder(order) should be(true)
     orderPool.size should be(1)
     val updated = orderPool(order.id)
     updatedOrders(order.id) should be(updated)
 
-    val reserved = updated.reserved
-    val actual = updated.actual
-
-    reserved should be(orderState(100, 0, 20))
-    actual should be(orderState(100, 500, 10))
+    updatedOrders(order.id).reserved should be(orderState(100, 0, 20))
+    updatedOrders(order.id).actual should be(orderState(100, 500, 10))
   }
 
   "order" should "be scaled by tokenS allowance (zero) if tokenFee allowance is still high " in {
@@ -46,7 +43,7 @@ class OrderManagerImplSpec_RestrictedByAllowance extends CommonSpec {
 
     val order = sellDAI(200, 1000, 20)
 
-    orderManager.submitOrder(order) should be(true)
+    submitOrder(order) should be(true)
     orderPool.size should be(1)
     val updated = orderPool(order.id)
     updatedOrders(order.id) should be(updated)
@@ -64,7 +61,7 @@ class OrderManagerImplSpec_RestrictedByAllowance extends CommonSpec {
 
     val order = sellDAI(200, 1000, 20)
 
-    orderManager.submitOrder(order) should be(true)
+    submitOrder(order) should be(true)
     orderPool.size should be(1)
     val updated = orderPool(order.id)
     updatedOrders(order.id) should be(updated)
@@ -82,7 +79,7 @@ class OrderManagerImplSpec_RestrictedByAllowance extends CommonSpec {
 
     val order = sellDAI(200, 1000, 20)
 
-    orderManager.submitOrder(order) should be(true)
+    submitOrder(order) should be(true)
     orderPool.size should be(1)
     val updated = orderPool(order.id)
     updatedOrders(order.id) should be(updated)
