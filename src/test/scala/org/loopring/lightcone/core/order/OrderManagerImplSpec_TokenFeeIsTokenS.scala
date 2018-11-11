@@ -29,14 +29,25 @@ class OrderManagerImplSpec_TokenFeeIsTokenS extends CommonSpec {
     updatedOrders(order.id).status should be(OrderStatus.CANCELLED_LOW_BALANCE)
   }
 
-  "when tokenS == tokenFee, submit order" should "reserve for both tokenS and tokenFee" in {
-    lrc.init(1000, 0)
-    val order = sellLRC(100, 1, 10)
+  "when tokenS == tokenFee, submit order" should "reserve for both tokenS and tokenFee when allowance is suffcient" in {
+    lrc.init(1000, 1000)
+    val order = sellLRC(100, 10, 10)
     submitOrder(order) should be(true)
     orderPool.size should be(1)
     updatedOrders(order.id).status should be(OrderStatus.PENDING)
 
     updatedOrders(order.id).reserved should be(orderState(100, 0, 10))
-    updatedOrders(order.id).actual should be(orderState(100, 1, 10))
+    updatedOrders(order.id).actual should be(orderState(100, 10, 10))
+  }
+
+  "when tokenS == tokenFee, submit order" should "reserve for both tokenS and tokenFee when allowance is insuffcient" in {
+    lrc.init(1000, 55)
+    val order = sellLRC(200, 10, 20)
+    submitOrder(order) should be(true)
+    orderPool.size should be(1)
+    updatedOrders(order.id).status should be(OrderStatus.PENDING)
+
+    updatedOrders(order.id).reserved should be(orderState(50, 0, 5))
+    updatedOrders(order.id).actual should be(orderState(50, 2, 5))
   }
 }

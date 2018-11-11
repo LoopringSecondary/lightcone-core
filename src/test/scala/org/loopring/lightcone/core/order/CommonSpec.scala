@@ -25,6 +25,7 @@ import org.slf4s.Logging
 class CommonSpec
   extends FlatSpec
   with BeforeAndAfterEach
+  with BeforeAndAfterAll
   with Matchers
   with Logging {
 
@@ -56,6 +57,10 @@ class CommonSpec
   var weth: TokenReserveManager = _
 
   var updatedOrders = Map.empty[String, Order]
+
+  override def beforeAll() {
+    println(s"[To run this spec, use `testOnly *${getClass.getSimpleName}`]")
+  }
 
   override def beforeEach() {
     orderPool = new OrderPool()
