@@ -47,20 +47,25 @@ final private[core] class OrderManagerImpl(
   }
 
   def submitOrder(order: Order): Boolean = {
-    assert(order.amountS > 0)
+    if (order.amountS <= 0) {
+      orderPool += order.as(INVALID_DATA)
+      return false
+    }
 
-    assert(tokens.contains(order.tokenS))
-    assert(tokens.contains(order.tokenFee))
+    if (!tokens.contains(order.tokenS) || !tokens.contains(order.tokenFee)) {
+      orderPool += order.as(UNSUPPORTED_MARKET)
+      return false
+    }
 
-    if (order.onTokenS(_.hasTooManyOrders) &&
-      order.onTokenFee(_.hasTooManyOrders)) {
+    if (order.callOnTokenS(_.hasTooManyOrders) ||
+      order.callOnTokenFee(_.hasTooManyOrders)) {
       orderPool += order.as(CANCELLED_TOO_MANY_ORDERS)
       return false
     }
 
     orderPool += order.as(NEW)
 
-    if (order.callTokenSAndFeeThenRemoveOrders(_.reserve(order.id))) {
+    if (order.callOnTokenSAndTokenFee(_.reserve(order.id))) {
       return false
     }
 
@@ -72,8 +77,11 @@ final private[core] class OrderManagerImpl(
     orderPool.getOrder(orderId) match {
       case None ⇒ false
       case Some(order) ⇒
-        order.callTokenSAndFeeThenRemoveOrders(_.release(orderId))
-        tryRemoveOrder(orderId, CANCELLED_BY_USER)
+        orderPool.getOrder(orderId) map { order ⇒
+          orderPool += order.as(CANCELLED_BY_USER)
+        }
+
+        order.callOnTokenSAndTokenFee(_.release(order.id))
         true
     }
   }
@@ -83,36 +91,16 @@ final private[core] class OrderManagerImpl(
     orderPool.getOrder(orderId) match {
       case None ⇒ false
       case Some(order) ⇒
-        orderPool += order.withOutstandingAmountS(outstandingAmountS)
-        order.callTokenSAndFeeThenRemoveOrders(_.adjust(orderId))
+        val outstandingAmountS_ = order.amountS min outstandingAmountS
+        orderPool += order.withOutstandingAmountS(outstandingAmountS_)
+        order.callOnTokenSAndTokenFee(_.adjust(order.id))
         true
     }
   }
 
-  private type TM = TokenReserveManager
-  private type ORDER = Order
-
-  private def tryRemoveOrder(orderId: String, status: OrderStatus) = {
-    orderPool.getOrder(orderId) map { order ⇒
-      val updated = order.as(status)
-      log.debug("delete_by_status: " + updated)
-      orderPool += updated
-    }
-  }
-
-  implicit private class MagicOrder(order: ORDER) {
-
-    def onTokenS[R](method: TM ⇒ R): R =
-      method(tokens(order.tokenS))
-
-    def onTokenFee[R](method: TM ⇒ R): R =
-      method(tokens(order.tokenFee))
-
-    private def callTokenS_(method: TM ⇒ Map[String, OrderStatus]) =
-      onTokenS[Map[String, OrderStatus]](method)
-
-    private def callTokenFee_(method: TM ⇒ Map[String, OrderStatus]) =
-      onTokenFee[Map[String, OrderStatus]](method)
+  implicit private class MagicOrder(order: Order) {
+    def callOnTokenS[R](method: TokenReserveManager ⇒ R) = method(tokens(order.tokenS))
+    def callOnTokenFee[R](method: TokenReserveManager ⇒ R) = method(tokens(order.tokenFee))
 
     // 删除订单应该有以下几种情况:
     // 1.用户主动删除订单
@@ -122,17 +110,13 @@ final private[core] class OrderManagerImpl(
     // tokenManager的release动作不能由tokenManager本身调用,
     // 只能由orderManager根据并汇总tokenS&tokenFee情况后删除,
     // 删除时tokenS&tokenFee都要删,不能只留一个
-    def callTokenSAndFeeThenRemoveOrders(
-      method: TM ⇒ Map[String, OrderStatus]
-    ): Boolean = {
-      (callTokenS_(method) ++ callTokenFee_(method)).map(x ⇒ {
-        val id = x._1
-        callTokenS_(_.release(id))
-        callTokenFee_(_.release(id))
-        tryRemoveOrder(id, x._2)
-      }).size > 0
+    def callOnTokenSAndTokenFee(method: TokenReserveManager ⇒ Set[String]) = {
+      val ordersToDelete = callOnTokenS(method) ++ callOnTokenFee(method)
+      ordersToDelete.map { orderId ⇒
+        callOnTokenS(_.release(orderId))
+        callOnTokenFee(_.release(orderId))
+      }.size > 0
     }
-
   }
 
 }

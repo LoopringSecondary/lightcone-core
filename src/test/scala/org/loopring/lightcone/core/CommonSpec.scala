@@ -20,12 +20,109 @@ import org.loopring.lightcone.core.base._
 import org.loopring.lightcone.core.data._
 import org.loopring.lightcone.core.order._
 import org.scalatest._
+import org.slf4s.Logging
 
-class CommonSpec extends FlatSpec with Matchers {
+class CommonSpec
+  extends FlatSpec
+  with BeforeAndAfterEach
+  with Matchers
+  with Logging {
 
-  val lrc = "LRC"
-  val xyz = "XYZ"
-  val gto = "GTO"
-  val eth = "WETH"
+  val rand = new scala.util.Random
+
+  val LRC = "LRC"
+  val GTO = "GTO"
+  val DAI = "DAI"
+  val WETH = "WETH"
+
+  val LRC_TOKEN = TokenMetadata(LRC, 0, 0.1, 1.0)
+  val GTO_TOKEN = TokenMetadata(GTO, 1, 0.2, 1400.0)
+  val DAI_TOKEN = TokenMetadata(DAI, 2, 0.3, 7.0)
+  val WETH_TOKEN = TokenMetadata(WETH, 3, 0.4, 0.5)
+
+  implicit val tmm = new TokenMetadataManager()
+  tmm.addToken(LRC_TOKEN)
+  tmm.addToken(GTO_TOKEN)
+  tmm.addToken(DAI_TOKEN)
+  tmm.addToken(WETH_TOKEN)
+
+  implicit val dustEvaluator = new DustOrderEvaluatorImpl
+
+  implicit var orderPool: OrderPool = _
+  var orderManager: OrderManager = _
+  var lrc: TokenReserveManager = _
+  var gto: TokenReserveManager = _
+  var dai: TokenReserveManager = _
+  var weth: TokenReserveManager = _
+
+  var updatedOrders = Map.empty[String, Order]
+
+  override def beforeEach() {
+    orderPool = new OrderPool()
+    updatedOrders = Map.empty[String, Order]
+    orderPool.addCallback { order ⇒
+      updatedOrders += order.id -> order
+      // println("----UO: " + order)
+      // log.debug("order: " + order)
+    }
+    orderManager = OrderManager.default()
+
+    lrc = new TokenReserveManager(LRC)
+    gto = new TokenReserveManager(GTO)
+    dai = new TokenReserveManager(DAI)
+    weth = new TokenReserveManager(WETH)
+
+    orderManager.addTokenReserveManager(lrc)
+    orderManager.addTokenReserveManager(gto)
+    orderManager.addTokenReserveManager(dai)
+    orderManager.addTokenReserveManager(weth)
+  }
+
+  def sellLRC(
+    amountS: Long,
+    amountB: Long,
+    amountFee: Long = 0
+  ) = newOrder(LRC, WETH, LRC, amountS, amountB, amountFee)
+
+  def buyLRC(
+    amountS: Long,
+    amountB: Long,
+    amountFee: Long = 0
+  ) = newOrder(WETH, LRC, LRC, amountS, amountB, amountFee)
+
+  def sellDAI(
+    amountS: Long,
+    amountB: Long,
+    amountFee: Long = 0
+  ) = newOrder(DAI, WETH, LRC, amountS, amountB, amountFee)
+
+  def buyDAI(
+    amountS: Long,
+    amountB: Long,
+    amountFee: Long = 0
+  ) = newOrder(WETH, DAI, LRC, amountS, amountB, amountFee)
+
+  def newOrder(
+    tokenS: String,
+    tokenB: String,
+    tokenFee: String,
+    amountS: Long,
+    amountB: Long,
+    amountFee: Long = 0
+  ) = Order(
+    rand.nextLong().toString,
+    tokenS,
+    tokenB,
+    tokenFee,
+    BigInt(amountS),
+    BigInt(amountB),
+    BigInt(amountFee)
+  )
+
+  def orderState(
+    amountS: Long,
+    amountB: Long,
+    amountFee: Long
+  ) = OrderState(BigInt(amountS), BigInt(amountB), BigInt(amountFee))
 
 }

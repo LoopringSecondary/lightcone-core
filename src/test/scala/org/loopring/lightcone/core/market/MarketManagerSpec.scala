@@ -24,74 +24,74 @@ import org.scalatest._
 
 class MarketManagerSpec extends CommonSpec {
 
-  implicit val tmm = new TokenMetadataManager()
-  tmm.addToken(TokenMetadata(lrc, 0, 0.1, 0.8))
-  tmm.addToken(TokenMetadata(eth, 0, 0.2, 1400))
+  // implicit val tmm = new TokenMetadataManager()
+  // tmm.addToken(TokenMetadata(lrc, 0, 0.1, 0.8))
+  // tmm.addToken(TokenMetadata(eth, 0, 0.2, 1400))
 
-  val incomeEvaluator = new RingIncomeEstimatorImpl(10)
-  val simpleMatcher = new SimpleRingMatcher(incomeEvaluator)
+  // val incomeEvaluator = new RingIncomeEstimatorImpl(10)
+  // val simpleMatcher = new SimpleRingMatcher(incomeEvaluator)
 
-  implicit val dustEvaluator = new DustOrderEvaluatorImpl(5)
+  // implicit val dustEvaluator = new DustOrderEvaluatorImpl(5)
 
-  implicit val orderPool = new OrderPool()
-  implicit val timeProvider: TimeProvider = new SystemTimeProvider()
-  implicit val pendingRingPool = new PendingRingPoolImpl()
+  // implicit val orderPool = new OrderPool()
+  // implicit val timeProvider: TimeProvider = new SystemTimeProvider()
+  // implicit val pendingRingPool = new PendingRingPoolImpl()
 
-  var marketManager = new MarketManagerImpl(
-    MarketId(lrc, eth),
-    MarketManagerConfig(0, 0),
-    simpleMatcher
-  )
+  // var marketManager = new MarketManagerImpl(
+  //   MarketId(lrc, eth),
+  //   MarketManagerConfig(0, 0),
+  //   simpleMatcher
+  // )
 
-  "submitOrder" should "add orders to marketManager" in {
-    val maker1 = Order(
-      id = "maker1",
-      tokenS = lrc,
-      tokenB = eth,
-      tokenFee = lrc,
-      amountS = 100,
-      amountB = 10,
-      amountFee = 10,
-      walletSplitPercentage = 0.2,
-      createdAt = 1,
-      _actual = Some(OrderState(amountS = 100, amountB = 10, amountFee = 10))
-    )
-    val maker2 = Order(
-      id = "maker2",
-      tokenS = lrc,
-      tokenB = eth,
-      tokenFee = lrc,
-      amountS = 100,
-      amountB = 10,
-      amountFee = 10,
-      walletSplitPercentage = 0.2,
-      createdAt = 2,
-      _actual = Some(OrderState(amountS = 100, amountB = 10, amountFee = 10))
-    )
-    val maker3 = Order(
-      id = "maker3",
-      tokenS = lrc,
-      tokenB = eth,
-      tokenFee = lrc,
-      amountS = 100,
-      amountB = 10,
-      amountFee = 10,
-      walletSplitPercentage = 0.2,
-      createdAt = 3,
-      _actual = Some(OrderState(amountS = 100, amountB = 10, amountFee = 10))
-    )
-    val res1 = marketManager.submitOrder(maker1)
-    assert(res1.rings.isEmpty && res1.fullyMatchedOrderIds.isEmpty && res1.matchedMakers.size == 1)
-    assert(res1.matchedMakers("maker1").matchable.amountS == maker1.amountS)
-    val res2 = marketManager.submitOrder(maker2)
-    assert(res2.rings.isEmpty && res2.fullyMatchedOrderIds.isEmpty && res2.matchedMakers.size == 1)
-    assert(res2.matchedMakers("maker2").matchable.amountS == maker2.amountS)
-    val res3 = marketManager.submitOrder(maker3)
-    assert(res3.rings.isEmpty && res3.fullyMatchedOrderIds.isEmpty && res3.matchedMakers.size == 1)
-    assert(res3.matchedMakers("maker3").matchable.amountS == maker3.amountS)
+  // "submitOrder" should "add orders to marketManager" in {
+  //   val maker1 = Order(
+  //     id = "maker1",
+  //     tokenS = lrc,
+  //     tokenB = eth,
+  //     tokenFee = lrc,
+  //     amountS = 100,
+  //     amountB = 10,
+  //     amountFee = 10,
+  //     walletSplitPercentage = 0.2,
+  //     createdAt = 1,
+  //     _actual = Some(OrderState(amountS = 100, amountB = 10, amountFee = 10))
+  //   )
+  //   val maker2 = Order(
+  //     id = "maker2",
+  //     tokenS = lrc,
+  //     tokenB = eth,
+  //     tokenFee = lrc,
+  //     amountS = 100,
+  //     amountB = 10,
+  //     amountFee = 10,
+  //     walletSplitPercentage = 0.2,
+  //     createdAt = 2,
+  //     _actual = Some(OrderState(amountS = 100, amountB = 10, amountFee = 10))
+  //   )
+  //   val maker3 = Order(
+  //     id = "maker3",
+  //     tokenS = lrc,
+  //     tokenB = eth,
+  //     tokenFee = lrc,
+  //     amountS = 100,
+  //     amountB = 10,
+  //     amountFee = 10,
+  //     walletSplitPercentage = 0.2,
+  //     createdAt = 3,
+  //     _actual = Some(OrderState(amountS = 100, amountB = 10, amountFee = 10))
+  //   )
+  //   val res1 = marketManager.submitOrder(maker1)
+  //   assert(res1.rings.isEmpty && res1.fullyMatchedOrderIds.isEmpty && res1.matchedMakers.size == 1)
+  //   assert(res1.matchedMakers("maker1").matchable.amountS == maker1.amountS)
+  //   val res2 = marketManager.submitOrder(maker2)
+  //   assert(res2.rings.isEmpty && res2.fullyMatchedOrderIds.isEmpty && res2.matchedMakers.size == 1)
+  //   assert(res2.matchedMakers("maker2").matchable.amountS == maker2.amountS)
+  //   val res3 = marketManager.submitOrder(maker3)
+  //   assert(res3.rings.isEmpty && res3.fullyMatchedOrderIds.isEmpty && res3.matchedMakers.size == 1)
+  //   assert(res3.matchedMakers("maker3").matchable.amountS == maker3.amountS)
 
-    assert(marketManager.bids.size == 3)
-  }
+  //   assert(marketManager.bids.size == 3)
+  // }
 
   // "submitOrder" should " fullfill in first order" in {
   //   assert(marketManager.bids.nonEmpty)

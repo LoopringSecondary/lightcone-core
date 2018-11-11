@@ -27,7 +27,7 @@ trait DustOrderEvaluator {
   def isMatchableDust(order: Order): Boolean
 }
 
-class DustOrderEvaluatorImpl(threshold: Double)(
+class DustOrderEvaluatorImpl(threshold: Double = 0.0)(
     implicit
     tve: TokenMetadataManager
 )
