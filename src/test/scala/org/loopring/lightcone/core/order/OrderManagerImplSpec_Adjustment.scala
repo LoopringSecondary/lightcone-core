@@ -38,22 +38,16 @@ class OrderManagerImplSpec_Adjustment extends CommonSpec {
     adjustOrder(order1.id, 40) should be(true)
     updatedOrders.size should be(1)
 
-    {
-      val order = updatedOrders(order1.id)
-      order.status should be(OrderStatus.PENDING)
-      order.reserved should be(orderState(40, 0, 16))
-      order.actual should be(orderState(40, 4, 16))
-    }
+    updatedOrders(order1.id).status should be(OrderStatus.PENDING)
+    updatedOrders(order1.id).reserved should be(orderState(40, 0, 16))
+    updatedOrders(order1.id).actual should be(orderState(40, 4, 16))
 
     adjustOrder(order1.id, 140) should be(true)
     updatedOrders.size should be(1)
 
-    {
-      val order = updatedOrders(order1.id)
-      order.status should be(OrderStatus.PENDING)
-      order.reserved should be(orderState(100, 0, 40))
-      order.actual should be(orderState(100, 10, 40))
-    }
+    updatedOrders(order1.id).status should be(OrderStatus.PENDING)
+    updatedOrders(order1.id).reserved should be(orderState(100, 0, 40))
+    updatedOrders(order1.id).actual should be(orderState(100, 10, 40))
   }
 
   "adjustment of the last order upward and downward" should "just work" in {
@@ -70,22 +64,16 @@ class OrderManagerImplSpec_Adjustment extends CommonSpec {
     adjustOrder(order2.id, 40)
     updatedOrders.size should be(1)
 
-    {
-      val order = updatedOrders(order2.id)
-      order.status should be(OrderStatus.PENDING)
-      order.reserved should be(orderState(40, 0, 16))
-      order.actual should be(orderState(40, 4, 16))
-    }
+    updatedOrders(order2.id).status should be(OrderStatus.PENDING)
+    updatedOrders(order2.id).reserved should be(orderState(40, 0, 16))
+    updatedOrders(order2.id).actual should be(orderState(40, 4, 16))
 
     adjustOrder(order2.id, 140)
     updatedOrders.size should be(1)
 
-    {
-      val order = updatedOrders(order2.id)
-      order.status should be(OrderStatus.PENDING)
-      order.reserved should be(orderState(100, 0, 40))
-      order.actual should be(orderState(100, 10, 40))
-    }
+    updatedOrders(order2.id).status should be(OrderStatus.PENDING)
+    updatedOrders(order2.id).reserved should be(orderState(100, 0, 40))
+    updatedOrders(order2.id).actual should be(orderState(100, 10, 40))
   }
 
   "adjustment of the first order upward" should "just scale down the following orders" in {

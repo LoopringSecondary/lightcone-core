@@ -1,0 +1,42 @@
+/*
+ * Copyright 2018 Loopring Foundation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package org.loopring.lightcone.core.order
+
+import org.loopring.lightcone.core.data._
+import org.loopring.lightcone.core._
+import org.scalatest._
+
+class OrderManagerImplSpec_TokenFeeIsTokenS extends CommonSpec {
+  "when tokenS == tokenFee, submit order" should "fail when tokenS balance is low" in {
+    lrc.init(100, 0)
+    val order = sellLRC(100, 1, 10)
+    submitOrder(order) should be(false)
+    orderPool.size should be(0)
+    updatedOrders(order.id).status should be(OrderStatus.CANCELLED_LOW_BALANCE)
+  }
+
+  "when tokenS == tokenFee, submit order" should "reserve for both tokenS and tokenFee" in {
+    lrc.init(1000, 0)
+    val order = sellLRC(100, 1, 10)
+    submitOrder(order) should be(true)
+    orderPool.size should be(1)
+    updatedOrders(order.id).status should be(OrderStatus.PENDING)
+
+    updatedOrders(order.id).reserved should be(orderState(100, 0, 10))
+    updatedOrders(order.id).actual should be(orderState(100, 1, 10))
+  }
+}

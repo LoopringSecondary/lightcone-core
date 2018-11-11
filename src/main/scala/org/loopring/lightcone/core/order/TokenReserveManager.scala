@@ -99,7 +99,8 @@ class TokenReserveManager(
     else {
       indexMap.get(orderId) match {
         case Some(_) ⇒
-          throw new Exception("attepmted to reserve for the same order")
+          // in case tokenS == tokenB
+          Set.empty[String]
         case None ⇒
           reservations :+= Reservation(orderId, 0, 0)
           rebalance()
