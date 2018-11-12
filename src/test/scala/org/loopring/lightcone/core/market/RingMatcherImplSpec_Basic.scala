@@ -21,7 +21,7 @@ import org.loopring.lightcone.core.data._
 import org.scalatest._
 import MatchingFailure._
 
-class RingMatcherImplSpec extends CommonSpec {
+class RingMatcherImplSpec_Basic extends CommonSpec {
 
   implicit val alwaysProfitable = new RingIncomeEstimator {
     def getRingIncome(ring: OrderRing) = Long.MaxValue
@@ -56,6 +56,7 @@ class RingMatcherImplSpec extends CommonSpec {
     ) should be(Left(ORDERS_NOT_TRADABLE))
   }
 
+  // TODO(hongyu): fix test failure
   "RingMatcherImpl" should "not match orders if one of them has tokenS as 0 " in {
     val matcher = new RingMatcherImpl()
 

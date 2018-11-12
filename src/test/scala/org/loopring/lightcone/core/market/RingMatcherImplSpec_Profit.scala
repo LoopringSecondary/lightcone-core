@@ -46,6 +46,7 @@ class RingMatcherImplSpec_Profit extends CommonSpec {
     matcher.matchOrders(taker, maker, 0).isRight should be(true)
   }
 
+  // TODO(hongyu): fix test failure
   "RingMatcherImpl" should "not match orders if their `_matchable` fields are not set" in {
     implicit val alwaysProfitable = new RingIncomeEstimator {
       def getRingIncome(ring: OrderRing) = Long.MaxValue
