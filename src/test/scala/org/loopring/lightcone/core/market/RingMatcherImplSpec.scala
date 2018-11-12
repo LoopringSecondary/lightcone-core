@@ -28,10 +28,6 @@ class RingMatcherImplSpec extends CommonSpec {
     def isProfitable(ring: OrderRing, fiatValueThreshold: Double) = true
   }
 
-  private implicit class richOrder(order: Order) {
-    def !() = order.copy(_matchable = Some(order.original))
-  }
-
   "RingMatcherImpl" should "not match untradable orders" in {
     val matcher = new RingMatcherImpl()
 
@@ -88,10 +84,10 @@ class RingMatcherImplSpec extends CommonSpec {
     ).isRight should be(true)
 
     // match the same orders with `_matchable`
-    println(matcher.matchOrders(
+    matcher.matchOrders(
       sellDAI(10, 10),
       buyDAI(10, 10)
-    )).isRight should be(false)
+    ) should be(Left(INCOME_TOO_SMALL))
   }
 
 }

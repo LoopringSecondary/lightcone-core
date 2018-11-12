@@ -23,8 +23,8 @@ import MatchingFailure._
 
 class RingMatcherImplSpec_Profit extends CommonSpec {
 
-  val maker = sellDAI(10, 10).copy(_matchable = Some(OrderState(10, 10)))
-  val taker = buyDAI(10, 10).copy(_matchable = Some(OrderState(10, 10)))
+  val maker = sellDAI(10, 10)!
+  val taker = buyDAI(10, 10)!
 
   "RingMatcherImpl" should "not match orders if the ring is not profitable" in {
 
@@ -44,6 +44,26 @@ class RingMatcherImplSpec_Profit extends CommonSpec {
     }
     val matcher = new RingMatcherImpl()
     matcher.matchOrders(taker, maker, 0).isRight should be(true)
+  }
+
+  "RingMatcherImpl" should "not match orders if their `_matchable` fields are not set" in {
+    implicit val alwaysProfitable = new RingIncomeEstimator {
+      def getRingIncome(ring: OrderRing) = Long.MaxValue
+      def isProfitable(ring: OrderRing, fiatValueThreshold: Double) = true
+    }
+
+    val matcher = new RingMatcherImpl()
+
+    matcher.matchOrders(
+      sellDAI(10, 10)!,
+      buyDAI(10, 10)!
+    ).isRight should be(true)
+
+    // match the same orders with `_matchable`
+    matcher.matchOrders(
+      sellDAI(10, 10),
+      buyDAI(10, 10)
+    ) should be(Left(INCOME_TOO_SMALL))
   }
 
 }

@@ -161,4 +161,8 @@ class CommonSpec
   def resetUpdatedOrders() {
     updatedOrders = Map.empty[String, Order]
   }
+
+  implicit class richOrder(order: Order) {
+    def !() = order.copy(_matchable = Some(order.original))
+  }
 }
