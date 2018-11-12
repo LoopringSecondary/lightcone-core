@@ -47,6 +47,7 @@ class CommonSpec
   tmm.addToken(DAI_TOKEN)
   tmm.addToken(WETH_TOKEN)
 
+  implicit val tve = new TokenValueEstimatorImpl
   implicit val dustEvaluator = new DustOrderEvaluatorImpl
 
   implicit var orderPool: OrderPool = _

@@ -46,9 +46,9 @@ trait MarketManager {
     }
   }
 
-  def submitOrder(order: Order): SubmitOrderResult
+  def submitOrder(order: Order, minFiatValue: Double): SubmitOrderResult
   def deleteOrder(orderId: String): Boolean
-  def triggerMatch(): SubmitOrderResult
+  def triggerMatch(minFiatValue: Double): SubmitOrderResult
   def deletePendingRing(ring: OrderRing): Unit
   // def getMetadata(): OrderBookMetadata
 }

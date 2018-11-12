@@ -18,7 +18,7 @@ package org.loopring.lightcone.core.order
 
 import org.loopring.lightcone.core.data._
 
-class TokenMetadataManager {
+class TokenMetadataManager(defaultBurnRate: Double = 0.2) {
 
   private var tokens = Map.empty[String, TokenMetadata]
 
@@ -32,6 +32,8 @@ class TokenMetadataManager {
 
   def hasToken(token: String) = tokens.contains(token)
 
+  def getToken(token: String) = tokens.get(token)
+
   def updatePrices(priceMap: Map[String, Double]) {
     tokens = tokens.map {
       case (address, token) ⇒ priceMap.get(address) match {
@@ -41,20 +43,7 @@ class TokenMetadataManager {
     }
   }
 
-  def setBurnRates(burnRateMap: Map[String, Double]) {
-    this.burnRateMap = burnRateMap
-  }
-
-  def getFiatValue(token: String, amount: BigInt): Double = {
-    if (amount.signum <= 0) 0
-    else {
-      val decimals: Int = decimalsMap.getOrElse(token, 0)
-      val scaling: Double = Math.pow(10, decimals)
-      val price = priceMap.getOrElse(token, 0.0)
-      (Rational(price) * Rational(amount) / Rational(scaling)).doubleValue
-    }
-  }
-
-  def getBurnRate(token: String): Double = burnRateMap.getOrElse(token, 0.05)
+  def getBurnRate(token: String) =
+    tokens.get(token).map(_.burnRate).getOrElse(defaultBurnRate)
 }
 

@@ -24,7 +24,8 @@ import org.slf4s.Logging
 trait RingMatcher {
   def matchOrders(
     taker: Order,
-    maker: Order
+    maker: Order,
+    minFiatValue: Double
   ): Either[MatchingFailure, OrderRing]
 }
 
@@ -34,10 +35,11 @@ class SimpleRingMatcher(
 
   def matchOrders(
     taker: Order,
-    maker: Order
+    maker: Order,
+    minFiatValue: Double = 0
   ): Either[MatchingFailure, OrderRing] = {
     makeRing(maker, taker) match {
-      case Some(ring) if ringIncomeEstimator.isProfitable(ring) ⇒ Right(ring)
+      case Some(ring) if ringIncomeEstimator.isProfitable(ring, minFiatValue) ⇒ Right(ring)
       case Some(ring) ⇒ Left(INCOME_TOO_SMALL)
       case None ⇒ Left(ORDERS_NOT_TRADABLE)
     }

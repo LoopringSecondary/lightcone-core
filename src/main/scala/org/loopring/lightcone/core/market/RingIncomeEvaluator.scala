@@ -17,37 +17,43 @@
 package org.loopring.lightcone.core.market
 
 import org.loopring.lightcone.core.data._
-import org.loopring.lightcone.core.order.TokenMetadataManager
+import org.loopring.lightcone.core.order._
 
 trait RingIncomeEstimator {
   def getIncomeFiatValue(ring: OrderRing): Double
-  def isProfitable(ring: OrderRing): Boolean
+  def isProfitable(ring: OrderRing, fiatValueThreshold: Double): Boolean
 }
 
-final class RingIncomeEstimatorImpl(
-    threshold: Double
-)(implicit tve: TokenMetadataManager) extends RingIncomeEstimator {
+// TODO(hongyu): we should deduct the gas cost.
+final class RingIncomeEstimatorImpl()(
+    implicit
+    tmm: TokenMetadataManager,
+    tve: TokenValueEstimator
+) extends RingIncomeEstimator {
 
   def getIncomeFiatValue(ring: OrderRing) =
     getExpectedFillIncomeFiatValue(ring.maker) +
       getExpectedFillIncomeFiatValue(ring.taker)
 
-  def isProfitable(ring: OrderRing) =
-    getIncomeFiatValue(ring) >= threshold
+  def isProfitable(ring: OrderRing, fiatValueThreshold: Double) =
+    getIncomeFiatValue(ring) >= fiatValueThreshold
 
-  private def getExpectedFillIncomeFiatValue(fill: ExpectedFill)(implicit tve: TokenMetadataManager) = {
-    /** 当不包含tokenFee时，无法转换，则返回0
-     *  当不包含tokenS时，需要使用tokenB计算
-     */
+  private def getExpectedFillIncomeFiatValue(fill: ExpectedFill) = {
+
     val (order, pending, amountMargin) = (fill.order, fill.pending, fill.amountMargin)
-    val rate = (1 - order.walletSplitPercentage) * (1 - tve.getBurnRate(order.tokenFee))
+
+    val rate = (1 - order.walletSplitPercentage) * (1 - tmm.getBurnRate(order.tokenFee))
     val fiatFee = rate * tve.getFiatValue(order.tokenFee, pending.amountFee)
-    val fiatMargin = if (tve.hasToken(order.tokenS)) {
-      tve.getFiatValue(order.tokenS, amountMargin)
-    } else {
-      val amountBMargin = Rational(amountMargin * order.amountS, order.amountB).bigintValue()
-      tve.getFiatValue(order.tokenB, amountBMargin)
-    }
+
+    // when we do not know the price of tokenS, try to use tokenB's price to calculate
+    // the price.
+    val fiatMargin =
+      if (tmm.hasToken(order.tokenS)) {
+        tve.getFiatValue(order.tokenS, amountMargin)
+      } else {
+        val amountBMargin = Rational(amountMargin * order.amountS, order.amountB).bigintValue()
+        tve.getFiatValue(order.tokenB, amountBMargin)
+      }
     fiatFee + fiatMargin
   }
 }

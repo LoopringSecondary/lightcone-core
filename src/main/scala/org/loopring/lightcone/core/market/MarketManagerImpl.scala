@@ -67,12 +67,12 @@ class MarketManagerImpl(
     marketId.secondary -> asks
   )
 
-  def submitOrder(order: Order): SubmitOrderResult = {
+  def submitOrder(order: Order, minFiatValue: Double=0): SubmitOrderResult = {
     // Allow re-submission of an existing order. In such case, we need to remove the original
     // copy of the order first.
     deleteOrder(order.id)
 
-    val res = matchOrders(order)
+    val res = matchOrders(order, minFiatValue)
 
     res.matchedMakers.get(order.id) match {
       case None ⇒
@@ -86,7 +86,7 @@ class MarketManagerImpl(
 
   // Recursively match the taker with makers. The taker order will NOT be added to its side
   // by this method.
-  private[core] def matchOrders(order: Order): SubmitOrderResult = {
+  private[core] def matchOrders(order: Order, minFiatValue: Double): SubmitOrderResult = {
     log.debug(s"taker order: $order , ${pendingRingPool.getOrderPendingAmountS(order.id)} ")
 
     var rings = Set.empty[OrderRing]
@@ -105,7 +105,7 @@ class MarketManagerImpl(
     def recursivelyMatchOrders(): Unit = {
       popBestMakerOrder(taker).map { maker ⇒
         val updatdMaker = updateOrderMatchable(maker)
-        (updatdMaker, ringMatcher.matchOrders(taker, updatdMaker))
+        (updatdMaker, ringMatcher.matchOrders(taker, updatdMaker, minFiatValue))
       } match {
         case Some((maker, Left(failure))) ⇒
           log.debug(s"match failure $failure, taker: $taker, maker: $maker")
@@ -160,7 +160,7 @@ class MarketManagerImpl(
     SubmitOrderResult(rings, matchedMakers, Some(taker))
   }
 
-  def triggerMatch(): SubmitOrderResult = {
+  def triggerMatch( minFiatValue: Double): SubmitOrderResult = {
     val maxBidsPrice = (bids.headOption map {
       head ⇒ Rational(head.amountS, head.amountB)
     }).getOrElse(Rational(0))
@@ -177,7 +177,7 @@ class MarketManagerImpl(
           log.debug(s"triggerMatch --- ask:${taker.id}")
           //submitOrder会在在taker最后不为灰尘单时，会重新放入首部，
           //因此需要保证不会taker再放入asks
-          val submitRes = matchOrders(taker)
+          val submitRes = matchOrders(taker, minFiatValue)
           submitRes.matchedMakers.get(taker.id) match {
             case None ⇒
               makersToAddBack += taker
