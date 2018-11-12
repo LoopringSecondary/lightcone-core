@@ -85,7 +85,7 @@ class PendingRingPoolImpl()(
         incrementPendingAmountS(ring.id, ring.taker.id, ring.taker.pending.amountS)
         incrementPendingAmountS(ring.id, ring.maker.id, ring.maker.pending.amountS)
 
-        log.debug("pending_orders: " + orderMap.mkString("\n\t"))
+      // log.debug("pending_orders: " + orderMap.mkString("\n\t"))
     }
   }
 

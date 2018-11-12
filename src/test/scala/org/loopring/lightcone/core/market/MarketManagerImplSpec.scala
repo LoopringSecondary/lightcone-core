@@ -22,7 +22,7 @@ import org.loopring.lightcone.core.order._
 import org.loopring.lightcone.core._
 import org.scalatest._
 
-class MarketManagerImplSpec extends CommonSpec {
+class MarketManagerImplSpec extends OrderAwareSpec {
 
   // implicit val tmm = new TokenMetadataManager()
   // tmm.addToken(TokenMetadata(lrc, 0, 0.1, 0.8))

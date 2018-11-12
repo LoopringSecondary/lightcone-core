@@ -16,9 +16,10 @@
 
 package org.loopring.lightcone.core.depth
 
+import org.loopring.lightcone.core.CommonSpec
 import org.scalatest._
 
-class DepthViewSpec extends FlatSpec with Matchers {
+class DepthViewSpec extends CommonSpec {
 
   // "DepthView" should "return list data" in {
 
