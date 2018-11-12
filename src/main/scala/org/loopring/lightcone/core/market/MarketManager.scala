@@ -18,20 +18,6 @@ package org.loopring.lightcone.core.market
 
 import org.loopring.lightcone.core.data._
 
-case class OrderBookMetadata(
-    numBuys: Int = 0, // number of visible buy orders
-    numSells: Int = 0, // number of visible sell orders
-    numHiddenBuys: Int = 0,
-    numHiddenSells: Int = 0,
-    bestBuyPrice: Option[Rational] = None,
-    bestSellPrice: Option[Rational] = None,
-    lastPrice: Option[Rational] = None,
-    isLastTakerSell: Boolean = false
-) {
-  def totalNumBuys = numBuys + numHiddenBuys
-  def totalNumSells = numSells + numHiddenSells
-}
-
 trait MarketManager {
   val marketId: MarketId
 
@@ -50,5 +36,5 @@ trait MarketManager {
   def deleteOrder(orderId: String): Boolean
   def triggerMatch(minFiatValue: Double): SubmitOrderResult
   def deletePendingRing(ring: OrderRing): Unit
-  // def getMetadata(): OrderBookMetadata
+  def getMetadata(): MarketMetadata
 }

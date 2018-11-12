@@ -44,7 +44,7 @@ object MarketManagerImpl {
 class MarketManagerImpl(
     val marketId: MarketId,
     val config: MarketManagerConfig,
-    val ringMatcher: RingMatcher,
+    val ringMatcher: RingMatcher
 )(
     implicit
     pendingRingPool: PendingRingPool,
@@ -67,7 +67,7 @@ class MarketManagerImpl(
     marketId.secondary -> asks
   )
 
-  def submitOrder(order: Order, minFiatValue: Double=0): SubmitOrderResult = {
+  def submitOrder(order: Order, minFiatValue: Double = 0): SubmitOrderResult = {
     // Allow re-submission of an existing order. In such case, we need to remove the original
     // copy of the order first.
     deleteOrder(order.id)
@@ -160,7 +160,7 @@ class MarketManagerImpl(
     SubmitOrderResult(rings, matchedMakers, Some(taker))
   }
 
-  def triggerMatch( minFiatValue: Double): SubmitOrderResult = {
+  def triggerMatch(minFiatValue: Double): SubmitOrderResult = {
     val maxBidsPrice = (bids.headOption map {
       head ⇒ Rational(head.amountS, head.amountB)
     }).getOrElse(Rational(0))
@@ -214,6 +214,18 @@ class MarketManagerImpl(
   def deletePendingRing(ring: OrderRing): Unit = {
     pendingRingPool.removeRing(ring.id)
   }
+
+  // TODO(dongw)
+  def getMetadata() = MarketMetadata(
+    numBuys = 0,
+    numSells = 0,
+    numHiddenBuys = 0,
+    numHiddenSells = 0,
+    bestBuyPrice = None,
+    bestSellPrice = None,
+    lastPrice = None,
+    isLastTakerSell = false
+  )
 
   // Add an order to its side.
   private def addOrderToSide(order: Order) = {
