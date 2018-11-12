@@ -20,12 +20,32 @@ import org.loopring.lightcone.core.data._
 import scala.collection.SortedMap
 
 class OrderbookAggregator(marketId: MarketId, priceDecimals: Int) {
-  private val sellSide = new OrderbookAggregatorSellSide(priceDecimals)
-  private val buySide = new OrderbookAggregatorBuySide(priceDecimals)
+  private val sells = new OrderbookAggregatorSide.Sells(priceDecimals)
+  private val buys = new OrderbookAggregatorSide.Buys(priceDecimals)
 
-  def getSlots(num: Int = 0): OrderbookUpdate =
-    if (num == 0) OrderbookUpdate(sellSide.takeUpdatedSlots, buySide.takeUpdatedSlots)
-    else OrderbookUpdate(sellSide.getSlots(num), buySide.getSlots(num))
+  def getOrderbookUpdate(num: Int = 0): OrderbookUpdate = {
+    if (num == 0) OrderbookUpdate(buys.takeUpdatedSlots, buys.takeUpdatedSlots)
+    else OrderbookUpdate(buys.getSlots(num), buys.getSlots(num))
+  }
+
+  def adjustAmount(
+    isSell: Boolean,
+    increase: Boolean,
+    price: Double,
+    amount: Double,
+    total: Double
+  ) {
+    val side = if (isSell) sells else buys
+    side.adjustAmount(increase, price, amount, total)
+  }
+}
+
+private object OrderbookAggregatorSide {
+  class Sells(val priceDecimals: Int)
+    extends LongOrderingSupport(true) with OrderbookAggregatorSide
+
+  class Buys(val priceDecimals: Int)
+    extends LongOrderingSupport(false) with OrderbookAggregatorSide
 }
 
 private trait OrderbookAggregatorSide {
@@ -33,37 +53,28 @@ private trait OrderbookAggregatorSide {
   val priceDecimals: Int
   implicit val ordering: Ordering[Long]
 
-  private lazy val scaling = Math.pow(10, priceDecimals)
+  private val scaling = Math.pow(10, priceDecimals)
+  private var slotMap = SortedMap.empty[Long, OrderbookSlot]
+  private var updatedSlots = Map.empty[Long, OrderbookSlot]
 
-  var slotMap = SortedMap.empty[Long, OrderbookSlot]
-  var updatedSlots = Map.empty[Long, OrderbookSlot]
-
-  def increase(price: Double, amount: Double, total: Double) =
-    updateSlot(price, amount, total)(_ + _)
-
-  def decrease(price: Double, amount: Double, total: Double) =
-    updateSlot(price, amount, total)(_ - _)
-
-  private def updateSlot(
+  def adjustAmount(
+    increase: Boolean,
     price: Double,
     amount: Double,
     total: Double
-  )(op: (Double, Double) ⇒ Double) = {
+  ) = {
     val id = getSlotForPriceId(price)
-    val op_ = (a: Double, b: Double) ⇒ Math.max(0, op(a, b))
+    val op =
+      if (increase) (a: Double, b: Double) ⇒ Math.max(0, a + b)
+      else (a: Double, b: Double) ⇒ Math.max(0, a - b)
 
     val slot = slotMap.get(id) match {
-      case Some(slot) ⇒ OrderbookSlot(id, op_(slot.amount, amount), op_(slot.total, total))
-      case None       ⇒ OrderbookSlot(id, op_(0, amount), op(0, total))
+      case Some(slot) ⇒ OrderbookSlot(id, op(slot.amount, amount), op(slot.total, total))
+      case None       ⇒ OrderbookSlot(id, op(0, amount), op(0, total))
     }
 
     slotMap += id -> slot
     updatedSlots += id -> slot
-  }
-
-  private def getSlotForPriceId(price: Double) = {
-    if (isSell) Math.ceil(price * scaling).toLong
-    else Math.floor(price * scaling).toLong
   }
 
   def getSlots(num: Int): Seq[OrderbookSlot] = slotMap.take(num).values.toSeq
@@ -73,23 +84,10 @@ private trait OrderbookAggregatorSide {
     updatedSlots = Map.empty
     slots
   }
-}
 
-private class OrderbookAggregatorSellSide(val priceDecimals: Int)
-  extends OrderbookAggregatorSide {
-  val isSell = true
-
-  implicit val ordering = new Ordering[Long] {
-    def compare(a: Long, b: Long) = a compare b
-  }
-}
-
-private class OrderbookAggregatorBuySide(val priceDecimals: Int)
-  extends OrderbookAggregatorSide {
-  val isSell = false
-
-  implicit val ordering = new Ordering[Long] {
-    def compare(a: Long, b: Long) = b compare a
+  private def getSlotForPriceId(price: Double) = {
+    if (isSell) Math.ceil(price * scaling).toLong
+    else Math.floor(price * scaling).toLong
   }
 }
 

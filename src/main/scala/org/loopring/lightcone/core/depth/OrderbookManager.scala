@@ -36,8 +36,8 @@ class OrderbookManager(config: OrderbookConfig) {
   def reset() = viewMap.values.foreach(_.reset)
 
   class View(level: Int) {
-    private val sellSide = new OrderbookViewSellSide(level, config)
-    private val buySide = new OrderbookViewBuySide(level, config)
+    private val sellSide = new OrderbookViewSide.Sells(level, config)
+    private val buySide = new OrderbookViewSide.Buys(level, config)
 
     def handleUpdate(update: OrderbookUpdate) = {
       sellSide.setSlots(update.sells)
@@ -54,6 +54,14 @@ class OrderbookManager(config: OrderbookConfig) {
       buySide.reset()
     }
   }
+}
+
+private object OrderbookViewSide {
+  class Sells(val level: Int, val config: OrderbookConfig)
+    extends LongOrderingSupport(true) with OrderbookViewSide
+
+  class Buys(val level: Int, val config: OrderbookConfig)
+    extends LongOrderingSupport(false) with OrderbookViewSide
 }
 
 private trait OrderbookViewSide {
@@ -83,22 +91,3 @@ private trait OrderbookViewSide {
 
   def getDepth(num: Int): Seq[OrderbookItem] = itemMap.take(num).values.toSeq
 }
-
-private class OrderbookViewSellSide(val level: Int, val config: OrderbookConfig)
-  extends OrderbookViewSide {
-  val isSell = true
-
-  implicit val ordering = new Ordering[Long] {
-    def compare(a: Long, b: Long) = a compare b
-  }
-}
-
-private class OrderbookViewBuySide(val level: Int, val config: OrderbookConfig)
-  extends OrderbookViewSide {
-  val isSell = false
-
-  implicit val ordering = new Ordering[Long] {
-    def compare(a: Long, b: Long) = b compare a
-  }
-}
-
