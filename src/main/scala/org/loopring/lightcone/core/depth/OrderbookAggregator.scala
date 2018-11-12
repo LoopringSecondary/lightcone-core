@@ -19,14 +19,38 @@ package org.loopring.lightcone.core.depth
 import org.loopring.lightcone.core.data._
 import scala.collection.SortedMap
 
-class OrderbookAggregator(marketId: MarketId, priceDecimals: Int) {
+class OrderbookAggregator(priceDecimals: Int) {
   private val sells = new OrderbookAggregatorSide.Sells(priceDecimals)
   private val buys = new OrderbookAggregatorSide.Buys(priceDecimals)
 
   def getOrderbookUpdate(num: Int = 0): OrderbookUpdate = {
-    if (num == 0) OrderbookUpdate(buys.takeUpdatedSlots, buys.takeUpdatedSlots)
-    else OrderbookUpdate(buys.getSlots(num), buys.getSlots(num))
+    if (num == 0) OrderbookUpdate(sells.takeUpdatedSlots, buys.takeUpdatedSlots)
+    else OrderbookUpdate(sells.getSlots(num), buys.getSlots(num))
   }
+
+  def increaseSell(
+    price: Double,
+    amount: Double,
+    total: Double
+  ) = adjustAmount(true, true, price, amount, total)
+
+  def decreaseSell(
+    price: Double,
+    amount: Double,
+    total: Double
+  ) = adjustAmount(true, false, price, amount, total)
+
+  def increaseBuy(
+    price: Double,
+    amount: Double,
+    total: Double
+  ) = adjustAmount(false, true, price, amount, total)
+
+  def decreaseBuy(
+    price: Double,
+    amount: Double,
+    total: Double
+  ) = adjustAmount(false, false, price, amount, total)
 
   def adjustAmount(
     isSell: Boolean,
@@ -35,8 +59,15 @@ class OrderbookAggregator(marketId: MarketId, priceDecimals: Int) {
     amount: Double,
     total: Double
   ) {
-    val side = if (isSell) sells else buys
-    side.adjustAmount(increase, price, amount, total)
+    if (price > 0 && amount > 0 && total > 0) {
+      val side = if (isSell) sells else buys
+      side.adjustAmount(increase, price, amount, total)
+    }
+  }
+
+  def reset() {
+    sells.reset()
+    buys.reset()
   }
 }
 
@@ -77,10 +108,14 @@ private trait OrderbookAggregatorSide {
     updatedSlots += id -> slot
   }
 
-  def getSlots(num: Int): Seq[OrderbookSlot] = slotMap.take(num).values.toSeq
+  def reset() = {
+    slotMap = SortedMap.empty
+    updatedSlots = Map.empty
+  }
+  def getSlots(num: Int): Seq[OrderbookSlot] = slotMap.take(num).values.toList
 
   def takeUpdatedSlots(): Seq[OrderbookSlot] = {
-    val slots = updatedSlots.values.toSeq
+    val slots = updatedSlots.values.toList
     updatedSlots = Map.empty
     slots
   }

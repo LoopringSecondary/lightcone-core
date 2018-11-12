@@ -89,5 +89,5 @@ private trait OrderbookViewSide {
 
   def reset() = { itemMap = SortedMap.empty }
 
-  def getDepth(num: Int): Seq[OrderbookItem] = itemMap.take(num).values.toSeq
+  def getDepth(num: Int): Seq[OrderbookItem] = itemMap.take(num).values.toList
 }
