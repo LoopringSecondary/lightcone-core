@@ -22,7 +22,7 @@ import org.loopring.lightcone.core.base._
 import org.scalatest._
 import org.web3j.utils.Numeric
 
-class PendingRingPoolSpec extends CommonSpec {
+class PendingRingPoolImplSpec extends CommonSpec {
   implicit val timeProvider = new SystemTimeProvider()
 
   val pendingRingPool = new PendingRingPoolImpl()
