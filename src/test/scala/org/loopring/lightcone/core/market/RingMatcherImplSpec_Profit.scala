@@ -23,36 +23,34 @@ import MatchingFailure._
 
 class RingMatcherImplSpec_Profit extends CommonSpec {
 
+  val nonProfitable = new RingIncomeEstimator {
+    def getRingIncome(ring: OrderRing) = 0
+    def isProfitable(ring: OrderRing, fiatValueThreshold: Double) = false
+  }
+
+  val alwaysProfitable = new RingIncomeEstimator {
+    def getRingIncome(ring: OrderRing) = Long.MaxValue
+    def isProfitable(ring: OrderRing, fiatValueThreshold: Double) = true
+  }
+
   val maker = sellDAI(10, 10)!
   val taker = buyDAI(10, 10)!
 
   "RingMatcherImpl" should "not match orders if the ring is not profitable" in {
-
-    implicit val nonProfitable = new RingIncomeEstimator {
-      def getRingIncome(ring: OrderRing) = 0
-      def isProfitable(ring: OrderRing, fiatValueThreshold: Double) = false
-    }
+    implicit val rie = nonProfitable
     val matcher = new RingMatcherImpl()
     matcher.matchOrders(taker, maker, 0) should be(Left(INCOME_TOO_SMALL))
   }
 
   "RingMatcherImpl" should "match orders if the ring is indeed profitable" in {
-
-    implicit val alwaysProfitable = new RingIncomeEstimator {
-      def getRingIncome(ring: OrderRing) = Long.MaxValue
-      def isProfitable(ring: OrderRing, fiatValueThreshold: Double) = true
-    }
+    implicit val rie = alwaysProfitable
     val matcher = new RingMatcherImpl()
     matcher.matchOrders(taker, maker, 0).isRight should be(true)
   }
 
   // TODO(hongyu): fix test failure
   "RingMatcherImpl" should "not match orders if their `_matchable` fields are not set" in {
-    implicit val alwaysProfitable = new RingIncomeEstimator {
-      def getRingIncome(ring: OrderRing) = Long.MaxValue
-      def isProfitable(ring: OrderRing, fiatValueThreshold: Double) = true
-    }
-
+    implicit val rie = alwaysProfitable
     val matcher = new RingMatcherImpl()
 
     matcher.matchOrders(

@@ -28,9 +28,9 @@ class RingMatcherImplSpec_Basic extends CommonSpec {
     def isProfitable(ring: OrderRing, fiatValueThreshold: Double) = true
   }
 
-  "RingMatcherImpl" should "not match untradable orders" in {
-    val matcher = new RingMatcherImpl()
+  val matcher = new RingMatcherImpl()
 
+  "RingMatcherImpl" should "not match untradable orders" in {
     val maker = sellDAI(100000000, 100000001)!
     val taker = buyDAI(100000000, 100000000)!
 
@@ -38,8 +38,6 @@ class RingMatcherImplSpec_Basic extends CommonSpec {
   }
 
   "RingMatcherImpl" should "not match orders if one of them has tokenB as 0 " in {
-    val matcher = new RingMatcherImpl()
-
     matcher.matchOrders(
       sellDAI(10, 0)!,
       buyDAI(10, 10)!
@@ -58,8 +56,6 @@ class RingMatcherImplSpec_Basic extends CommonSpec {
 
   // TODO(hongyu): fix test failure
   "RingMatcherImpl" should "not match orders if one of them has tokenS as 0 " in {
-    val matcher = new RingMatcherImpl()
-
     matcher.matchOrders(
       sellDAI(0, 10)!,
       buyDAI(10, 10)!
@@ -75,20 +71,4 @@ class RingMatcherImplSpec_Basic extends CommonSpec {
       buyDAI(0, 10)!
     ) should be(Left(ORDERS_NOT_TRADABLE))
   }
-
-  "RingMatcherImpl" should "not match orders if their `_matchable` fields are not set" in {
-    val matcher = new RingMatcherImpl()
-
-    matcher.matchOrders(
-      sellDAI(10, 10)!,
-      buyDAI(10, 10)!
-    ).isRight should be(true)
-
-    // match the same orders with `_matchable`
-    matcher.matchOrders(
-      sellDAI(10, 10),
-      buyDAI(10, 10)
-    ) should be(Left(INCOME_TOO_SMALL))
-  }
-
 }
