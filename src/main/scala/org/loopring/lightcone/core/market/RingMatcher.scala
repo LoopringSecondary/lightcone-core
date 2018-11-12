@@ -29,7 +29,10 @@ trait RingMatcher {
   ): Either[MatchingFailure, OrderRing]
 }
 
-class SimpleRingMatcher(
+//TODO(hongyu): what if an order's tokenB is 0?
+
+class RingMatcherImpl()(
+    implicit
     ringIncomeEstimator: RingIncomeEstimator
 ) extends RingMatcher with Logging {
 
