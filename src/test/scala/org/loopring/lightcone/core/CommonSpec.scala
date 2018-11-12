@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.loopring.lightcone.core.order
+package org.loopring.lightcone.core
 
 import org.loopring.lightcone.core.base._
 import org.loopring.lightcone.core.data._
