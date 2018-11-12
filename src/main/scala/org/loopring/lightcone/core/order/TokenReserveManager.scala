@@ -115,7 +115,8 @@ class TokenReserveManager(
       case Some(idx) ⇒
         reservations = reservations.patch(idx, Nil, 1)
         indexMap -= orderId
-        cursor = idx - 1
+        // TODO(dongw): optimize cursor
+        cursor = idx - 1 // Performance issue
         rebalance()
     }
   }
