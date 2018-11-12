@@ -59,8 +59,7 @@ class MarketManagerImpl(
   private[core] val bids = SortedSet.empty[Order] // order.tokenS == marketId.primary
   private[core] val asks = SortedSet.empty[Order] // order.tokenS == marketId.secondary
   private[core] val orderMap = MMap.empty[String, Order]
-
-  private[core] val depthAggregator = new Level0DepthAggregator(config.priceDecimals)
+  private[core] val aggregator = new OrderbookAggregator(marketId, config.priceDecimals)
 
   private[core] val sides = Map(
     marketId.primary -> bids,

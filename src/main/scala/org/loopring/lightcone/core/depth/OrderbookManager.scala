@@ -17,6 +17,7 @@
 package org.loopring.lightcone.core.depth
 
 import org.loopring.lightcone.core.data._
+import scala.collection.SortedMap
 
 class OrderbookManager(config: OrderbookConfig) {
   private[depth] val viewMap = (0 until config.levels).map {
@@ -32,9 +33,11 @@ class OrderbookManager(config: OrderbookConfig) {
     case None       ⇒ Orderbook(Nil, Nil)
   }
 
+  def reset() = viewMap.values.foreach(_.reset)
+
   class View(level: Int) {
-    private[depth] val sellSide = new OrderbookViewSide.Buys(level, config)
-    private[depth] val buySide = new OrderbookViewSide.Sells(level, config)
+    private val sellSide = new OrderbookViewSellSide(level, config)
+    private val buySide = new OrderbookViewBuySide(level, config)
 
     def handleUpdate(update: OrderbookUpdate) = {
       sellSide.setSlots(update.sells)
@@ -45,5 +48,57 @@ class OrderbookManager(config: OrderbookConfig) {
       sellSide.getDepth(size),
       buySide.getDepth(size)
     )
+
+    def reset() = {
+      sellSide.reset()
+      buySide.reset()
+    }
   }
 }
+
+private trait OrderbookViewSide {
+  val level: Int
+  val config: OrderbookConfig
+  val isSell: Boolean
+  implicit val ordering: Ordering[Long]
+
+  private val scaling = Math.pow(10, config.priceDecimals - level)
+  private val priceFormat = s"%.${config.precisionForPrice}f"
+  private val amountFormat = s"%.${config.precisionForAmount}f"
+  private val totalFormat = s"%.${config.precisionForTotal}f"
+
+  var itemMap = SortedMap.empty[Long, OrderbookItem]
+
+  def setSlots(slots: Seq[OrderbookSlot]) = slots.foreach(setSlot)
+
+  def setSlot(slot: OrderbookSlot) = {
+    itemMap += slot.slot -> OrderbookItem(
+      priceFormat.format(slot.slot / scaling),
+      amountFormat.format(slot.amount),
+      totalFormat.format(slot.total)
+    )
+  }
+
+  def reset() = { itemMap = SortedMap.empty }
+
+  def getDepth(num: Int): Seq[OrderbookItem] = itemMap.take(num).values.toSeq
+}
+
+private class OrderbookViewSellSide(val level: Int, val config: OrderbookConfig)
+  extends OrderbookViewSide {
+  val isSell = true
+
+  implicit val ordering = new Ordering[Long] {
+    def compare(a: Long, b: Long) = a compare b
+  }
+}
+
+private class OrderbookViewBuySide(val level: Int, val config: OrderbookConfig)
+  extends OrderbookViewSide {
+  val isSell = false
+
+  implicit val ordering = new Ordering[Long] {
+    def compare(a: Long, b: Long) = b compare a
+  }
+}
+
