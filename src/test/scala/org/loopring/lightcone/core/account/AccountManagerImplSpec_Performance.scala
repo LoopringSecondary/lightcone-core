@@ -22,6 +22,8 @@ import org.scalatest._
 
 class AccountManagerImplSpec_Performance extends OrderAwareSpec {
   "submit order" should "fail when tokenS balance is low" in {
+
+    val _lrc = lrc.asInstanceOf[TokenManagerImpl]
     lrc.setBalanceAndAllowance(100000, 100000)
 
     (1 to lrc.maxNumOrders) foreach { i ⇒
@@ -32,7 +34,7 @@ class AccountManagerImplSpec_Performance extends OrderAwareSpec {
     val now = System.currentTimeMillis
     val count: Int = 100
     (1 to count) foreach { i ⇒
-      cancelOrder(lrc.reservations.head.orderId)
+      cancelOrder(_lrc.reservations.head.orderId)
       val order = sellLRC(1, 1, 1)
       submitOrder(order)
     }

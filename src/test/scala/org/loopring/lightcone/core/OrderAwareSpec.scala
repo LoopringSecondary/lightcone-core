@@ -61,10 +61,10 @@ trait OrderAwareSpec extends CommonSpec {
     }
     orderManager = AccountManager.default()
 
-    lrc = new TokenManager(LRC)
-    gto = new TokenManager(GTO)
-    dai = new TokenManager(DAI)
-    weth = new TokenManager(WETH)
+    lrc = new TokenManagerImpl(LRC)
+    gto = new TokenManagerImpl(GTO)
+    dai = new TokenManagerImpl(DAI)
+    weth = new TokenManagerImpl(WETH)
 
     orderManager.addTokenManager(lrc)
     orderManager.addTokenManager(gto)
