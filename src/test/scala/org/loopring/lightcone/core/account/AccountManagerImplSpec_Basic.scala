@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-package org.loopring.lightcone.core.order
+package org.loopring.lightcone.core.account
 
 import org.loopring.lightcone.core.OrderAwareSpec
 import org.loopring.lightcone.core.data._
 import org.scalatest._
 
-class OrderManagerImplSpec_Basic extends OrderAwareSpec {
+class AccountManagerImplSpec_Basic extends OrderAwareSpec {
   "submit order" should "fail when tokenS balance is low" in {
     dai.init(0, 0)
     val order = sellDAI(100, 1)

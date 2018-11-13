@@ -14,19 +14,19 @@
  * limitations under the License.
  */
 
-package org.loopring.lightcone.core.order
+package org.loopring.lightcone.core.base
+
 import org.loopring.lightcone.core.data._
 
-trait OrderManager {
-  def hasTokenReserveManager(token: String): Boolean
-  def addTokenReserveManager(tm: TokenReserveManager): TokenReserveManager
-  def getTokenReserveManager(token: String): TokenReserveManager
-
-  def submitOrder(order: Order): Boolean
-  def cancelOrder(orderId: String): Boolean
-  def adjustOrder(orderId: String, outstandingAmountS: BigInt): Boolean
+class TokenValueEstimator()(implicit tmm: TokenMetadataManager) {
+  def getEstimatedValue(token: String, amount: BigInt): Double = {
+    if (amount.signum <= 0) 0
+    else tmm.getToken(token) match {
+      case None ⇒ 0
+      case Some(metadata) ⇒
+        val scaling = Math.pow(10, metadata.decimals)
+        (Rational(metadata.currentPrice) * Rational(amount) / Rational(scaling)).doubleValue
+    }
+  }
 }
 
-object OrderManager {
-  def default()(implicit orderPool: OrderPool): OrderManager = new OrderManagerImpl()
-}

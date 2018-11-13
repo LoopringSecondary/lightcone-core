@@ -18,7 +18,7 @@ package org.loopring.lightcone.core.market
 
 import org.loopring.lightcone.core.data._
 import org.loopring.lightcone.core.depth._
-import org.loopring.lightcone.core.order.DustOrderEvaluator
+import org.loopring.lightcone.core.base.DustOrderEvaluator
 
 import org.slf4s.Logging
 import scala.annotation.tailrec

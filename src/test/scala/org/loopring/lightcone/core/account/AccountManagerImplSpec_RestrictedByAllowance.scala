@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-package org.loopring.lightcone.core.order
+package org.loopring.lightcone.core.account
 
 import org.loopring.lightcone.core.OrderAwareSpec
 import org.loopring.lightcone.core.data._
 import org.scalatest._
 
-class OrderManagerImplSpec_RestrictedByAllowance extends OrderAwareSpec {
+class AccountManagerImplSpec_RestrictedByAllowance extends OrderAwareSpec {
 
   "order" should "be scaled by tokenS allowance (non-zero) if tokenFee allowance is still high " in {
     dai.init(1000, 100)

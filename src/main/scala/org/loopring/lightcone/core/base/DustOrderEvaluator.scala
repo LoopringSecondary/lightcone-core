@@ -14,35 +14,20 @@
  * limitations under the License.
  */
 
-package org.loopring.lightcone.core.order
+package org.loopring.lightcone.core.base
 
 import org.loopring.lightcone.core.data._
 
-trait DustOrderEvaluator {
-  def isDust(order: Order): Boolean // TODO(dong): this method is confusing and should be removed.
-
-  def isOriginalDust(order: Order): Boolean
-  def isOutstandingDust(order: Order): Boolean
-  def isActualDust(order: Order): Boolean
-  def isMatchableDust(order: Order): Boolean
-}
-
-class DustOrderEvaluatorImpl(
-    threshold: Double = 0.0
-)(
+class DustOrderEvaluator(threshold: Double = 0.0)(
     implicit
     tve: TokenValueEstimator
-)
-  extends DustOrderEvaluator {
-
-  def isDust(order: Order): Boolean = isOriginalDust(order)
-
-  def isOriginalDust(order: Order) = _isDust(order.tokenS, order.matchable.amountS)
-  def isOutstandingDust(order: Order) = _isDust(order.tokenS, order.matchable.amountS)
-  def isActualDust(order: Order) = _isDust(order.tokenS, order.matchable.amountS)
+) {
+  def isOriginalDust(order: Order) = _isDust(order.tokenS, order.original.amountS)
+  def isOutstandingDust(order: Order) = _isDust(order.tokenS, order.outstanding.amountS)
+  def isActualDust(order: Order) = _isDust(order.tokenS, order.actual.amountS)
   def isMatchableDust(order: Order) = _isDust(order.tokenS, order.matchable.amountS)
 
   private def _isDust(tokenS: String, amountS: BigInt): Boolean = {
-    tve.getFiatValue(tokenS, amountS) < threshold
+    tve.getEstimatedValue(tokenS, amountS) < threshold
   }
 }

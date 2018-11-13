@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-package org.loopring.lightcone.core.order
+package org.loopring.lightcone.core.account
 
 import org.loopring.lightcone.core.OrderAwareSpec
 import org.loopring.lightcone.core.data._
 import org.scalatest._
 
-class OrderManagerImplSpec_Initialization extends OrderAwareSpec {
+class AccountManagerImplSpec_Initialization extends OrderAwareSpec {
   "reinitialization of tokenS balance to smaller values" should "cancel existing orders" in {
     dai.init(1000, 10000)
 

@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-package org.loopring.lightcone.core.order
+package org.loopring.lightcone.core.account
 
 import org.loopring.lightcone.core.OrderAwareSpec
 import org.loopring.lightcone.core.data._
 import org.scalatest._
 
-class OrderManagerImplSpec_Cancellation extends OrderAwareSpec {
+class AccountManagerImplSpec_Cancellation extends OrderAwareSpec {
 
   "cancel order" should "fail if the order does not exist" in {
     cancelOrder("bad-id") should be(false)

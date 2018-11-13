@@ -18,7 +18,7 @@ package org.loopring.lightcone.core
 
 import org.loopring.lightcone.core.base._
 import org.loopring.lightcone.core.data._
-import org.loopring.lightcone.core.order._
+import org.loopring.lightcone.core.account._
 
 trait OrderAwareSpec extends CommonSpec {
   val rand = new scala.util.Random
@@ -39,11 +39,11 @@ trait OrderAwareSpec extends CommonSpec {
   tmm.addToken(DAI_TOKEN)
   tmm.addToken(WETH_TOKEN)
 
-  implicit val tve = new TokenValueEstimatorImpl
-  implicit val dustEvaluator = new DustOrderEvaluatorImpl
+  implicit val tve = new TokenValueEstimator
+  implicit val dustEvaluator = new DustOrderEvaluator
 
-  implicit var orderPool: OrderPool = _
-  var orderManager: OrderManager = _
+  implicit var orderPool: AccountOrderPool = _
+  var orderManager: AccountManager = _
   var lrc: TokenReserveManager = _
   var gto: TokenReserveManager = _
   var dai: TokenReserveManager = _
@@ -52,14 +52,14 @@ trait OrderAwareSpec extends CommonSpec {
   var updatedOrders = Map.empty[String, Order]
 
   override def beforeEach() {
-    orderPool = new OrderPool()
+    orderPool = new AccountOrderPool()
     updatedOrders = Map.empty[String, Order]
     orderPool.addCallback { order ⇒
       updatedOrders += order.id -> order
       // println("----UO: " + order)
       // log.debug("order: " + order)
     }
-    orderManager = OrderManager.default()
+    orderManager = AccountManager.default()
 
     lrc = new TokenReserveManager(LRC)
     gto = new TokenReserveManager(GTO)

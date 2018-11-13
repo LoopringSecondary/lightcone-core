@@ -14,15 +14,15 @@
  * limitations under the License.
  */
 
-package org.loopring.lightcone.core.order
+package org.loopring.lightcone.core.account
 import org.loopring.lightcone.core.data._
 
 import org.slf4s.Logging
 
-final private[core] class OrderManagerImpl()(
+final private[core] class AccountManagerImpl()(
     implicit
-    orderPool: OrderPool
-) extends OrderManager with Logging {
+    orderPool: AccountOrderPool
+) extends AccountManager with Logging {
   import OrderStatus._
 
   private[core] implicit var tokens = Map.empty[String, TokenReserveManager]

@@ -14,26 +14,19 @@
  * limitations under the License.
  */
 
-package org.loopring.lightcone.core.order
-
+package org.loopring.lightcone.core.account
 import org.loopring.lightcone.core.data._
 
-trait TokenValueEstimator {
-  def getFiatValue(token: String, amount: BigInt): Double
+trait AccountManager {
+  def hasTokenReserveManager(token: String): Boolean
+  def addTokenReserveManager(tm: TokenReserveManager): TokenReserveManager
+  def getTokenReserveManager(token: String): TokenReserveManager
+
+  def submitOrder(order: Order): Boolean
+  def cancelOrder(orderId: String): Boolean
+  def adjustOrder(orderId: String, outstandingAmountS: BigInt): Boolean
 }
 
-class TokenValueEstimatorImpl()(
-    implicit
-    tmm: TokenMetadataManager
-) extends TokenValueEstimator {
-  def getFiatValue(token: String, amount: BigInt): Double = {
-    if (amount.signum <= 0) 0
-    else tmm.getToken(token) match {
-      case None ⇒ 0
-      case Some(metadata) ⇒
-        val scaling = Math.pow(10, metadata.decimals)
-        (Rational(metadata.currentPrice) * Rational(amount) / Rational(scaling)).doubleValue
-    }
-  }
+object AccountManager {
+  def default()(implicit orderPool: AccountOrderPool): AccountManager = new AccountManagerImpl()
 }
-

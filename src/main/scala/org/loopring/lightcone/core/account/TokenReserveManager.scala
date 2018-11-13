@@ -14,8 +14,9 @@
  * limitations under the License.
  */
 
-package org.loopring.lightcone.core.order
+package org.loopring.lightcone.core.account
 
+import org.loopring.lightcone.core.base._
 import org.loopring.lightcone.core.data._
 
 import org.slf4s.Logging
@@ -31,7 +32,7 @@ class TokenReserveManager(
     val maxNumOrders: Int = 1000
 )(
     implicit
-    orderPool: OrderPool,
+    orderPool: AccountOrderPool,
     dustEvaluator: DustOrderEvaluator
 ) extends Object with Logging {
 
@@ -56,10 +57,10 @@ class TokenReserveManager(
   private var availableAllowance: BigInt = 0
 
   // `cursor1 indicates the index to begin rebalancing
-  private[order] var cursor: Int = -1
+  private[account] var cursor: Int = -1
   // indexMap is the map of order id to order's index in `reservations`
-  private[order] var indexMap = Map.empty[String, Int]
-  private[order] var reservations = Seq.empty[Reservation]
+  private[account] var indexMap = Map.empty[String, Int]
+  private[account] var reservations = Seq.empty[Reservation]
 
   def size() = reservations.size
   def hasTooManyOrders() = size >= maxNumOrders

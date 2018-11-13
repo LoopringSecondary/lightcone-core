@@ -18,7 +18,7 @@ package org.loopring.lightcone.core.market
 
 import org.loopring.lightcone.core.base._
 import org.loopring.lightcone.core.data._
-import org.loopring.lightcone.core.order._
+import org.loopring.lightcone.core.account._
 import org.loopring.lightcone.core._
 import org.scalatest._
 

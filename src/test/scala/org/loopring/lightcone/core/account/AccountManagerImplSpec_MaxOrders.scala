@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-package org.loopring.lightcone.core.order
+package org.loopring.lightcone.core.account
 
 import org.loopring.lightcone.core.OrderAwareSpec
 import org.loopring.lightcone.core.data._
 import org.scalatest._
 
-class OrderManagerImplSpec_MaxOrders extends OrderAwareSpec {
+class AccountManagerImplSpec_MaxOrders extends OrderAwareSpec {
   "submit order" should "fail when max orders received for tokenS" in {
     dai.init(dai.maxNumOrders * 10, dai.maxNumOrders * 10)
 
