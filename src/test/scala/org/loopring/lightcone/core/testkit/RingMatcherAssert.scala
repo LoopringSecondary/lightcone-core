@@ -17,8 +17,8 @@
 package org.loopring.lightcone.core.testkit
 
 import org.loopring.lightcone.core.data.MatchingFailure.MatchingFailure
-import org.loopring.lightcone.core.data.{ MatchingFailure, OrderRing }
-import org.scalatest.{ FlatSpec, Matchers }
+import org.loopring.lightcone.core.data._
+import org.scalatest._
 
 trait RingMatcherAssert extends Matchers { this: FlatSpec ⇒
 
