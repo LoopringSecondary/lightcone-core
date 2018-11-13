@@ -16,11 +16,11 @@
 
 package org.loopring.lightcone.core.order
 
-import org.loopring.lightcone.core.CommonSpec
+import org.loopring.lightcone.core.OrderAwareSpec
 import org.loopring.lightcone.core.data._
 import org.scalatest._
 
-class OrderManagerImplSpec_MaxOrders extends CommonSpec {
+class OrderManagerImplSpec_MaxOrders extends OrderAwareSpec {
   "submit order" should "fail when max orders received for tokenS" in {
     dai.init(dai.maxNumOrders * 10, dai.maxNumOrders * 10)
 

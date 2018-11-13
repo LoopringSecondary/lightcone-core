@@ -16,12 +16,12 @@
 
 package org.loopring.lightcone.core.market
 
-import org.loopring.lightcone.core.CommonSpec
+import org.loopring.lightcone.core.OrderAwareSpec
 import org.loopring.lightcone.core.data._
 import org.scalatest._
 import MatchingFailure._
 
-class RingMatcherImplSpec_Profit extends CommonSpec {
+class RingMatcherImplSpec_Profit extends OrderAwareSpec {
 
   val nonProfitable = new RingIncomeEstimator {
     def getRingIncome(ring: OrderRing) = 0

@@ -16,11 +16,11 @@
 
 package org.loopring.lightcone.core.order
 
-import org.loopring.lightcone.core.CommonSpec
+import org.loopring.lightcone.core.OrderAwareSpec
 import org.loopring.lightcone.core.data._
 import org.scalatest._
 
-class OrderManagerImplSpec_MultipleOrders extends CommonSpec {
+class OrderManagerImplSpec_MultipleOrders extends OrderAwareSpec {
   "last order" should "fail when available balance for tokenS is smaller than required" in {
     dai.init(999, 999)
 

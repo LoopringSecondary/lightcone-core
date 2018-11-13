@@ -116,7 +116,7 @@ class RingMatcherImpl()(
         )
       )
 
-      log.debug(s"makeRing: ${ring}")
+      // log.debug(s"makeRing: ${ring}")
 
       Some(ring)
     }

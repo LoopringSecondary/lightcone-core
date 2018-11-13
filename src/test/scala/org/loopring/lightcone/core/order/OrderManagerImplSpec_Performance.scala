@@ -16,11 +16,11 @@
 
 package org.loopring.lightcone.core.order
 
-import org.loopring.lightcone.core.CommonSpec
+import org.loopring.lightcone.core.OrderAwareSpec
 import org.loopring.lightcone.core.data._
 import org.scalatest._
 
-class OrderManagerImplSpec_Performance extends CommonSpec {
+class OrderManagerImplSpec_Performance extends OrderAwareSpec {
   "submit order" should "fail when tokenS balance is low" in {
     lrc.init(100000, 100000)
 

@@ -16,11 +16,11 @@
 
 package org.loopring.lightcone.core.order
 
-import org.loopring.lightcone.core.CommonSpec
+import org.loopring.lightcone.core.OrderAwareSpec
 import org.loopring.lightcone.core.data._
 import org.scalatest._
 
-class OrderManagerImplSpec_Adjustment extends CommonSpec {
+class OrderManagerImplSpec_Adjustment extends OrderAwareSpec {
 
   "adjustment of unexist order" should "return false" in {
     adjustOrder("bad-id", 40) should be(false)

@@ -16,11 +16,12 @@
 
 package org.loopring.lightcone.core.depth
 
-import org.scalatest._
-
-class DepthViewSpec extends FlatSpec with Matchers {
-
-  // "DepthView" should "return list data" in {
-
-  // }
+private[depth] abstract class LongOrderingSupport(val isSell: Boolean) {
+  implicit val ordering =
+    if (isSell) new Ordering[Long] {
+      def compare(a: Long, b: Long) = a compare b
+    }
+    else new Ordering[Long] {
+      def compare(a: Long, b: Long) = b compare a
+    }
 }

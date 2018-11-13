@@ -14,19 +14,19 @@
  * limitations under the License.
  */
 
-package org.loopring.lightcone.core
+package org.loopring.lightcone.core.data
 
-import org.scalatest._
-import org.slf4s.Logging
+case class OrderbookUpdate(sells: Seq[OrderbookSlot], buys: Seq[OrderbookSlot])
 
-trait CommonSpec
-  extends FlatSpec
-  with BeforeAndAfterEach
-  with BeforeAndAfterAll
-  with Matchers
-  with Logging {
+case class OrderbookSlot(slot: Long, amount: Double, total: Double)
 
-  override def beforeAll() {
-    println(s"[To run this spec, use `testOnly *${getClass.getSimpleName}`]")
-  }
-}
+case class OrderbookItem(price: String, amount: String, total: String)
+
+case class Orderbook(sells: Seq[OrderbookItem], buys: Seq[OrderbookItem])
+
+case class OrderbookConfig(
+    levels: Int = 1,
+    priceDecimals: Int,
+    precisionForAmount: Int,
+    precisionForTotal: Int
+)

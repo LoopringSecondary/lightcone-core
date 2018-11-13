@@ -16,11 +16,11 @@
 
 package org.loopring.lightcone.core.order
 
-import org.loopring.lightcone.core.CommonSpec
+import org.loopring.lightcone.core.OrderAwareSpec
 import org.loopring.lightcone.core.data._
 import org.scalatest._
 
-class OrderManagerImplSpec_RequestAmount extends CommonSpec {
+class OrderManagerImplSpec_RequestAmount extends OrderAwareSpec {
 
   "OrderManagerImpl" should "calulate request amount correctly (legacy code)" in {
     lrc.init(100, 200)

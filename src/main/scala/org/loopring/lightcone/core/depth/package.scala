@@ -16,17 +16,18 @@
 
 package org.loopring.lightcone.core
 
-import org.scalatest._
-import org.slf4s.Logging
+import org.loopring.lightcone.core.data._
 
-trait CommonSpec
-  extends FlatSpec
-  with BeforeAndAfterEach
-  with BeforeAndAfterAll
-  with Matchers
-  with Logging {
+package object depth {
+  implicit class RichOrderbookSlot(this_ : OrderbookSlot) {
+    def +(that: OrderbookSlot) = {
+      assert(this_.slot == that.slot)
+      OrderbookSlot(this_.slot, this_.amount + that.amount, this_.total + that.total)
+    }
 
-  override def beforeAll() {
-    println(s"[To run this spec, use `testOnly *${getClass.getSimpleName}`]")
+    def -(that: OrderbookSlot) = {
+      assert(this_.slot == that.slot)
+      OrderbookSlot(this_.slot, this_.amount - that.amount, this_.total - that.total)
+    }
   }
 }

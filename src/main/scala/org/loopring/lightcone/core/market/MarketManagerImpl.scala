@@ -59,8 +59,7 @@ class MarketManagerImpl(
   private[core] val bids = SortedSet.empty[Order] // order.tokenS == marketId.primary
   private[core] val asks = SortedSet.empty[Order] // order.tokenS == marketId.secondary
   private[core] val orderMap = MMap.empty[String, Order]
-
-  private[core] val depthAggregator = new Level0DepthAggregator(config.priceDecimals)
+  private[core] val aggregator = new OrderbookAggregator(config.priceDecimals)
 
   private[core] val sides = Map(
     marketId.primary -> bids,
@@ -77,7 +76,7 @@ class MarketManagerImpl(
     res.matchedMakers.get(order.id) match {
       case None ⇒
         addOrderToSide(order) // why none???
-      case Some(o) if !dustOrderEvaluator.isDust(o) ⇒
+      case Some(o) if !dustOrderEvaluator.isMatchableDust(o) ⇒
         addOrderToSide(o)
       case _ ⇒ //此时完全匹配，不需要再添加到订单薄
     }
@@ -94,12 +93,6 @@ class MarketManagerImpl(
     var matchedMakers = Map.empty[String, Order]
 
     var taker = updateOrderMatchable(order)
-
-    if (dustOrderEvaluator.isDust(taker)) {
-      matchedMakers += taker.id → taker.copy(_matchable = Some(OrderState()))
-
-      return SubmitOrderResult(rings, matchedMakers, Some(taker))
-    }
 
     @tailrec
     def recursivelyMatchOrders(): Unit = {
@@ -136,9 +129,7 @@ class MarketManagerImpl(
             makersToAddBack += updatedMaker
           }
 
-          if (dustOrderEvaluator.isMatchableDust(taker)) {
-            matchedMakers += taker.id → taker.copy(_matchable = Some(OrderState()))
-          } else {
+          if (!dustOrderEvaluator.isMatchableDust(taker)) {
             recursivelyMatchOrders()
           }
 
@@ -149,15 +140,20 @@ class MarketManagerImpl(
       }
     }
 
-    recursivelyMatchOrders()
+    if (!dustOrderEvaluator.isMatchableDust(taker)) {
+      recursivelyMatchOrders()
+      // add each skipped maker orders back
+      makersToAddBack.foreach(addOrderToSide)
+      // put rings to the pendign pool
+      rings.foreach(pendingRingPool.addRing)
+    }
 
-    // add each skipped maker orders back
-    makersToAddBack.foreach(addOrderToSide)
-
-    // put rings to the pendign pool
-    rings.foreach(pendingRingPool.addRing)
-
-    SubmitOrderResult(rings, matchedMakers, Some(taker))
+    SubmitOrderResult(
+      rings,
+      matchedMakers,
+      Some(taker),
+      Some(aggregator.getOrderbookUpdate())
+    )
   }
 
   def triggerMatch(minFiatValue: Double): SubmitOrderResult = {
@@ -181,7 +177,7 @@ class MarketManagerImpl(
           submitRes.matchedMakers.get(taker.id) match {
             case None ⇒
               makersToAddBack += taker
-            case Some(o) if !dustOrderEvaluator.isDust(o) ⇒
+            case Some(o) if !dustOrderEvaluator.isMatchableDust(o) ⇒
               makersToAddBack += o
             case _ ⇒
           }

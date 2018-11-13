@@ -25,7 +25,8 @@ trait MarketManager {
       rings: Set[OrderRing],
       // fullyMatchedOrders: Set[Order],
       matchedMakers: Map[String, Order],
-      taker: Option[Order]
+      taker: Option[Order],
+      orderbookUpdate: Option[OrderbookUpdate] = None
   ) {
     def fullyMatchedOrderIds: Seq[String] = {
       matchedMakers.values.filter(_.status == matchedMakers).map(_.id).toSeq
