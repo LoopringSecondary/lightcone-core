@@ -39,7 +39,7 @@ class OrderbookManager(config: OrderbookConfig) {
 
   private[depth] class View(aggregationLevel: Int) {
 
-    private val priceFormat = s"%.${config.precisionForPrice}f"
+    private val priceFormat = s"%.${config.priceDecimals - aggregationLevel}f"
     private val amountFormat = s"%.${config.precisionForAmount}f"
     private val totalFormat = s"%.${config.precisionForTotal}f"
 
@@ -77,7 +77,10 @@ class OrderbookManager(config: OrderbookConfig) {
         amountFormat.format(slot.amount),
         totalFormat.format(slot.total)
       )
-      def getDepth(num: Int): Seq[OrderbookItem] = getSlots(num).map(slotToItem(_))
+      def getDepth(num: Int): Seq[OrderbookItem] =
+        getSlots(num)
+          .filter(_.slot != 0)
+          .map(slotToItem(_))
     }
   }
 }

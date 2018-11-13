@@ -56,7 +56,8 @@ private[depth] trait OrderbookSide {
 
   def increase(slot: OrderbookSlot): Unit = adjustInternal(slot, _ + _)
   def decrease(slot: OrderbookSlot): Unit = adjustInternal(slot, _ - _)
-  def replace(slot: OrderbookSlot): Unit = adjustInternal(slot, (old: OrderbookSlot, new_ : OrderbookSlot) ⇒ new_)
+  def replace(slot: OrderbookSlot): Unit =
+    adjustInternal(slot, (old: OrderbookSlot, new_ : OrderbookSlot) ⇒ new_)
 
   def getDiff(slot: OrderbookSlot) = {
     slot - slotMap.getOrElse(slot.slot, OrderbookSlot(slot.slot, 0, 0))

@@ -27,7 +27,6 @@ case class Orderbook(sells: Seq[OrderbookItem], buys: Seq[OrderbookItem])
 case class OrderbookConfig(
     levels: Int = 1,
     priceDecimals: Int,
-    precisionForPrice: Int,
     precisionForAmount: Int,
     precisionForTotal: Int
 )
