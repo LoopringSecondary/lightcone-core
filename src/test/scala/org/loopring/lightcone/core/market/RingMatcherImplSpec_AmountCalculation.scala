@@ -102,7 +102,7 @@ class RingMatcherImplSpec_AmountCalculation extends CommonSpec with RingMatcherA
 
   }
 
-  "RingMatcherImpl1" should "calulate volume in case of price with margin " in {
+  "RingMatcherImpl" should "calulate volume in case of price with margin " in {
     implicit val incomeEstimator = alwaysProfitable
     val matcher = new RingMatcherImpl()
 
@@ -149,5 +149,93 @@ class RingMatcherImplSpec_AmountCalculation extends CommonSpec with RingMatcherA
     shouldRing(res1, Some(expectRing1))
   }
 
+  "RingMatcherImpl" should "calulate fee in case of only token fee" in {
+    implicit val incomeEstimator = ringIncomeEstimator
+    val matcher = new RingMatcherImpl()
+    tmm.updatePrices(Map[String, Double](LRC → 1.0))
+    tmm.updateBurnRate(LRC, 0.1)
 
+    val maker = sellDAI(
+      100,
+      10,
+      10
+    )
+
+    val taker = buyDAI(
+      10,
+      100,
+      10
+    )
+
+    info("reduce the matchable then the fiatIncome should be 9")
+    info("set minFiatValue=10, then the income is not enough:")
+    var res = matcher.matchOrders(
+      taker.copy(_matchable = Some(OrderState(amountS = 5, amountB = 50, amountFee = 5))),
+      maker.copy(_matchable = Some(OrderState(amountS = 50, amountB = 5, amountFee = 5))),
+      10
+    )
+    shouldIncomeTooSmall(res)
+
+    info("set minFiatValue=10, then the income is enough:")
+    res = matcher.matchOrders(
+      taker.copy(_matchable = Some(OrderState(amountS = 5, amountB = 50, amountFee = 5))),
+      maker.copy(_matchable = Some(OrderState(amountS = 50, amountB = 5, amountFee = 5))),
+      9
+    )
+    shouldRing(res)
+
+    //放开交易规模，收益足够
+    info("info the income is enough when set matchable=amountS:")
+    val res1 = matcher.matchOrders(
+      taker.copy(_matchable = Some(OrderState(amountS = 10, amountB = 100, amountFee = 10))),
+      maker.copy(_matchable = Some(OrderState(amountS = 100, amountB = 10, amountFee = 10))),
+      10
+    )
+    shouldRing(res1)
+  }
+
+  "RingMatcherImpl" should "calulate fee in case of only margin" in {
+    implicit val incomeEstimator = ringIncomeEstimator
+    val matcher = new RingMatcherImpl()
+    tmm.updatePrices(Map[String, Double](LRC → 1.0))
+    tmm.updateBurnRate(LRC, 0.1)
+
+    val maker = sellLRC(
+      100,
+      10,
+      0
+    )
+
+    val taker = buyLRC(
+      12,
+      100,
+      0
+    )
+
+    info("reduce the matchable then the fiatIncome should be 9")
+    info("set minFiatValue=10, then the income is not enough:")
+    var res = matcher.matchOrders(
+      taker.copy(_matchable = Some(OrderState(amountS = 6, amountB = 50))),
+      maker.copy(_matchable = Some(OrderState(amountS = 50, amountB = 5))),
+      10
+    )
+    shouldIncomeTooSmall(res)
+
+    info("set minFiatValue=9, then the income is enough:")
+    res = matcher.matchOrders(
+      taker.copy(_matchable = Some(OrderState(amountS = 6, amountB = 50))),
+      maker.copy(_matchable = Some(OrderState(amountS = 50, amountB = 5))),
+      9
+    )
+    shouldRing(res)
+
+    //放开交易规模，收益足够
+    info("info the income is enough when set matchable=amountS:")
+    val res1 = matcher.matchOrders(
+      taker.copy(_matchable = Some(OrderState(amountS = 12, amountB = 100))),
+      maker.copy(_matchable = Some(OrderState(amountS = 100, amountB = 10))),
+      10
+    )
+    shouldRing(res1)
+  }
 }
