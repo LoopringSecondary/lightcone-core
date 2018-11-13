@@ -23,27 +23,26 @@ class AccountOrderPool extends Object with Logging {
 
   type Callback = Order ⇒ Unit
 
-  private var callbacks = Seq.empty[Callback]
+  private var callbacks = Set.empty[Callback]
   private[account] var orderMap = Map.empty[String, Order]
 
   def apply(id: String): Order = orderMap(id)
   def getOrder(id: String): Option[Order] = orderMap.get(id)
   def contains(id: String): Boolean = orderMap.contains(id)
-  def orders() = orderMap.values
-  def add(id: String, order: Order): Unit = orderMap += id -> order
-  def delete(id: String): Unit = orderMap -= id
   def size: Int = orderMap.size
 
-  private[core] def toMap = orderMap
+  // private def orders() = orderMap.values
+  private def add(id: String, order: Order): Unit = orderMap += id -> order
+  private def delete(id: String): Unit = orderMap -= id
 
-  def addCallback(callback: Callback) = {
-    callbacks :+= callback
-    callbacks
+  // private[core] def toMap = orderMap
+
+  def addCallback(callback: Callback) {
+    callbacks += callback
   }
 
-  def removeCallback(callback: Callback) = {
-    callbacks = callbacks.dropWhile(_ == callback)
-    callbacks
+  def removeCallback(callback: Callback) {
+    callbacks -= callback
   }
 
   def +=(order: Order) = {
