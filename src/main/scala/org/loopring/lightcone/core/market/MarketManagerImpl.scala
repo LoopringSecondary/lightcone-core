@@ -97,7 +97,12 @@ class MarketManagerImpl(
     if (dustOrderEvaluator.isDust(taker)) {
       matchedMakers += taker.id → taker.copy(_matchable = Some(OrderState()))
 
-      return SubmitOrderResult(rings, matchedMakers, Some(taker))
+      return SubmitOrderResult(
+        rings,
+        matchedMakers,
+        Some(taker),
+        Some(aggregator.getOrderbookUpdate())
+      )
     }
 
     @tailrec
@@ -156,7 +161,12 @@ class MarketManagerImpl(
     // put rings to the pendign pool
     rings.foreach(pendingRingPool.addRing)
 
-    SubmitOrderResult(rings, matchedMakers, Some(taker))
+    SubmitOrderResult(
+      rings,
+      matchedMakers,
+      Some(taker),
+      Some(aggregator.getOrderbookUpdate())
+    )
   }
 
   def triggerMatch(minFiatValue: Double): SubmitOrderResult = {
