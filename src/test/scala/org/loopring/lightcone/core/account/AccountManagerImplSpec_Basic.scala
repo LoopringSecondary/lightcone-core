@@ -14,15 +14,15 @@
  * limitations under the License.
  */
 
-package org.loopring.lightcone.core.order
+package org.loopring.lightcone.core.account
 
 import org.loopring.lightcone.core.OrderAwareSpec
 import org.loopring.lightcone.core.data._
 import org.scalatest._
 
-class OrderManagerImplSpec_Basic extends OrderAwareSpec {
+class AccountManagerImplSpec_Basic extends OrderAwareSpec {
   "submit order" should "fail when tokenS balance is low" in {
-    dai.init(0, 0)
+    dai.setBalanceAndAllowance(0, 0)
     val order = sellDAI(100, 1)
     submitOrder(order) should be(false)
     orderPool.size should be(0)
@@ -30,7 +30,7 @@ class OrderManagerImplSpec_Basic extends OrderAwareSpec {
   }
 
   "submit order" should "fail when tokenFee balance is low" in {
-    dai.init(100, 100)
+    dai.setBalanceAndAllowance(100, 100)
     val order = sellDAI(100, 1000, 10)
     submitOrder(order) should be(false)
     orderPool.size should be(0)
@@ -38,8 +38,8 @@ class OrderManagerImplSpec_Basic extends OrderAwareSpec {
   }
 
   "submit order" should "succeed when order consumes all tokenS but only part of tokenFee" in {
-    dai.init(100, 100)
-    lrc.init(100, 100)
+    dai.setBalanceAndAllowance(100, 100)
+    lrc.setBalanceAndAllowance(100, 100)
     val order = sellDAI(100, 1000, 10)
     submitOrder(order) should be(true)
     orderPool.size should be(1)
@@ -54,8 +54,8 @@ class OrderManagerImplSpec_Basic extends OrderAwareSpec {
   }
 
   "submit order" should "succeed when order consumes all tokenFee but only part of tokenS" in {
-    dai.init(100, 100)
-    lrc.init(100, 100)
+    dai.setBalanceAndAllowance(100, 100)
+    lrc.setBalanceAndAllowance(100, 100)
     val order = sellDAI(50, 1000, 100)
     submitOrder(order) should be(true)
     orderPool.size should be(1)
@@ -70,8 +70,8 @@ class OrderManagerImplSpec_Basic extends OrderAwareSpec {
   }
 
   "submit order" should "succeed when order consumes only part of tokenS and tokenFee" in {
-    dai.init(100, 100)
-    lrc.init(100, 100)
+    dai.setBalanceAndAllowance(100, 100)
+    lrc.setBalanceAndAllowance(100, 100)
     val order = sellDAI(10, 1000, 20)
     submitOrder(order) should be(true)
     orderPool.size should be(1)
@@ -86,8 +86,8 @@ class OrderManagerImplSpec_Basic extends OrderAwareSpec {
   }
 
   "submit order" should "fail if amountS is 0" in {
-    dai.init(100, 100)
-    lrc.init(100, 100)
+    dai.setBalanceAndAllowance(100, 100)
+    lrc.setBalanceAndAllowance(100, 100)
     val order = sellDAI(0, 1000, 20)
     submitOrder(order) should be(false)
     orderPool.size should be(0)
@@ -95,8 +95,8 @@ class OrderManagerImplSpec_Basic extends OrderAwareSpec {
   }
 
   "submit order" should "fail if tokenS is not supported" in {
-    dai.init(100, 100)
-    lrc.init(100, 100)
+    dai.setBalanceAndAllowance(100, 100)
+    lrc.setBalanceAndAllowance(100, 100)
     val order = Order("id", "XYZ", WETH, LRC, BigInt(10), BigInt(10), BigInt(10))
     submitOrder(order) should be(false)
     orderPool.size should be(0)
@@ -104,8 +104,8 @@ class OrderManagerImplSpec_Basic extends OrderAwareSpec {
   }
 
   "submit order" should "fail if tokenFee is not supported" in {
-    dai.init(100, 100)
-    lrc.init(100, 100)
+    dai.setBalanceAndAllowance(100, 100)
+    lrc.setBalanceAndAllowance(100, 100)
     val order = Order("id", DAI, WETH, "XYZ", BigInt(10), BigInt(10), BigInt(10))
     submitOrder(order) should be(false)
     orderPool.size should be(0)

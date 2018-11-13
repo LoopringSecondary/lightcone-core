@@ -14,15 +14,15 @@
  * limitations under the License.
  */
 
-package org.loopring.lightcone.core.order
+package org.loopring.lightcone.core.account
 
 import org.loopring.lightcone.core.OrderAwareSpec
 import org.loopring.lightcone.core.data._
 import org.scalatest._
 
-class OrderManagerImplSpec_TokenFeeIsTokenS extends OrderAwareSpec {
+class AccountManagerImplSpec_TokenFeeIsTokenS extends OrderAwareSpec {
   "when tokenS == tokenFee, submit order" should "fail when tokenS balance is low" in {
-    lrc.init(100, 0)
+    lrc.setBalanceAndAllowance(100, 0)
     val order = sellLRC(100, 1, 10)
     submitOrder(order) should be(false)
     orderPool.size should be(0)
@@ -30,7 +30,7 @@ class OrderManagerImplSpec_TokenFeeIsTokenS extends OrderAwareSpec {
   }
 
   "when tokenS == tokenFee, submit order" should "reserve for both tokenS and tokenFee when allowance is suffcient" in {
-    lrc.init(1000, 1000)
+    lrc.setBalanceAndAllowance(1000, 1000)
     val order = sellLRC(100, 10, 10)
     submitOrder(order) should be(true)
     orderPool.size should be(1)
@@ -41,7 +41,7 @@ class OrderManagerImplSpec_TokenFeeIsTokenS extends OrderAwareSpec {
   }
 
   "when tokenS == tokenFee, submit order" should "reserve for both tokenS and tokenFee when allowance is insuffcient" in {
-    lrc.init(1000, 55)
+    lrc.setBalanceAndAllowance(1000, 55)
     val order = sellLRC(200, 10, 20)
     submitOrder(order) should be(true)
     orderPool.size should be(1)

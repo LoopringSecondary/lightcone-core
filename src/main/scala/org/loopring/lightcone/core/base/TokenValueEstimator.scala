@@ -14,19 +14,12 @@
  * limitations under the License.
  */
 
-package org.loopring.lightcone.core.order
+package org.loopring.lightcone.core.base
 
 import org.loopring.lightcone.core.data._
 
-trait TokenValueEstimator {
-  def getFiatValue(token: String, amount: BigInt): Double
-}
-
-class TokenValueEstimatorImpl()(
-    implicit
-    tmm: TokenMetadataManager
-) extends TokenValueEstimator {
-  def getFiatValue(token: String, amount: BigInt): Double = {
+class TokenValueEstimator()(implicit tmm: TokenMetadataManager) {
+  def getEstimatedValue(token: String, amount: BigInt): Double = {
     if (amount.signum <= 0) 0
     else tmm.getToken(token) match {
       case None ⇒ 0

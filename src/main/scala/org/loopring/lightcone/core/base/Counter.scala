@@ -38,5 +38,3 @@ class SimpleCounter[T] extends Counter[T] {
   def remove(key: T) = { counts -= key }
   def clear() { counts = Map.empty }
 }
-
-class StringCounter extends SimpleCounter[String]

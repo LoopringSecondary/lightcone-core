@@ -18,7 +18,7 @@ package org.loopring.lightcone.core.market
 
 import org.loopring.lightcone.core.data._
 import org.loopring.lightcone.core.depth._
-import org.loopring.lightcone.core.order.DustOrderEvaluator
+import org.loopring.lightcone.core.base.DustOrderEvaluator
 
 import org.slf4s.Logging
 import scala.annotation.tailrec
@@ -66,7 +66,7 @@ class MarketManagerImpl(
     marketId.secondary -> asks
   )
 
-  def submitOrder(order: Order, minFiatValue: Double = 0): SubmitOrderResult = {
+  def submitOrder(order: Order, minFiatValue: Double = 0): MatchResult = {
     // Allow re-submission of an existing order. In such case, we need to remove the original
     // copy of the order first.
     deleteOrder(order.id)
@@ -83,7 +83,7 @@ class MarketManagerImpl(
     res
   }
 
-  def triggerMatch(sellOrderAsTaker: Boolean, minFiatValue: Double = 0, offset: Int = 0): Option[SubmitOrderResult] = {
+  def triggerMatch(sellOrderAsTaker: Boolean, minFiatValue: Double = 0, offset: Int = 0): Option[MatchResult] = {
     val side = if (sellOrderAsTaker) asks else bids
     val takerOption = side.drop(offset).headOption
     takerOption.map(submitOrder(_, minFiatValue))
@@ -91,7 +91,7 @@ class MarketManagerImpl(
 
   // Recursively match the taker with makers. The taker order will NOT be added to its side
   // by this method.
-  private[core] def matchOrders(order: Order, minFiatValue: Double): SubmitOrderResult = {
+  private[core] def matchOrders(order: Order, minFiatValue: Double): MatchResult = {
     log.debug(s"taker order: $order , ${pendingRingPool.getOrderPendingAmountS(order.id)} ")
 
     var rings = Seq.empty[OrderRing]
@@ -154,7 +154,7 @@ class MarketManagerImpl(
       rings.foreach(pendingRingPool.addRing)
     }
 
-    SubmitOrderResult(
+    MatchResult(
       rings,
       matchedMakers.values.toSeq,
       Some(taker),

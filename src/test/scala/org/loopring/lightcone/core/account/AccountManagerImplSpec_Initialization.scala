@@ -14,21 +14,21 @@
  * limitations under the License.
  */
 
-package org.loopring.lightcone.core.order
+package org.loopring.lightcone.core.account
 
 import org.loopring.lightcone.core.OrderAwareSpec
 import org.loopring.lightcone.core.data._
 import org.scalatest._
 
-class OrderManagerImplSpec_Initialization extends OrderAwareSpec {
+class AccountManagerImplSpec_Initialization extends OrderAwareSpec {
   "reinitialization of tokenS balance to smaller values" should "cancel existing orders" in {
-    dai.init(1000, 10000)
+    dai.setBalanceAndAllowance(1000, 10000)
 
     (1 to 10) foreach { i ⇒ submitOrder(sellDAI(100, 1)) }
     orderPool.size should be(10)
 
     resetUpdatedOrders()
-    dai.init(499, 10000)
+    dai.setBalanceAndAllowance(499, 10000)
 
     updatedOrders.size should be(6)
 
@@ -38,14 +38,14 @@ class OrderManagerImplSpec_Initialization extends OrderAwareSpec {
   }
 
   "reinitialization of tokenFee balance to smaller values" should "cancel existing orders" in {
-    dai.init(1000, 10000)
-    lrc.init(100, 1000)
+    dai.setBalanceAndAllowance(1000, 10000)
+    lrc.setBalanceAndAllowance(100, 1000)
 
     (1 to 10) foreach { i ⇒ submitOrder(sellDAI(100, 1, 10)) }
     orderPool.size should be(10)
 
     resetUpdatedOrders()
-    lrc.init(49, 10000)
+    lrc.setBalanceAndAllowance(49, 10000)
 
     updatedOrders.size should be(6)
 
@@ -55,13 +55,13 @@ class OrderManagerImplSpec_Initialization extends OrderAwareSpec {
   }
 
   "reinitialization of tokenS allowance to smaller values" should "scale down existing orders" in {
-    dai.init(1000, 1000)
+    dai.setBalanceAndAllowance(1000, 1000)
 
     (1 to 10) foreach { i ⇒ submitOrder(sellDAI(100, 1)) }
     orderPool.size should be(10)
 
     resetUpdatedOrders()
-    dai.init(1000, 500)
+    dai.setBalanceAndAllowance(1000, 500)
 
     updatedOrders.size should be(5)
 
@@ -74,14 +74,14 @@ class OrderManagerImplSpec_Initialization extends OrderAwareSpec {
   }
 
   "reinitialization of tokenFee allowance to smaller values" should "scale down existing orders" in {
-    dai.init(1000, 1000)
-    lrc.init(100, 100)
+    dai.setBalanceAndAllowance(1000, 1000)
+    lrc.setBalanceAndAllowance(100, 100)
 
     (1 to 10) foreach { i ⇒ submitOrder(sellDAI(100, 1, 10)) }
     orderPool.size should be(10)
 
     resetUpdatedOrders()
-    lrc.init(100, 50)
+    lrc.setBalanceAndAllowance(100, 50)
 
     updatedOrders.size should be(5)
 
@@ -94,27 +94,27 @@ class OrderManagerImplSpec_Initialization extends OrderAwareSpec {
   }
 
   "reinitialization of tokenS balance to 0" should "cancel all orders" in {
-    dai.init(1000, 10000)
+    dai.setBalanceAndAllowance(1000, 10000)
 
     (1 to 10) foreach { i ⇒ submitOrder(sellDAI(100, 1)) }
     orderPool.size should be(10)
 
     resetUpdatedOrders()
-    dai.init(0, 10000)
+    dai.setBalanceAndAllowance(0, 10000)
 
     updatedOrders.size should be(10)
     orderPool.size should be(0)
   }
 
   "reinitialization of tokenFee balance 0" should "cancel all orders" in {
-    dai.init(1000, 10000)
-    lrc.init(100, 1000)
+    dai.setBalanceAndAllowance(1000, 10000)
+    lrc.setBalanceAndAllowance(100, 1000)
 
     (1 to 10) foreach { i ⇒ submitOrder(sellDAI(100, 1, 10)) }
     orderPool.size should be(10)
 
     resetUpdatedOrders()
-    lrc.init(0, 10000)
+    lrc.setBalanceAndAllowance(0, 10000)
 
     updatedOrders.size should be(10)
     orderPool.size should be(0)

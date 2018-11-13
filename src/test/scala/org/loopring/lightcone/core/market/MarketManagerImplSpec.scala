@@ -14,11 +14,10 @@
  * limitations under the License.
  */
 
-package org.loopring.lightcone.core.market
+package org.loopring.lightcone.core.account
 
 import org.loopring.lightcone.core.base._
 import org.loopring.lightcone.core.data._
-import org.loopring.lightcone.core.order._
 import org.loopring.lightcone.core._
 import org.scalatest._
 

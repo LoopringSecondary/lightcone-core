@@ -14,19 +14,22 @@
  * limitations under the License.
  */
 
-package org.loopring.lightcone.core.order
+package org.loopring.lightcone.core.account
 import org.loopring.lightcone.core.data._
 
-trait OrderManager {
-  def hasTokenReserveManager(token: String): Boolean
-  def addTokenReserveManager(tm: TokenReserveManager): TokenReserveManager
-  def getTokenReserveManager(token: String): TokenReserveManager
+trait AccountManager {
+  def hasTokenManager(token: String): Boolean
+  def addTokenManager(tm: AccountTokenManager): AccountTokenManager
+  def getTokenManager(token: String): AccountTokenManager
 
   def submitOrder(order: Order): Boolean
   def cancelOrder(orderId: String): Boolean
   def adjustOrder(orderId: String, outstandingAmountS: BigInt): Boolean
 }
 
-object OrderManager {
-  def default()(implicit orderPool: OrderPool): OrderManager = new OrderManagerImpl()
+object AccountManager {
+  def default()(
+    implicit
+    orderPool: AccountOrderPoolWithUpdatedOrdersTracing
+  ): AccountManager = new AccountManagerImpl()
 }

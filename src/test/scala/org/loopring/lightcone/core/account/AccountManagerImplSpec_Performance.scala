@@ -14,15 +14,17 @@
  * limitations under the License.
  */
 
-package org.loopring.lightcone.core.order
+package org.loopring.lightcone.core.account
 
 import org.loopring.lightcone.core.OrderAwareSpec
 import org.loopring.lightcone.core.data._
 import org.scalatest._
 
-class OrderManagerImplSpec_Performance extends OrderAwareSpec {
+class AccountManagerImplSpec_Performance extends OrderAwareSpec {
   "submit order" should "fail when tokenS balance is low" in {
-    lrc.init(100000, 100000)
+
+    val _lrc = lrc.asInstanceOf[AccountTokenManagerImpl]
+    lrc.setBalanceAndAllowance(100000, 100000)
 
     (1 to lrc.maxNumOrders) foreach { i ⇒
       val order = sellLRC(1, 1, 1)
@@ -32,7 +34,7 @@ class OrderManagerImplSpec_Performance extends OrderAwareSpec {
     val now = System.currentTimeMillis
     val count: Int = 100
     (1 to count) foreach { i ⇒
-      cancelOrder(lrc.reservations.head.orderId)
+      cancelOrder(_lrc.reservations.head.orderId)
       val order = sellLRC(1, 1, 1)
       submitOrder(order)
     }

@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-package org.loopring.lightcone.core.order
+package org.loopring.lightcone.core.account
 
 import org.loopring.lightcone.core.OrderAwareSpec
 import org.loopring.lightcone.core.data._
 import org.scalatest._
 
-class OrderManagerImplSpec_Cancellation extends OrderAwareSpec {
+class AccountManagerImplSpec_Cancellation extends OrderAwareSpec {
 
   "cancel order" should "fail if the order does not exist" in {
     cancelOrder("bad-id") should be(false)
@@ -28,8 +28,8 @@ class OrderManagerImplSpec_Cancellation extends OrderAwareSpec {
   }
 
   "cancel a single order" should "just work" in {
-    dai.init(1000, 1000)
-    lrc.init(1000, 1000)
+    dai.setBalanceAndAllowance(1000, 1000)
+    lrc.setBalanceAndAllowance(1000, 1000)
 
     val order1 = sellDAI(100, 10, 40)
     submitOrder(order1) should be(true)
@@ -45,7 +45,7 @@ class OrderManagerImplSpec_Cancellation extends OrderAwareSpec {
   }
 
   "cancel the first order" should "just scale up the following orders" in {
-    dai.init(1000, 500)
+    dai.setBalanceAndAllowance(1000, 500)
     val order1 = sellDAI(400, 40)
     val order2 = sellDAI(200, 20)
     val order3 = sellDAI(200, 20)
@@ -66,7 +66,7 @@ class OrderManagerImplSpec_Cancellation extends OrderAwareSpec {
   }
 
   "cancel an order in the middle" should "scale up the following orders" in {
-    dai.init(1000, 500)
+    dai.setBalanceAndAllowance(1000, 500)
     val order1 = sellDAI(400, 40)
     val order2 = sellDAI(200, 20)
     val order3 = sellDAI(400, 40)
@@ -83,8 +83,8 @@ class OrderManagerImplSpec_Cancellation extends OrderAwareSpec {
   }
 
   "cancel an order" should "free both tokenS and tokenFee" in {
-    dai.init(2000, 1000)
-    lrc.init(200, 100)
+    dai.setBalanceAndAllowance(2000, 1000)
+    lrc.setBalanceAndAllowance(200, 100)
 
     val order1 = sellDAI(1000, 10, 100)
     val order2 = sellDAI(500, 5)
