@@ -23,12 +23,12 @@ import org.slf4s.Logging
 import OrderStatus._
 
 /*
- * TokenManagerImpl manages reserving balance and allowance for orders.
+ * AccountTokenManagerImpl manages reserving balance and allowance for orders.
  * An order can be 'reserved' if and only if the available (unservered) balance
  * is no less than the order's size.
  */
 
-trait TokenManager {
+trait AccountTokenManager {
   val token: String
   val maxNumOrders: Int
 

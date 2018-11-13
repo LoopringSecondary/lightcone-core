@@ -19,8 +19,8 @@ import org.loopring.lightcone.core.data._
 
 trait AccountManager {
   def hasTokenManager(token: String): Boolean
-  def addTokenManager(tm: TokenManager): TokenManager
-  def getTokenManager(token: String): TokenManager
+  def addTokenManager(tm: AccountTokenManager): AccountTokenManager
+  def getTokenManager(token: String): AccountTokenManager
 
   def submitOrder(order: Order): Boolean
   def cancelOrder(orderId: String): Boolean

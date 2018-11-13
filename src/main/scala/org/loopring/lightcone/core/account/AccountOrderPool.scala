@@ -19,51 +19,17 @@ import org.loopring.lightcone.core.data._
 
 import org.slf4s.Logging
 
-class AccountOrderPool extends Object with Logging {
+trait AccountOrderPool {
 
   type Callback = Order ⇒ Unit
 
-  private var callbacks = Set.empty[Callback]
-  private[account] var orderMap = Map.empty[String, Order]
+  def apply(id: String): Order
+  def getOrder(id: String): Option[Order]
+  def contains(id: String): Boolean
+  def size: Int
 
-  def apply(id: String): Order = orderMap(id)
-  def getOrder(id: String): Option[Order] = orderMap.get(id)
-  def contains(id: String): Boolean = orderMap.contains(id)
-  def size: Int = orderMap.size
+  def addCallback(callback: Callback): Unit
+  def removeCallback(callback: Callback): Unit
 
-  // private def orders() = orderMap.values
-  private def add(id: String, order: Order): Unit = orderMap += id -> order
-  private def delete(id: String): Unit = orderMap -= id
-
-  // private[core] def toMap = orderMap
-
-  def addCallback(callback: Callback) {
-    callbacks += callback
-  }
-
-  def removeCallback(callback: Callback) {
-    callbacks -= callback
-  }
-
-  def +=(order: Order) = {
-    getOrder(order.id) match {
-      case Some(existing) if existing == order ⇒
-
-      case _ ⇒ order.status match {
-        case OrderStatus.NEW ⇒
-          add(order.id, order)
-
-        case OrderStatus.PENDING ⇒
-          add(order.id, order)
-          callbacks.foreach(_(order))
-
-        case _ ⇒
-          // log.debug("drop_order_from_pool: " + order)
-          delete(order.id)
-          callbacks.foreach(_(order))
-      }
-    }
-  }
-
-  override def toString() = orderMap.toString
+  def +=(order: Order): Unit
 }

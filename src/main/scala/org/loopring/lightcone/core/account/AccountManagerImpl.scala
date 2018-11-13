@@ -25,18 +25,18 @@ final private[core] class AccountManagerImpl()(
 ) extends AccountManager with Logging {
   import OrderStatus._
 
-  private[core] implicit var tokens = Map.empty[String, TokenManager]
+  private[core] implicit var tokens = Map.empty[String, AccountTokenManager]
 
   def hasTokenManager(token: String): Boolean = {
     tokens.contains(token)
   }
-  def addTokenManager(tm: TokenManager) = {
+  def addTokenManager(tm: AccountTokenManager) = {
     assert(!hasTokenManager(tm.token))
     tokens += tm.token -> tm
     tm
   }
 
-  def getTokenManager(token: String): TokenManager = {
+  def getTokenManager(token: String): AccountTokenManager = {
     assert(hasTokenManager(token))
     tokens(token)
   }
@@ -94,8 +94,8 @@ final private[core] class AccountManagerImpl()(
   }
 
   implicit private class MagicOrder(order: Order) {
-    def callOnTokenS[R](method: TokenManager ⇒ R) = method(tokens(order.tokenS))
-    def callOnTokenFee[R](method: TokenManager ⇒ R) = method(tokens(order.tokenFee))
+    def callOnTokenS[R](method: AccountTokenManager ⇒ R) = method(tokens(order.tokenS))
+    def callOnTokenFee[R](method: AccountTokenManager ⇒ R) = method(tokens(order.tokenFee))
 
     // 删除订单应该有以下几种情况:
     // 1.用户主动删除订单
@@ -105,7 +105,7 @@ final private[core] class AccountManagerImpl()(
     // tokenManager的release动作不能由tokenManager本身调用,
     // 只能由orderManager根据并汇总tokenS&tokenFee情况后删除,
     // 删除时tokenS&tokenFee都要删,不能只留一个
-    def callOnTokenSAndTokenFee(method: TokenManager ⇒ Set[String]) = {
+    def callOnTokenSAndTokenFee(method: AccountTokenManager ⇒ Set[String]) = {
       val ordersToDelete = callOnTokenS(method) ++ callOnTokenFee(method)
       ordersToDelete.map { orderId ⇒
         callOnTokenS(_.release(orderId))

@@ -44,15 +44,15 @@ trait OrderAwareSpec extends CommonSpec {
 
   implicit var orderPool: AccountOrderPool = _
   var orderManager: AccountManager = _
-  var lrc: TokenManager = _
-  var gto: TokenManager = _
-  var dai: TokenManager = _
-  var weth: TokenManager = _
+  var lrc: AccountTokenManager = _
+  var gto: AccountTokenManager = _
+  var dai: AccountTokenManager = _
+  var weth: AccountTokenManager = _
 
   var updatedOrders = Map.empty[String, Order]
 
   override def beforeEach() {
-    orderPool = new AccountOrderPool()
+    orderPool = new AccountOrderPoolImpl()
     updatedOrders = Map.empty[String, Order]
     orderPool.addCallback { order ⇒
       updatedOrders += order.id -> order
@@ -61,10 +61,10 @@ trait OrderAwareSpec extends CommonSpec {
     }
     orderManager = AccountManager.default()
 
-    lrc = new TokenManagerImpl(LRC)
-    gto = new TokenManagerImpl(GTO)
-    dai = new TokenManagerImpl(DAI)
-    weth = new TokenManagerImpl(WETH)
+    lrc = new AccountTokenManagerImpl(LRC)
+    gto = new AccountTokenManagerImpl(GTO)
+    dai = new AccountTokenManagerImpl(DAI)
+    weth = new AccountTokenManagerImpl(WETH)
 
     orderManager.addTokenManager(lrc)
     orderManager.addTokenManager(gto)
