@@ -76,7 +76,7 @@ class MarketManagerImpl(
     res.matchedMakers.get(order.id) match {
       case None ⇒
         addOrderToSide(order) // why none???
-      case Some(o) if !dustOrderEvaluator.isDust(o) ⇒
+      case Some(o) if !dustOrderEvaluator.isMatchableDust(o) ⇒
         addOrderToSide(o)
       case _ ⇒ //此时完全匹配，不需要再添加到订单薄
     }
@@ -93,17 +93,6 @@ class MarketManagerImpl(
     var matchedMakers = Map.empty[String, Order]
 
     var taker = updateOrderMatchable(order)
-
-    if (dustOrderEvaluator.isDust(taker)) {
-      matchedMakers += taker.id → taker.copy(_matchable = Some(OrderState()))
-
-      return SubmitOrderResult(
-        rings,
-        matchedMakers,
-        Some(taker),
-        Some(aggregator.getOrderbookUpdate())
-      )
-    }
 
     @tailrec
     def recursivelyMatchOrders(): Unit = {
@@ -140,9 +129,7 @@ class MarketManagerImpl(
             makersToAddBack += updatedMaker
           }
 
-          if (dustOrderEvaluator.isMatchableDust(taker)) {
-            matchedMakers += taker.id → taker.copy(_matchable = Some(OrderState()))
-          } else {
+          if (!dustOrderEvaluator.isMatchableDust(taker)) {
             recursivelyMatchOrders()
           }
 
@@ -153,13 +140,13 @@ class MarketManagerImpl(
       }
     }
 
-    recursivelyMatchOrders()
-
-    // add each skipped maker orders back
-    makersToAddBack.foreach(addOrderToSide)
-
-    // put rings to the pendign pool
-    rings.foreach(pendingRingPool.addRing)
+    if (!dustOrderEvaluator.isMatchableDust(taker)) {
+      recursivelyMatchOrders()
+      // add each skipped maker orders back
+      makersToAddBack.foreach(addOrderToSide)
+      // put rings to the pendign pool
+      rings.foreach(pendingRingPool.addRing)
+    }
 
     SubmitOrderResult(
       rings,
@@ -190,7 +177,7 @@ class MarketManagerImpl(
           submitRes.matchedMakers.get(taker.id) match {
             case None ⇒
               makersToAddBack += taker
-            case Some(o) if !dustOrderEvaluator.isDust(o) ⇒
+            case Some(o) if !dustOrderEvaluator.isMatchableDust(o) ⇒
               makersToAddBack += o
             case _ ⇒
           }
