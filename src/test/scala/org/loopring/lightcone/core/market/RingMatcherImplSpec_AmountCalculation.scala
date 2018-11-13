@@ -81,7 +81,7 @@ class RingMatcherImplSpec_AmountCalculation extends CommonSpec with RingMatcherA
     )
     shouldRing(res1, Some(expectRing1))
 
-    info("one of the matchables is half of raw amount")
+    info("one of the matchables are half of raw amount")
     val res2 = matcher.matchOrders(
       taker.copy(_matchable = Some(OrderState(amountS = 5, amountB = 50, amountFee = 5))),
       maker.copy(_matchable = Some(OrderState(amountS = 80, amountB = 8, amountFee = 8)))
@@ -128,12 +128,11 @@ class RingMatcherImplSpec_AmountCalculation extends CommonSpec with RingMatcherA
     )
     shouldRing(res, Some(expectRing))
 
-    info("both matchables is half of raw amount")
+    info("both matchables are half of raw amount")
     val res1 = matcher.matchOrders(
       taker.copy(_matchable = Some(OrderState(amountS = 5, amountB = 50, amountFee = 5))),
       maker.copy(_matchable = Some(OrderState(amountS = 750, amountB = 45, amountFee = 45)))
     )
-
     val expectRing1 = OrderRing(
       taker = ExpectedFill(
         order = taker.copy(_matchable = Some(OrderState())),
