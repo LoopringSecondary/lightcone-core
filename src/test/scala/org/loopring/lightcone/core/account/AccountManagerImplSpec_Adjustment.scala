@@ -28,8 +28,8 @@ class AccountManagerImplSpec_Adjustment extends OrderAwareSpec {
   }
 
   "adjustment of single order upward and downward" should "just work" in {
-    dai.init(1000, 1000)
-    lrc.init(1000, 1000)
+    dai.setBalanceAndAllowance(1000, 1000)
+    lrc.setBalanceAndAllowance(1000, 1000)
 
     val order1 = sellDAI(100, 10, 40)
     submitOrder(order1) should be(true)
@@ -51,8 +51,8 @@ class AccountManagerImplSpec_Adjustment extends OrderAwareSpec {
   }
 
   "adjustment of the last order upward and downward" should "just work" in {
-    dai.init(1000, 1000)
-    lrc.init(1000, 1000)
+    dai.setBalanceAndAllowance(1000, 1000)
+    lrc.setBalanceAndAllowance(1000, 1000)
 
     val order1 = sellDAI(200, 20, 200)
     submitOrder(order1) should be(true)
@@ -77,7 +77,7 @@ class AccountManagerImplSpec_Adjustment extends OrderAwareSpec {
   }
 
   "adjustment of the first order upward" should "just scale down the following orders" in {
-    dai.init(1000, 500)
+    dai.setBalanceAndAllowance(1000, 500)
     val order1 = sellDAI(400, 40)
     val order2 = sellDAI(200, 20)
     val order3 = sellDAI(200, 20)
@@ -110,7 +110,7 @@ class AccountManagerImplSpec_Adjustment extends OrderAwareSpec {
   }
 
   "adjustment of the order in the middle upward" should "just scale down the following orders" in {
-    dai.init(1000, 500)
+    dai.setBalanceAndAllowance(1000, 500)
     val order1 = sellDAI(400, 40)
     val order2 = sellDAI(200, 20)
     val order3 = sellDAI(200, 20)

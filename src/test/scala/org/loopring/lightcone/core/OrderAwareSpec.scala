@@ -44,10 +44,10 @@ trait OrderAwareSpec extends CommonSpec {
 
   implicit var orderPool: AccountOrderPool = _
   var orderManager: AccountManager = _
-  var lrc: TokenReserveManager = _
-  var gto: TokenReserveManager = _
-  var dai: TokenReserveManager = _
-  var weth: TokenReserveManager = _
+  var lrc: TokenManager = _
+  var gto: TokenManager = _
+  var dai: TokenManager = _
+  var weth: TokenManager = _
 
   var updatedOrders = Map.empty[String, Order]
 
@@ -61,15 +61,15 @@ trait OrderAwareSpec extends CommonSpec {
     }
     orderManager = AccountManager.default()
 
-    lrc = new TokenReserveManager(LRC)
-    gto = new TokenReserveManager(GTO)
-    dai = new TokenReserveManager(DAI)
-    weth = new TokenReserveManager(WETH)
+    lrc = new TokenManager(LRC)
+    gto = new TokenManager(GTO)
+    dai = new TokenManager(DAI)
+    weth = new TokenManager(WETH)
 
-    orderManager.addTokenReserveManager(lrc)
-    orderManager.addTokenReserveManager(gto)
-    orderManager.addTokenReserveManager(dai)
-    orderManager.addTokenReserveManager(weth)
+    orderManager.addTokenManager(lrc)
+    orderManager.addTokenManager(gto)
+    orderManager.addTokenManager(dai)
+    orderManager.addTokenManager(weth)
   }
 
   def sellLRC(

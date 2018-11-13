@@ -23,9 +23,9 @@ import org.scalatest._
 class AccountManagerImplSpec_RequestAmount extends OrderAwareSpec {
 
   "AccountManagerImpl" should "calulate request amount correctly (legacy code)" in {
-    lrc.init(100, 200)
-    gto.init(100, 200)
-    weth.init(100, 200)
+    lrc.setBalanceAndAllowance(100, 200)
+    gto.setBalanceAndAllowance(100, 200)
+    weth.setBalanceAndAllowance(100, 200)
 
     var order = newOrder(
       LRC,

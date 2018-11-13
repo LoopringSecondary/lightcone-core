@@ -23,8 +23,8 @@ import org.scalatest._
 class AccountManagerImplSpec_RestrictedByAllowance extends OrderAwareSpec {
 
   "order" should "be scaled by tokenS allowance (non-zero) if tokenFee allowance is still high " in {
-    dai.init(1000, 100)
-    lrc.init(1000, 1000)
+    dai.setBalanceAndAllowance(1000, 100)
+    lrc.setBalanceAndAllowance(1000, 1000)
 
     val order = sellDAI(200, 1000, 20)
 
@@ -38,8 +38,8 @@ class AccountManagerImplSpec_RestrictedByAllowance extends OrderAwareSpec {
   }
 
   "order" should "be scaled by tokenS allowance (zero) if tokenFee allowance is still high " in {
-    dai.init(1000, 0)
-    lrc.init(1000, 1000)
+    dai.setBalanceAndAllowance(1000, 0)
+    lrc.setBalanceAndAllowance(1000, 1000)
 
     val order = sellDAI(200, 1000, 20)
 
@@ -56,8 +56,8 @@ class AccountManagerImplSpec_RestrictedByAllowance extends OrderAwareSpec {
   }
 
   "order" should "be scaled by tokenFee allowance (non-zero) if tokenS allowance is still high " in {
-    dai.init(1000, 1000)
-    lrc.init(1000, 10)
+    dai.setBalanceAndAllowance(1000, 1000)
+    lrc.setBalanceAndAllowance(1000, 10)
 
     val order = sellDAI(200, 1000, 20)
 
@@ -74,8 +74,8 @@ class AccountManagerImplSpec_RestrictedByAllowance extends OrderAwareSpec {
   }
 
   "order" should "be scaled by tokenFee allowance (zero) if tokenS allowance is still high " in {
-    dai.init(1000, 1000)
-    lrc.init(1000, 0)
+    dai.setBalanceAndAllowance(1000, 1000)
+    lrc.setBalanceAndAllowance(1000, 0)
 
     val order = sellDAI(200, 1000, 20)
 

@@ -23,11 +23,11 @@ import org.slf4s.Logging
 import OrderStatus._
 
 /*
- * TokenReserveManager manages reserving balance and allowance for orders.
+ * TokenManager manages reserving balance and allowance for orders.
  * An order can be 'reserved' if and only if the available (unservered) balance
  * is no less than the order's size.
  */
-class TokenReserveManager(
+class TokenManager(
     val token: String,
     val maxNumOrders: Int = 1000
 )(
@@ -68,7 +68,11 @@ class TokenReserveManager(
 
   // Initlize the balance and allowance and triger rebalancing.
   // Returns the ids of orders to delete
-  def init(balance: BigInt, allowance: BigInt): Set[String] = {
+
+  def setBalance(balance: BigInt) = setBalanceAndAllowance(balance, this.allowance)
+  def setAllowance(allowance: BigInt) = setBalanceAndAllowance(this.balance, allowance)
+
+  def setBalanceAndAllowance(balance: BigInt, allowance: BigInt): Set[String] = {
     val cursor1 =
       if (balance >= this.balance) cursor
       else {
