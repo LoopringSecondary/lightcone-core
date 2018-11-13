@@ -20,12 +20,14 @@ import org.loopring.lightcone.core.data._
 import scala.collection.SortedMap
 
 class OrderbookManager(config: OrderbookConfig) {
+
   private[depth] val viewMap = (0 until config.levels).map {
     level ⇒ level -> new View(level)
   }.toMap
 
-  def handleUpdate(update: OrderbookUpdate) = {
-    viewMap.values.foreach(_.handleUpdate(update))
+  def processUpdate(update: OrderbookUpdate) = {
+    val diff = viewMap(0).getDiff(update)
+    viewMap.values.foreach(_.processUpdate(diff))
   }
 
   def getOrderbook(level: Int, size: Int) = viewMap.get(level) match {
@@ -35,59 +37,48 @@ class OrderbookManager(config: OrderbookConfig) {
 
   def reset() = viewMap.values.foreach(_.reset)
 
-  class View(level: Int) {
-    private val sellSide = new OrderbookViewSide.Sells(level, config)
-    private val buySide = new OrderbookViewSide.Buys(level, config)
+  private[depth] class View(aggregationLevel: Int) {
 
-    def handleUpdate(update: OrderbookUpdate) = {
-      sellSide.setSlots(update.sells)
-      buySide.setSlots(update.buys)
+    private val priceFormat = s"%.${config.precisionForPrice}f"
+    private val amountFormat = s"%.${config.precisionForAmount}f"
+    private val totalFormat = s"%.${config.precisionForTotal}f"
+
+    private val sellSide = new OrderbookSide.Sells(
+      config.priceDecimals, aggregationLevel, false
+    ) with ConverstionSupport
+
+    private val buySide = new OrderbookSide.Buys(
+      config.priceDecimals, aggregationLevel, false
+    ) with ConverstionSupport
+
+    def processUpdate(update: OrderbookUpdate) {
+      update.sells.foreach(sellSide.increase)
+      update.buys.foreach(buySide.increase)
     }
 
-    def getOrderbook(size: Int) = Orderbook(
-      sellSide.getDepth(size),
-      buySide.getDepth(size)
-    )
+    def getDiff(update: OrderbookUpdate) = {
+      OrderbookUpdate(
+        update.sells.map(sellSide.getDiff),
+        update.buys.map(buySide.getDiff)
+      )
+    }
 
-    def reset() = {
+    def getOrderbook(size: Int) =
+      Orderbook(sellSide.getDepth(size), buySide.getDepth(size))
+
+    def reset() {
       sellSide.reset()
       buySide.reset()
     }
+
+    trait ConverstionSupport { self: OrderbookSide ⇒
+      private def slotToItem(slot: OrderbookSlot) = OrderbookItem(
+        priceFormat.format(slot.slot / priceScaling),
+        amountFormat.format(slot.amount),
+        totalFormat.format(slot.total)
+      )
+      def getDepth(num: Int): Seq[OrderbookItem] = getSlots(num).map(slotToItem(_))
+    }
   }
 }
 
-private object OrderbookViewSide {
-  class Sells(val level: Int, val config: OrderbookConfig)
-    extends LongOrderingSupport(true) with OrderbookViewSide
-
-  class Buys(val level: Int, val config: OrderbookConfig)
-    extends LongOrderingSupport(false) with OrderbookViewSide
-}
-
-private trait OrderbookViewSide {
-  val level: Int
-  val config: OrderbookConfig
-  val isSell: Boolean
-  implicit val ordering: Ordering[Long]
-
-  private val scaling = Math.pow(10, config.priceDecimals - level)
-  private val priceFormat = s"%.${config.precisionForPrice}f"
-  private val amountFormat = s"%.${config.precisionForAmount}f"
-  private val totalFormat = s"%.${config.precisionForTotal}f"
-
-  var itemMap = SortedMap.empty[Long, OrderbookItem]
-
-  def setSlots(slots: Seq[OrderbookSlot]) = slots.foreach(setSlot)
-
-  def setSlot(slot: OrderbookSlot) = {
-    itemMap += slot.slot -> OrderbookItem(
-      priceFormat.format(slot.slot / scaling),
-      amountFormat.format(slot.amount),
-      totalFormat.format(slot.total)
-    )
-  }
-
-  def reset() = { itemMap = SortedMap.empty }
-
-  def getDepth(num: Int): Seq[OrderbookItem] = itemMap.take(num).values.toList
-}
