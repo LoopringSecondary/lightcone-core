@@ -42,7 +42,7 @@ trait OrderAwareSpec extends CommonSpec {
   implicit val tve = new TokenValueEstimator
   implicit val dustEvaluator = new DustOrderEvaluator
 
-  implicit var orderPool: AccountOrderPool = _
+  implicit var orderPool: AccountOrderPoolWithUpdatedOrdersTracing = _
   var orderManager: AccountManager = _
   var lrc: AccountTokenManager = _
   var gto: AccountTokenManager = _

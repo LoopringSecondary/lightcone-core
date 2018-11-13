@@ -33,3 +33,20 @@ trait AccountOrderPool {
 
   def +=(order: Order): Unit
 }
+
+trait UpdatedOrdersTracing {
+  self: AccountOrderPool ⇒
+  private var updatedOrders = Map.empty[String, Order]
+
+  def getUpdatedOrders() = updatedOrders.values
+  def clearUpdatedOrders() = { updatedOrders = Map.empty }
+  def takeUpdatedOrders() = {
+    val orders = getUpdatedOrders
+    clearUpdatedOrders()
+    orders
+  }
+}
+
+trait AccountOrderPoolWithUpdatedOrdersTracing
+  extends AccountOrderPool
+  with UpdatedOrdersTracing
