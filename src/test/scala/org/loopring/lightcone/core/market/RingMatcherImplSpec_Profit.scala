@@ -48,7 +48,6 @@ class RingMatcherImplSpec_Profit extends CommonSpec {
     matcher.matchOrders(taker, maker, 0).isRight should be(true)
   }
 
-  // TODO(hongyu): fix test failure
   "RingMatcherImpl" should "not match orders if their `_matchable` fields are not set" in {
     implicit val rie = alwaysProfitable
     val matcher = new RingMatcherImpl()
@@ -62,7 +61,7 @@ class RingMatcherImplSpec_Profit extends CommonSpec {
     matcher.matchOrders(
       sellDAI(10, 10),
       buyDAI(10, 10)
-    ) should be(Left(INCOME_TOO_SMALL))
+    ) should be(Left(ORDERS_NOT_TRADABLE))
   }
 
 }

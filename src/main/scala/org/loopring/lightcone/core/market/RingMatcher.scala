@@ -49,7 +49,11 @@ class RingMatcherImpl()(
   }
 
   private def makeRing(maker: Order, taker: Order): Option[OrderRing] = {
-    if (maker.amountS * taker.amountS < maker.amountB * taker.amountB) {
+    if (maker.amountS * taker.amountS < maker.amountB * taker.amountB ||
+      maker.amountB.signum == 0 ||
+      taker.amountB.signum == 0 ||
+      maker._matchable.isEmpty ||
+      taker._matchable.isEmpty) {
       None
     } else {
       /*合约逻辑：
