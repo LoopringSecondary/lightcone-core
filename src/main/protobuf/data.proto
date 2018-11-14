@@ -27,7 +27,7 @@ enum OrderStatus {
     CANCELLED_TOO_MANY_FAILED_SETTLEMENTS = 12;
 }
 
-enum ExecutedStatus {
+enum ExecutionStatus {
     UNKNOWN = 0;
     FAILED = 1;
     SUCCEEDED = 2;
@@ -49,7 +49,7 @@ message POrder{
     bytes amountB=6;
     bytes amountFee=7;
     int64 createdAt=8;
-    ExecutedStatus status=9;
+    ExecutionStatus status=9;
     double walletSplitPercentage=10;
     POrderState _outstanding=11;
     POrderState _reserved=12;
