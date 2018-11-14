@@ -16,14 +16,19 @@
 
 package org.loopring.lightcone.core.base
 
-object TimeProvider {
-  val default = new SystemTimeProvider()
+import org.loopring.lightcone.core.data._
+
+class TokenValueEstimator()(implicit tmm: TokenMetadataManager) {
+  def getEstimatedValue(token: String, amount: BigInt): Double = {
+    if (amount.signum <= 0) 0
+    else tmm.getToken(token) match {
+      case None ⇒ 0
+      case Some(metadata) ⇒
+        val scaling = Math.pow(10, metadata.decimals)
+        (Rational(metadata.currentPrice) *
+          Rational(amount) /
+          Rational(scaling)).doubleValue
+    }
+  }
 }
 
-trait TimeProvider {
-  def getCurrentTimeMillis(): Long
-}
-
-final class SystemTimeProvider extends TimeProvider {
-  def getCurrentTimeMillis() = System.currentTimeMillis
-}

@@ -36,7 +36,9 @@ object Settings {
     resolvers += Resolver.bintrayRepo("hseeberger", "maven"),
     resolvers += Opts.resolver.sonatypeSnapshots,
     resolvers += Opts.resolver.sonatypeReleases,
-    libraryDependencies += "org.scala-lang" % "scala-library" % Globals.scalaVersion,
+    libraryDependencies ++= Seq(
+      "com.thesamet.scalapb" %% "scalapb-runtime" % scalapb.compiler.Version.scalapbVersion,
+      "com.thesamet.scalapb" %% "scalapb-runtime" % scalapb.compiler.Version.scalapbVersion % "protobuf"),
     javacOptions := Seq( //"-source", Globals.jvmVersion,
     ),
     scalacOptions := Seq(

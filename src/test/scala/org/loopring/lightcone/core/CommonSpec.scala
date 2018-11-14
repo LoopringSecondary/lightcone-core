@@ -14,16 +14,19 @@
  * limitations under the License.
  */
 
-package org.loopring.lightcone.core.base
+package org.loopring.lightcone.core
 
-object TimeProvider {
-  val default = new SystemTimeProvider()
-}
+import org.scalatest._
+import org.slf4s.Logging
 
-trait TimeProvider {
-  def getCurrentTimeMillis(): Long
-}
+trait CommonSpec
+  extends FlatSpec
+  with BeforeAndAfterEach
+  with BeforeAndAfterAll
+  with Matchers
+  with Logging {
 
-final class SystemTimeProvider extends TimeProvider {
-  def getCurrentTimeMillis() = System.currentTimeMillis
+  override def beforeAll() {
+    println(s"[To run this spec, use `testOnly *${getClass.getSimpleName}`]")
+  }
 }

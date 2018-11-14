@@ -14,16 +14,21 @@
  * limitations under the License.
  */
 
-package org.loopring.lightcone.core.base
+package org.loopring.lightcone.core.market
 
-object TimeProvider {
-  val default = new SystemTimeProvider()
+import org.loopring.lightcone.core.data._
+
+trait PendingRingPool {
+  def getOrderPendingAmountS(orderId: String): BigInt
+  def deleteOrder(orderId: String): Boolean
+  def deleteRing(ringId: String): Boolean
+
+  def hasRing(ringId: String): Boolean
+  def addRing(ring: OrderRing): Unit
+
+  def deleteAllRings(): Unit
+  def deleteRingsBefore(timestamp: Long): Unit
+  def deleteRingsOlderThan(age: Long): Unit
+  def deleteRingsContainingOrder(orderId: String): Unit
 }
 
-trait TimeProvider {
-  def getCurrentTimeMillis(): Long
-}
-
-final class SystemTimeProvider extends TimeProvider {
-  def getCurrentTimeMillis() = System.currentTimeMillis
-}

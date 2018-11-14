@@ -8,3 +8,6 @@ lazy val core = (project in file("."))
   .settings(
     basicSettings,
     libraryDependencies ++= commonDependency)
+  .settings(
+    PB.targets in Compile := Seq(
+      scalapb.gen(flatPackage = false) -> (sourceManaged in Compile).value))

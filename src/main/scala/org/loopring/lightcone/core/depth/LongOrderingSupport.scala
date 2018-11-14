@@ -14,16 +14,14 @@
  * limitations under the License.
  */
 
-package org.loopring.lightcone.core.base
+package org.loopring.lightcone.core.depth
 
-object TimeProvider {
-  val default = new SystemTimeProvider()
-}
-
-trait TimeProvider {
-  def getCurrentTimeMillis(): Long
-}
-
-final class SystemTimeProvider extends TimeProvider {
-  def getCurrentTimeMillis() = System.currentTimeMillis
+private[depth] abstract class LongOrderingSupport(val isSell: Boolean) {
+  implicit val ordering =
+    if (isSell) new Ordering[Long] {
+      def compare(a: Long, b: Long) = a compare b
+    }
+    else new Ordering[Long] {
+      def compare(a: Long, b: Long) = b compare a
+    }
 }

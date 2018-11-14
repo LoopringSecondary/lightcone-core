@@ -16,14 +16,25 @@
 
 package org.loopring.lightcone.core.base
 
-object TimeProvider {
-  val default = new SystemTimeProvider()
-}
+import org.loopring.lightcone.core.data._
 
-trait TimeProvider {
-  def getCurrentTimeMillis(): Long
-}
+class DustOrderEvaluator(threshold: Double = 0.0)(
+    implicit
+    tve: TokenValueEstimator
+) {
+  def isOriginalDust(order: Order) =
+    _isDust(order.tokenS, order.original.amountS)
 
-final class SystemTimeProvider extends TimeProvider {
-  def getCurrentTimeMillis() = System.currentTimeMillis
+  def isOutstandingDust(order: Order) =
+    _isDust(order.tokenS, order.outstanding.amountS)
+
+  def isActualDust(order: Order) =
+    _isDust(order.tokenS, order.actual.amountS)
+
+  def isMatchableDust(order: Order) =
+    _isDust(order.tokenS, order.matchable.amountS)
+
+  private def _isDust(tokenS: String, amountS: BigInt): Boolean = {
+    tve.getEstimatedValue(tokenS, amountS) < threshold
+  }
 }

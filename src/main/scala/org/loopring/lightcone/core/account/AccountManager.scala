@@ -14,16 +14,22 @@
  * limitations under the License.
  */
 
-package org.loopring.lightcone.core.base
+package org.loopring.lightcone.core.account
+import org.loopring.lightcone.core.data._
 
-object TimeProvider {
-  val default = new SystemTimeProvider()
+trait AccountManager {
+  def hasTokenManager(token: String): Boolean
+  def addTokenManager(tm: AccountTokenManager): AccountTokenManager
+  def getTokenManager(token: String): AccountTokenManager
+
+  def submitOrder(order: Order): Boolean
+  def cancelOrder(orderId: String): Boolean
+  def adjustOrder(orderId: String, outstandingAmountS: BigInt): Boolean
 }
 
-trait TimeProvider {
-  def getCurrentTimeMillis(): Long
-}
-
-final class SystemTimeProvider extends TimeProvider {
-  def getCurrentTimeMillis() = System.currentTimeMillis
+object AccountManager {
+  def default()(
+    implicit
+    orderPool: AccountOrderPoolWithUpdatedOrdersTracing
+  ): AccountManager = new AccountManagerImpl()
 }

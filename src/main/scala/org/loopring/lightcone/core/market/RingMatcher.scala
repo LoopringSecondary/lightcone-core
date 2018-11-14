@@ -14,16 +14,14 @@
  * limitations under the License.
  */
 
-package org.loopring.lightcone.core.base
+package org.loopring.lightcone.core.market
 
-object TimeProvider {
-  val default = new SystemTimeProvider()
-}
+import org.loopring.lightcone.core.data._
 
-trait TimeProvider {
-  def getCurrentTimeMillis(): Long
-}
-
-final class SystemTimeProvider extends TimeProvider {
-  def getCurrentTimeMillis() = System.currentTimeMillis
+trait RingMatcher {
+  def matchOrders(
+    taker: Order,
+    maker: Order,
+    minFiatValue: Double
+  ): Either[MatchingFailure, OrderRing]
 }

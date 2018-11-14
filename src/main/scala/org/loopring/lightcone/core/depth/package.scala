@@ -14,16 +14,29 @@
  * limitations under the License.
  */
 
-package org.loopring.lightcone.core.base
+package org.loopring.lightcone.core
 
-object TimeProvider {
-  val default = new SystemTimeProvider()
-}
+import org.loopring.lightcone.core.data._
 
-trait TimeProvider {
-  def getCurrentTimeMillis(): Long
-}
+package object depth {
+  implicit class RichOrderbookSlot(this_ : OrderbookSlot) {
 
-final class SystemTimeProvider extends TimeProvider {
-  def getCurrentTimeMillis() = System.currentTimeMillis
+    def +(that: OrderbookSlot) = {
+      assert(this_.slot == that.slot)
+      OrderbookSlot(
+        this_.slot,
+        this_.amount + that.amount,
+        this_.total + that.total
+      )
+    }
+
+    def -(that: OrderbookSlot) = {
+      assert(this_.slot == that.slot)
+      OrderbookSlot(
+        this_.slot,
+        this_.amount - that.amount,
+        this_.total - that.total
+      )
+    }
+  }
 }

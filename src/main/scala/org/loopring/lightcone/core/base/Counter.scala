@@ -16,14 +16,25 @@
 
 package org.loopring.lightcone.core.base
 
-object TimeProvider {
-  val default = new SystemTimeProvider()
+trait Counter[T] {
+  def incr(key: T, delta: Long = 1): Long
+  def decr(key: T, delta: Long = 1): Long
+  def get(keuy: T): Long
+  def remove(key: T): Unit
+  def clear(): Unit
 }
 
-trait TimeProvider {
-  def getCurrentTimeMillis(): Long
-}
+class SimpleCounter[T] extends Counter[T] {
+  private var counts = Map.empty[T, Long]
 
-final class SystemTimeProvider extends TimeProvider {
-  def getCurrentTimeMillis() = System.currentTimeMillis
+  def incr(key: T, delta: Long = 1) = {
+    val count = get(key) + delta
+    counts += (key -> count)
+    count
+  }
+
+  def decr(key: T, delta: Long = 1) = incr(key, -delta)
+  def get(key: T) = counts.getOrElse(key, 0)
+  def remove(key: T) = { counts -= key }
+  def clear() { counts = Map.empty }
 }
