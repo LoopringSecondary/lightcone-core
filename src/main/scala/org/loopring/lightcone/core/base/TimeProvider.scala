@@ -16,10 +16,6 @@
 
 package org.loopring.lightcone.core.base
 
-object TimeProvider {
-  val default = new SystemTimeProvider()
-}
-
 trait TimeProvider {
   def getCurrentTimeMillis(): Long
 }

@@ -20,13 +20,6 @@ import org.loopring.lightcone.core.base._
 import org.loopring.lightcone.core.data._
 
 import org.slf4s.Logging
-import OrderStatus._
-
-/*
- * AccountTokenManagerImpl manages reserving balance and allowance for orders.
- * An order can be 'reserved' if and only if the available (unservered) balance
- * is no less than the order's size.
- */
 
 class AccountTokenManagerImpl(
     val token: String,
@@ -35,8 +28,7 @@ class AccountTokenManagerImpl(
     implicit
     orderPool: AccountOrderPool,
     dustEvaluator: DustOrderEvaluator
-)
-  extends AccountTokenManager with Logging {
+) extends AccountTokenManager with Logging {
 
   case class Reservation(
       orderId: String,
@@ -152,7 +144,8 @@ class AccountTokenManagerImpl(
     val (goodOnes, badOnes) = reservations.splitAt(cursor + 1)
     reservations = goodOnes
 
-    var (accumulatedBalance, accumulatedAllowance) = getAccumulatedAtCursor()
+    var (accumulatedBalance, accumulatedAllowance) =
+      getAccumulatedAtCursor()
 
     availableBalance = balance - accumulatedBalance
     availableAllowance = allowance - accumulatedAllowance
@@ -163,9 +156,10 @@ class AccountTokenManagerImpl(
       val order = orderPool(r.orderId)
       val requestedAmount = order.requestedAmount
 
-      val status = if (availableBalance >= requestedAmount) OrderStatus.PENDING
-      else if (token == order.tokenS) OrderStatus.CANCELLED_LOW_BALANCE
-      else OrderStatus.CANCELLED_LOW_FEE_BALANCE
+      val status =
+        if (availableBalance >= requestedAmount) OrderStatus.PENDING
+        else if (token == order.tokenS) OrderStatus.CANCELLED_LOW_BALANCE
+        else OrderStatus.CANCELLED_LOW_FEE_BALANCE
 
       if (status != OrderStatus.PENDING) {
         ordersToDelete += order.id
