@@ -34,13 +34,13 @@ enum ExecutedStatus {
 }
 
 
-message RawOrderState {
+message POrderState {
     bytes amountS=1;
     bytes amountB=2;
     bytes amountFee=3;
 }
 
-message RawOrder{
+message POrder{
     string id=1;
     string tokenS=2;
     string tokenB=3;
@@ -51,26 +51,26 @@ message RawOrder{
     int64 createdAt=8;
     ExecutedStatus status=9;
     double walletSplitPercentage=10;
-    RawOrderState _outstanding=11;
-    RawOrderState _reserved=12;
-    RawOrderState _actual=13;
-    RawOrderState _matchable=14;
+    POrderState _outstanding=11;
+    POrderState _reserved=12;
+    POrderState _actual=13;
+    POrderState _matchable=14;
 }
 
 
-message RawExpectedFill {
-    RawOrder order=1;
-    RawOrderState pending=2;
+message PExpectedFill {
+    POrder order=1;
+    POrderState pending=2;
     bytes amountMargin=3;
 }
 
-message RawOrderRing {
-    RawExpectedFill maker=1;
-    RawExpectedFill taker=2;
+message POrderRing {
+    PExpectedFill maker=1;
+    PExpectedFill taker=2;
 }
 
-message RawSettlement {
-    repeated RawOrderRing rings=1;
+message PSettlement {
+    repeated POrderRing rings=1;
     int32 nonce=2;
     int64 createdAt=3;
     string txid=4;
