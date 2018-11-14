@@ -112,6 +112,9 @@ case class Order(
     )
   }
 
+  private[core] def resetMatchable() =
+    copy(_matchable = None)
+
   private def updateActual() = {
     var r = Rational(reserved.amountS, amountS)
     if (amountFee > 0) {

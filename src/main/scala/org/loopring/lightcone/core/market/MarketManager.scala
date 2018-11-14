@@ -20,16 +20,17 @@ import org.loopring.lightcone.core.data._
 
 trait MarketManager {
   val marketId: MarketId
+  val pendingRingPool: PendingRingPool
 
   case class MatchResult(
       rings: Seq[OrderRing],
-      makers: Seq[Order],
-      taker: Option[Order],
+      taker: Order,
       orderbookUpdate: Option[OrderbookUpdate]
   )
   def submitOrder(order: Order, minFiatValue: Double): MatchResult
   def deleteOrder(orderId: String): Option[OrderbookUpdate]
   def deletePendingRing(ringId: String): Option[OrderbookUpdate]
+  def getOrder(orderId: String): Option[Order]
   def getMetadata(): MarketMetadata
   def triggerMatch(
     sellOrderAsTaker: Boolean,

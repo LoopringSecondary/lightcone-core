@@ -22,6 +22,8 @@ final object OrderStatus extends Enumeration {
   val NEW = Value
   val PENDING = Value
   val EXPIRED = Value
+  val DUST_ORDER = Value
+  val PARTIALLY_FILLED = Value
   val COMPLETELY_FILLED = Value // 完全成交
   val INVALID_DATA = Value
   val UNSUPPORTED_MARKET = Value
