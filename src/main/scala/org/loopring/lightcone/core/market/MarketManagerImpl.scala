@@ -164,9 +164,8 @@ class MarketManagerImpl(
 
   // TODO
   def deleteOrder(orderId: String): Option[OrderbookUpdate] = {
-    deleteOrderInternal(orderId)
     pendingRingPool.deleteOrder(orderId)
-    None
+    deleteOrderInternal(orderId)
   }
 
   def deletePendingRing(ringId: String): Option[OrderbookUpdate] = {
