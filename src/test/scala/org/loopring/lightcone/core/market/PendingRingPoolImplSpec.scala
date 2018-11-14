@@ -136,7 +136,7 @@ class PendingRingPoolImplSpec extends OrderAwareSpec {
         pending = OrderState(amountS = 100, amountFee = 10)
       )
     )
-    pendingRingPool.removeRing(ring1.id)
+    pendingRingPool.deleteRing(ring1.id)
     assert(pendingRingPool.ringMap.size == 10)
     assert(pendingRingPool.orderMap.size == 20)
     assert(pendingRingPool.getOrderPendingAmountS("taker-1") == 100)
@@ -145,7 +145,7 @@ class PendingRingPoolImplSpec extends OrderAwareSpec {
     assert(pendingRingPool.getOrderPendingAmountS("maker-2") == 100)
 
     info("将环路全部删除")
-    pendingRingPool.removeAllRings()
+    pendingRingPool.deleteAllRings()
     assert(pendingRingPool.orderMap.isEmpty && pendingRingPool.ringMap.isEmpty)
     assert(pendingRingPool.getOrderPendingAmountS("taker-1") == 0)
   }

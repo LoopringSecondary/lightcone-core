@@ -27,12 +27,9 @@ trait MarketManager {
       taker: Option[Order],
       orderbookUpdate: Option[OrderbookUpdate]
   )
-
-  def removeRing(ringId: String, settlementSucceeded: Boolean): Boolean
-
   def submitOrder(order: Order, minFiatValue: Double): MatchResult
   def deleteOrder(orderId: String): Option[OrderbookUpdate]
-  def deletePendingRing(ring: OrderRing): Option[OrderbookUpdate]
+  def deletePendingRing(ringId: String): Option[OrderbookUpdate]
   def getMetadata(): MarketMetadata
   def triggerMatch(
     sellOrderAsTaker: Boolean,
