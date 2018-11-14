@@ -19,7 +19,7 @@ package org.loopring.lightcone.core.data
 import java.math.{ MathContext, RoundingMode }
 import scala.math._
 
-object Rational {
+private[core] object Rational {
   val MaxIntValue = Rational(Integer.MAX_VALUE)
   val MaxDoubleValue = BigDecimal(Double.MaxValue)
 
@@ -41,7 +41,7 @@ object Rational {
     new Rational(BigInt(numerator), BigInt(1))
 }
 
-class Rational(numerator: BigInt, denominator: BigInt)
+private[core] class Rational(numerator: BigInt, denominator: BigInt)
   extends ScalaNumber
   with ScalaNumericConversions
   with Serializable

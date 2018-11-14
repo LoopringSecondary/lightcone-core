@@ -54,6 +54,10 @@ class MarketManagerImpl(
   import OrderStatus._
 
   private implicit val ordering = defaultOrdering()
+
+  private var isLastTakerSell = false
+  private var lastPrice: Double = 0
+
   private[core] val bids = SortedSet.empty[Order] // order.tokenS == marketId.primary
   private[core] val asks = SortedSet.empty[Order] // order.tokenS == marketId.secondary
   private[core] val orderMap = MMap.empty[String, Order]
@@ -97,7 +101,7 @@ class MarketManagerImpl(
     if (dustOrderEvaluator.isOriginalDust(order)) {
       MatchResult(Nil, order.copy(status = DUST_ORDER), None)
     } else if (dustOrderEvaluator.isActualDust(order)) {
-      MatchResult(Nil, order.copy(status = PENDING), None)
+      MatchResult(Nil, order.copy(status = COMPLETELY_FILLED), None)
     } else {
       var taker = order.copy(status = PENDING)
       var rings = Seq.empty[OrderRing]
@@ -137,6 +141,7 @@ class MarketManagerImpl(
                 recursivelyMatchOrders()
 
               case Right(ring) ⇒
+                isLastTakerSell = (taker.tokenS == marketId.secondary)
                 rings +:= ring
                 pendingRingPool.addRing(ring)
                 recursivelyMatchOrders()
@@ -172,14 +177,14 @@ class MarketManagerImpl(
 
   // TODO(dongw)
   def getMetadata() = MarketMetadata(
-    numBuys = 0,
-    numSells = 0,
+    numBuys = bids.size,
+    numSells = asks.size,
     numHiddenBuys = 0,
     numHiddenSells = 0,
-    bestBuyPrice = None,
-    bestSellPrice = None,
-    lastPrice = None,
-    isLastTakerSell = false
+    bestBuyPrice = 0.0,
+    bestSellPrice = 0.0,
+    lastPrice = 0.0,
+    isLastTakerSell = isLastTakerSell
   )
 
   // Add an order to its side.
