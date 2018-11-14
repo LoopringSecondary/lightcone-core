@@ -18,7 +18,7 @@ package org.loopring.lightcone.core.market
 
 import org.loopring.lightcone.core.data._
 import org.loopring.lightcone.core.depth._
-import org.loopring.lightcone.core.base.DustOrderEvaluator
+import org.loopring.lightcone.core.base._
 
 import org.slf4s.Logging
 import scala.annotation.tailrec
@@ -47,7 +47,7 @@ class MarketManagerImpl(
     val ringMatcher: RingMatcher
 )(
     implicit
-    pendingRingPool: PendingRingPool,
+    time: TimeProvider,
     dustOrderEvaluator: DustOrderEvaluator
 ) extends MarketManager with Logging {
 
@@ -59,7 +59,8 @@ class MarketManagerImpl(
   private[core] val bids = SortedSet.empty[Order] // order.tokenS == marketId.primary
   private[core] val asks = SortedSet.empty[Order] // order.tokenS == marketId.secondary
   private[core] val orderMap = MMap.empty[String, Order]
-  private[core] val aggregator = new OrderbookAggregator(config.priceDecimals)
+  val aggregator = new OrderbookAggregator(config.priceDecimals)
+  val pendingRingPool: PendingRingPool = new PendingRingPoolImpl
 
   private[core] val sides = Map(
     marketId.primary -> bids,

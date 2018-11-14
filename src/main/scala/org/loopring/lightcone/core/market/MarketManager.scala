@@ -20,6 +20,7 @@ import org.loopring.lightcone.core.data._
 
 trait MarketManager {
   val marketId: MarketId
+  val pendingRingPool: PendingRingPool
 
   case class MatchResult(
       rings: Seq[OrderRing],
