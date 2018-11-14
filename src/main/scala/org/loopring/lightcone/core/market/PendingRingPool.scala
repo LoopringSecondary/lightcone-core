@@ -23,10 +23,11 @@ import org.slf4s.Logging
 
 trait PendingRingPool {
   def getOrderPendingAmountS(orderId: String): BigInt
-  def hasRing(ringId: String): Boolean
 
+  def deleteOrder(orderId: String): Unit
+  def hasRing(ringId: String): Boolean
   def addRing(ring: OrderRing): Unit
-  def removeRing(ringId: String): Unit
+  def removeRing(ringId: String): Boolean
   def removeAllRings(): Unit
   def removeRingsBefore(timestamp: Long): Unit
   def removeRingsOlderThan(age: Long): Unit
@@ -50,10 +51,13 @@ class PendingRingPoolImpl()(
       ringIds ++ another.ringIds
     )
 
-    def -(another: OrderInfo) = OrderInfo(
-      pendingAmountS - another.pendingAmountS,
-      ringIds -- another.ringIds
-    )
+    def -(another: OrderInfo) = {
+      val newPendingAmountS = pendingAmountS - another.pendingAmountS
+      OrderInfo(
+        if (newPendingAmountS > 0) newPendingAmountS else 0,
+        ringIds -- another.ringIds
+      )
+    }
 
   }
 
@@ -70,6 +74,8 @@ class PendingRingPoolImpl()(
 
   def getOrderPendingAmountS(orderId: String): BigInt =
     orderMap.get(orderId).map(_.pendingAmountS).getOrElse(0)
+
+  def deleteOrder(orderId: String) = { orderMap -= orderId }
 
   def hasRing(ringId: String) = ringMap.contains(ringId)
 
@@ -89,10 +95,13 @@ class PendingRingPoolImpl()(
     }
   }
 
-  def removeRing(ringId: String) = ringMap.get(ringId) foreach { ringInfo ⇒
-    ringMap -= ringId
-    decrementPendingAmountS(ringId, ringInfo.takerId, ringInfo.takerPendingAmountS)
-    decrementPendingAmountS(ringId, ringInfo.makerId, ringInfo.makerPendingAmountS)
+  def removeRing(ringId: String) = ringMap.get(ringId) match {
+    case Some(ringInfo) ⇒
+      ringMap -= ringId
+      decrementPendingAmountS(ringId, ringInfo.takerId, ringInfo.takerPendingAmountS)
+      decrementPendingAmountS(ringId, ringInfo.makerId, ringInfo.makerPendingAmountS)
+      true
+    case None ⇒ false
   }
 
   def removeAllRings() {

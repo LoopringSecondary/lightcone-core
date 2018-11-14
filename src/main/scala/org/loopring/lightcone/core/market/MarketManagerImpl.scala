@@ -66,10 +66,13 @@ class MarketManagerImpl(
     marketId.secondary -> asks
   )
 
+  def removeRing(ringId: String, settlementSucceeded: Boolean) =
+    pendingRingPool.removeRing(ringId)
+
   def submitOrder(order: Order, minFiatValue: Double = 0): MatchResult = {
     // Allow re-submission of an existing order. In such case, we need to remove the original
     // copy of the order first.
-    deleteOrder(order.id)
+    deleteOrderInternal(order.id)
 
     val res = matchOrders(order, minFiatValue)
 
@@ -164,6 +167,12 @@ class MarketManagerImpl(
 
   // TODO
   def deleteOrder(orderId: String): Option[OrderbookUpdate] = {
+    deleteOrderInternal(orderId)
+    pendingRingPool.deleteOrder(orderId)
+    None
+  }
+
+  private def deleteOrderInternal(orderId: String): Option[OrderbookUpdate] = {
     orderMap.get(orderId) match {
       case None ⇒ None
       case Some(order) ⇒
