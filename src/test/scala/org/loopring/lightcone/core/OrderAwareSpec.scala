@@ -73,56 +73,56 @@ trait OrderAwareSpec extends CommonSpec {
   }
 
   def sellLRC(
-    amountS: Long,
-    amountB: Long,
-    amountFee: Long = 0
+    amountS: BigInt,
+    amountB: BigInt,
+    amountFee: BigInt = 0
   ) = newOrder(LRC, WETH, LRC, amountS, amountB, amountFee)
 
   def buyLRC(
-    amountS: Long,
-    amountB: Long,
-    amountFee: Long = 0
+    amountS: BigInt,
+    amountB: BigInt,
+    amountFee: BigInt = 0
   ) = newOrder(WETH, LRC, LRC, amountS, amountB, amountFee)
 
   def sellDAI(
-    amountS: Long,
-    amountB: Long,
-    amountFee: Long = 0
+    amountS: BigInt,
+    amountB: BigInt,
+    amountFee: BigInt = 0
   ) = newOrder(DAI, WETH, LRC, amountS, amountB, amountFee)
 
   def buyDAI(
-    amountS: Long,
-    amountB: Long,
-    amountFee: Long = 0
+    amountS: BigInt,
+    amountB: BigInt,
+    amountFee: BigInt = 0
   ) = newOrder(WETH, DAI, LRC, amountS, amountB, amountFee)
 
   def sellGTO(
-    amountS: Long,
-    amountB: Long,
-    amountFee: Long = 0
+    amountS: BigInt,
+    amountB: BigInt,
+    amountFee: BigInt = 0
   ) = newOrder(GTO, WETH, LRC, amountS, amountB, amountFee)
 
   def buyGTO(
-    amountS: Long,
-    amountB: Long,
-    amountFee: Long = 0
+    amountS: BigInt,
+    amountB: BigInt,
+    amountFee: BigInt = 0
   ) = newOrder(WETH, GTO, LRC, amountS, amountB, amountFee)
 
   def newOrder(
     tokenS: String,
     tokenB: String,
     tokenFee: String,
-    amountS: Long,
-    amountB: Long,
-    amountFee: Long = 0
+    amountS: BigInt,
+    amountB: BigInt,
+    amountFee: BigInt = 0
   ) = Order(
     rand.nextLong().toString,
     tokenS,
     tokenB,
     tokenFee,
-    BigInt(amountS),
-    BigInt(amountB),
-    BigInt(amountFee)
+    amountS,
+    amountB,
+    amountFee
   )
 
   def orderState(
@@ -149,6 +149,8 @@ trait OrderAwareSpec extends CommonSpec {
   def resetUpdatedOrders() {
     updatedOrders = Map.empty[String, Order]
   }
+
+  implicit def longToBigInt(l: Long) = BigInt(l)
 
   implicit class richOrder(order: Order) {
     def !() = order.copy(_matchable = Some(order.original))

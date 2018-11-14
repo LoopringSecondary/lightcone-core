@@ -29,8 +29,6 @@ trait RingMatcher {
   ): Either[MatchingFailure, OrderRing]
 }
 
-//TODO(hongyu): what if an order's tokenB is 0?
-
 class RingMatcherImpl()(
     implicit
     ringIncomeEstimator: RingIncomeEstimator
@@ -49,7 +47,15 @@ class RingMatcherImpl()(
   }
 
   private def makeRing(maker: Order, taker: Order): Option[OrderRing] = {
-    if (maker.amountS * taker.amountS < maker.amountB * taker.amountB) {
+    if (maker.amountS * taker.amountS < maker.amountB * taker.amountB ||
+      maker.amountB.signum <= 0 ||
+      taker.amountB.signum <= 0 ||
+      maker._matchable.isEmpty ||
+      taker._matchable.isEmpty ||
+      maker.matchable.amountB <= 0 ||
+      taker.matchable.amountB <= 0 ||
+      maker.matchable.amountS <= 0 ||
+      taker.matchable.amountS <= 0) {
       None
     } else {
       /*合约逻辑：
@@ -88,8 +94,8 @@ class RingMatcherImpl()(
       val makerFee = maker.matchable.amountFee * makerVolume.amountS / maker.matchable.amountS
       val takerFee = taker.matchable.amountFee * takerVolume.amountS / taker.matchable.amountS
 
-      val makerMargin = (makerVolume.amountS - takerVolume.amountB).max(BigInt(0))
-      val takerMargin = (takerVolume.amountS - makerVolume.amountB).max(BigInt(0))
+      val makerMargin = makerVolume.amountS - takerVolume.amountB
+      val takerMargin = takerVolume.amountS - makerVolume.amountB
 
       val ring = OrderRing(
         maker = ExpectedFill(

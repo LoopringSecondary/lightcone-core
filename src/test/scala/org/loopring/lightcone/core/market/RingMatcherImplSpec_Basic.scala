@@ -54,7 +54,6 @@ class RingMatcherImplSpec_Basic extends OrderAwareSpec {
     ) should be(Left(ORDERS_NOT_TRADABLE))
   }
 
-  // TODO(hongyu): fix test failure
   "RingMatcherImpl" should "not match orders if one of them has tokenS as 0 " in {
     matcher.matchOrders(
       sellDAI(0, 10)!,

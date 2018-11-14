@@ -45,5 +45,11 @@ class TokenMetadataManager(defaultBurnRate: Double = 0.2) {
 
   def getBurnRate(token: String) =
     tokens.get(token).map(_.burnRate).getOrElse(defaultBurnRate)
+
+  def updateBurnRate(token: String, rate: Double) =
+    tokens.get(token) match {
+      case Some(meta) ⇒ tokens += token → meta.copy(burnRate = rate)
+      case None       ⇒
+    }
 }
 
