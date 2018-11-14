@@ -21,14 +21,8 @@ import org.web3j.utils.Numeric
 
 package object data {
   implicit class RichBigInt(this_ : BigInt) {
-    def ÷(that: BigInt): Double = (BigDecimal(this_) / BigDecimal(that)).toDouble
-    def ×(d: Double): BigInt = (BigDecimal(this_) * BigDecimal(d)).toBigInt
     def min(that: BigInt): BigInt = if (this_ < that) this_ else that
     def max(that: BigInt): BigInt = if (this_ > that) this_ else that
-  }
-
-  implicit class RichDouble(d: Double) {
-    def scaled(s: Int) = BigDecimal(d).setScale(s, BigDecimal.RoundingMode.HALF_UP).toDouble
   }
 
   implicit def rational2BigInt(r: Rational) = r.bigintValue
@@ -41,16 +35,24 @@ package object data {
       raw: OrderRing
   ) {
     // Switching maker and taker should have the same id.
-    lazy val id: String = {
-      val hash = BigInt(Hash.sha3(raw.maker.id.getBytes)) ^ BigInt(Hash.sha3(raw.taker.id.getBytes()))
+    def id(): String = {
+      val hash = BigInt(Hash.sha3(raw.maker.id.getBytes)) ^
+        BigInt(Hash.sha3(raw.taker.id.getBytes()))
       Numeric.toHexString(hash.toByteArray)
     }
 
     //中间价格，可以在显示深度价格时使用,简单的中间价
     //根据计价token来计算中间价格
     def middleRate(feeToken: String): Double = {
-      val makerSellPrice = Rational(raw.maker.order.amountS, raw.maker.order.amountB).doubleValue()
-      val takerSellPrice = Rational(raw.taker.order.amountS, raw.taker.order.amountB).doubleValue()
+      val makerSellPrice = Rational(
+        raw.maker.order.amountS,
+        raw.maker.order.amountB
+      ).doubleValue()
+
+      val takerSellPrice = Rational(
+        raw.taker.order.amountS,
+        raw.taker.order.amountB
+      ).doubleValue()
 
       val productPrice = takerSellPrice * makerSellPrice
       val rateOfPrice = math.pow(productPrice, 0.5)

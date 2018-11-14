@@ -100,8 +100,10 @@ class MarketManagerImpl(
   private[core] def matchOrders(order: Order, minFiatValue: Double): MatchResult = {
     if (dustOrderEvaluator.isOriginalDust(order)) {
       MatchResult(Nil, order.copy(status = DUST_ORDER), None)
+
     } else if (dustOrderEvaluator.isActualDust(order)) {
       MatchResult(Nil, order.copy(status = COMPLETELY_FILLED), None)
+
     } else {
       var taker = order.copy(status = PENDING)
       var rings = Seq.empty[OrderRing]

@@ -4,60 +4,6 @@ option java_multiple_files = true;
 option java_package = "org.loopring.lightcone.core";
 package org.loopring.lightcone.core;
 
-
-// For ABC/XYZ market, ABC is secondary, XYZ is primary
-message MarketId {
-    string primary=1;
-    string secondary=2;
-}
-
-message MarketMetadata {
-    int32 numBuys=1;
-    int32 numSells=2;
-    int32 numHiddenBuys=3;
-    int32 numHiddenSells=4;
-    double bestBuyPrice=5;
-    double bestSellPrice=6;
-    double lastPrice=7;
-    bool isLastTakerSell=8;
-}
-
-message OrderbookSlot {
-    int64 slot=1;
-    double amount=2;
-    double total=3;
-}
-
-message OrderbookItem {
-    string price=1;
-    string amount=2;
-    string total=3;
-}
-
-message Orderbook {
-    repeated OrderbookItem sells=1;
-    repeated OrderbookItem buys=2;
-}
-
-message OrderbookConfig {
-    int32 levels=1;
-    int32 priceDecimals=2;
-    int32 precisionForAmount=3;
-    int32 precisionForTotal=4;
-}
-
-message OrderbookUpdate {
-    repeated OrderbookSlot sells=1;
-    repeated OrderbookSlot buys=2;
-}
-
-message TokenMetadata {
-    string address=1;
-    int32 decimals=2;
-    double burnRate=3;
-    double currentPrice=4;
-}
-
 enum MatchingFailure {
     NO_ERROR = 0;
     ORDERS_NOT_TRADABLE = 1;
@@ -81,8 +27,114 @@ enum OrderStatus {
     CANCELLED_TOO_MANY_FAILED_SETTLEMENTS = 12;
 }
 
-enum ExecutedStatus {
+enum ExecutionStatus {
     UNKNOWN = 0;
     FAILED = 1;
     SUCCEEDED = 2;
 }
+
+
+message POrderState {
+    bytes amountS = 1;
+    bytes amountB = 2;
+    bytes amountFee = 3;
+}
+
+message POrder{
+    string id = 1;
+    string tokenS = 2;
+    string tokenB = 3;
+    string tokenFee = 4;
+    bytes amountS = 5;
+    bytes amountB = 6;
+    bytes amountFee = 7;
+    int64 createdAt = 8;
+    ExecutionStatus status = 9;
+    double walletSplitPercentage = 10;
+    POrderState _outstanding = 11;
+    POrderState _reserved = 12;
+    POrderState _actual = 13;
+    POrderState _matchable = 14;
+}
+
+
+message PExpectedFill {
+    POrder order = 1;
+    POrderState pending = 2;
+    bytes amountMargin = 3;
+}
+
+message POrderRing {
+    PExpectedFill maker = 1;
+    PExpectedFill taker = 2;
+}
+
+message PSettlement {
+    repeated POrderRing rings = 1;
+    int32 nonce = 2;
+    int64 createdAt = 3;
+    string txid = 4;
+    int64 committedAt = 5;
+    int64 confirmedBlock = 6;
+}
+
+
+// For ABC/XYZ market, ABC is secondary, XYZ is primary
+message MarketId {
+    string primary = 1;
+    string secondary = 2;
+}
+
+message MarketManagerConfig {
+    int32 maxNumbersOfOrders = 1;
+    int32 priceDecimals = 2;
+}
+
+message MarketMetadata {
+    int32 numBuys = 1;
+    int32 numSells = 2;
+    int32 numHiddenBuys = 3;
+    int32 numHiddenSells = 4;
+    double bestBuyPrice = 5;
+    double bestSellPrice = 6;
+    double lastPrice = 7;
+    bool isLastTakerSell = 8;
+}
+
+message OrderbookSlot {
+    int64 slot = 1;
+    double amount = 2;
+    double total = 3;
+}
+
+message OrderbookItem {
+    string price = 1;
+    string amount = 2;
+    string total = 3;
+}
+
+message Orderbook {
+    repeated OrderbookItem sells = 1;
+    repeated OrderbookItem buys = 2;
+}
+
+message OrderbookConfig {
+    int32 levels = 1;
+    int32 priceDecimals = 2;
+    int32 precisionForAmount = 3;
+    int32 precisionForTotal = 4;
+}
+
+message OrderbookUpdate {
+    repeated OrderbookSlot sells = 1;
+    repeated OrderbookSlot buys = 2;
+}
+
+message TokenMetadata {
+    string address = 1;
+    int32 decimals = 2;
+    double burnRate = 3;
+    double currentPrice = 4;
+}
+
+

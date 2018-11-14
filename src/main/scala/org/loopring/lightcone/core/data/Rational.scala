@@ -48,7 +48,10 @@ private[core] class Rational(numerator: BigInt, denominator: BigInt)
   with Ordered[Rational] {
 
   require(denominator.signum != 0)
-  private val gcd = if (numerator.signum == 0) BigInt(1) else numerator gcd denominator
+
+  private val gcd =
+    if (numerator.signum == 0) BigInt(1)
+    else numerator gcd denominator
 
   val num: BigInt = numerator / gcd
   val denom: BigInt = denominator / gcd

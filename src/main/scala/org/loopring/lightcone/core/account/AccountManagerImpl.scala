@@ -25,7 +25,8 @@ final private[core] class AccountManagerImpl()(
 ) extends AccountManager with Logging {
   import OrderStatus._
 
-  private[core] implicit var tokens = Map.empty[String, AccountTokenManager]
+  private[core] implicit var tokens =
+    Map.empty[String, AccountTokenManager]
 
   def hasTokenManager(token: String): Boolean = {
     tokens.contains(token)
@@ -47,7 +48,8 @@ final private[core] class AccountManagerImpl()(
       return false
     }
 
-    if (!tokens.contains(order.tokenS) || !tokens.contains(order.tokenFee)) {
+    if (!tokens.contains(order.tokenS) ||
+      !tokens.contains(order.tokenFee)) {
       orderPool += order.as(UNSUPPORTED_MARKET)
       return false
     }
@@ -94,8 +96,11 @@ final private[core] class AccountManagerImpl()(
   }
 
   implicit private class MagicOrder(order: Order) {
-    def callOnTokenS[R](method: AccountTokenManager ⇒ R) = method(tokens(order.tokenS))
-    def callOnTokenFee[R](method: AccountTokenManager ⇒ R) = method(tokens(order.tokenFee))
+    def callOnTokenS[R](method: AccountTokenManager ⇒ R) =
+      method(tokens(order.tokenS))
+
+    def callOnTokenFee[R](method: AccountTokenManager ⇒ R) =
+      method(tokens(order.tokenFee))
 
     // 删除订单应该有以下几种情况:
     // 1.用户主动删除订单

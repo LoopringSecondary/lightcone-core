@@ -20,10 +20,8 @@ import org.loopring.lightcone.core.data._
 import org.loopring.lightcone.core.data.MatchingFailure._
 import org.slf4s.Logging
 
-class RingMatcherImpl()(
-    implicit
-    ringIncomeEstimator: RingIncomeEstimator
-) extends RingMatcher with Logging {
+class RingMatcherImpl()(implicit rie: RingIncomeEstimator)
+  extends RingMatcher with Logging {
 
   def matchOrders(
     taker: Order,
@@ -31,7 +29,7 @@ class RingMatcherImpl()(
     minFiatValue: Double = 0
   ): Either[MatchingFailure, OrderRing] = {
     makeRing(maker, taker) match {
-      case Some(ring) if ringIncomeEstimator.isProfitable(ring, minFiatValue) ⇒ Right(ring)
+      case Some(ring) if rie.isProfitable(ring, minFiatValue) ⇒ Right(ring)
       case Some(ring) ⇒ Left(INCOME_TOO_SMALL)
       case None ⇒ Left(ORDERS_NOT_TRADABLE)
     }
@@ -60,41 +58,48 @@ class RingMatcherImpl()(
         if (taker.matchable.amountS > maker.matchable.amountB) {
           (
             OrderState(
-              amountS = maker.matchable.amountS,
-              amountB = maker.matchable.amountB
+              maker.matchable.amountS,
+              maker.matchable.amountB
             ),
-            OrderState(
-              amountS = maker.matchable.amountB,
-              amountB = Rational(maker.matchable.amountB) * Rational(taker.amountB, taker.amountS)
-            )
+              OrderState(
+                maker.matchable.amountB,
+                Rational(maker.matchable.amountB) *
+                  Rational(taker.amountB, taker.amountS)
+              )
           )
         } else {
           (
             OrderState(
-              amountS = taker.matchable.amountB,
-              amountB = Rational(taker.matchable.amountB) * Rational(maker.amountB, maker.amountS)
+              taker.matchable.amountB,
+              Rational(taker.matchable.amountB) *
+                Rational(maker.amountB, maker.amountS)
             ),
-            OrderState(
-              amountS = taker.matchable.amountS,
-              amountB = taker.matchable.amountB
-            )
+              OrderState(
+                taker.matchable.amountS,
+                taker.matchable.amountB
+              )
           )
         }
 
       //fee 按照卖出的比例计算
-      val makerFee = maker.matchable.amountFee * makerVolume.amountS / maker.matchable.amountS
-      val takerFee = taker.matchable.amountFee * takerVolume.amountS / taker.matchable.amountS
+      val makerFee = maker.matchable.amountFee *
+        makerVolume.amountS /
+        maker.matchable.amountS
+
+      val takerFee = taker.matchable.amountFee *
+        takerVolume.amountS /
+        taker.matchable.amountS
 
       val makerMargin = makerVolume.amountS - takerVolume.amountB
       val takerMargin = takerVolume.amountS - makerVolume.amountB
 
-      val ring = OrderRing(
+      Some(OrderRing(
         maker = ExpectedFill(
           order = maker.copy(
             _matchable = Some(OrderState(
-              amountS = maker.matchable.amountS - makerVolume.amountS,
-              amountB = maker.matchable.amountB - makerVolume.amountB,
-              amountFee = maker.matchable.amountFee - makerFee
+              maker.matchable.amountS - makerVolume.amountS,
+              maker.matchable.amountB - makerVolume.amountB,
+              maker.matchable.amountFee - makerFee
             ))
           ),
           pending = makerVolume.copy(amountFee = makerFee),
@@ -103,19 +108,15 @@ class RingMatcherImpl()(
         taker = ExpectedFill(
           order = taker.copy(
             _matchable = Some(OrderState(
-              amountS = taker.matchable.amountS - takerVolume.amountS,
-              amountB = taker.matchable.amountB - takerVolume.amountB,
-              amountFee = taker.matchable.amountFee - takerFee
+              taker.matchable.amountS - takerVolume.amountS,
+              taker.matchable.amountB - takerVolume.amountB,
+              taker.matchable.amountFee - takerFee
             ))
           ),
           pending = takerVolume.copy(amountFee = takerFee),
           amountMargin = takerMargin
         )
-      )
-
-      // log.debug(s"makeRing: ${ring}")
-
-      Some(ring)
+      ))
     }
   }
 }
