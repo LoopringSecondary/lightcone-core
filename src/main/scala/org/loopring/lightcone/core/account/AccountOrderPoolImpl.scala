@@ -19,7 +19,9 @@ import org.loopring.lightcone.core.data._
 
 import org.slf4s.Logging
 
-class AccountOrderPoolImpl extends AccountOrderPoolWithUpdatedOrdersTracing with Logging {
+class AccountOrderPoolImpl()
+  extends AccountOrderPoolWithUpdatedOrdersTracing
+  with Logging {
 
   private var callbacks = Set.empty[Callback]
   private[account] var orderMap = Map.empty[String, Order]

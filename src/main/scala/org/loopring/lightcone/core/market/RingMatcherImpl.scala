@@ -20,10 +20,8 @@ import org.loopring.lightcone.core.data._
 import org.loopring.lightcone.core.data.MatchingFailure._
 import org.slf4s.Logging
 
-class RingMatcherImpl()(
-    implicit
-    ringIncomeEstimator: RingIncomeEstimator
-) extends RingMatcher with Logging {
+class RingMatcherImpl()(implicit rie: RingIncomeEstimator)
+  extends RingMatcher with Logging {
 
   def matchOrders(
     taker: Order,
@@ -31,7 +29,7 @@ class RingMatcherImpl()(
     minFiatValue: Double = 0
   ): Either[MatchingFailure, OrderRing] = {
     makeRing(maker, taker) match {
-      case Some(ring) if ringIncomeEstimator.isProfitable(ring, minFiatValue) ⇒ Right(ring)
+      case Some(ring) if rie.isProfitable(ring, minFiatValue) ⇒ Right(ring)
       case Some(ring) ⇒ Left(INCOME_TOO_SMALL)
       case None ⇒ Left(ORDERS_NOT_TRADABLE)
     }

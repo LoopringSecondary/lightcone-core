@@ -47,10 +47,9 @@ object PendingRingPoolImpl {
   )
 }
 
-class PendingRingPoolImpl()(
-    implicit
-    time: TimeProvider
-) extends PendingRingPool with Logging {
+class PendingRingPoolImpl()(implicit time: TimeProvider)
+  extends PendingRingPool with Logging {
+
   import PendingRingPoolImpl._
 
   private[core] var orderMap = Map.empty[String, OrderInfo]
@@ -69,8 +68,18 @@ class PendingRingPoolImpl()(
     ringMap.get(ringId) match {
       case Some(ringInfo) ⇒
         ringMap -= ringId
-        decrementOrderPendingAmountS(ringInfo.takerId, ringId, ringInfo.takerPendingAmountS)
-        decrementOrderPendingAmountS(ringInfo.makerId, ringId, ringInfo.makerPendingAmountS)
+
+        decrementOrderPendingAmountS(
+          ringInfo.takerId,
+          ringId,
+          ringInfo.takerPendingAmountS
+        )
+
+        decrementOrderPendingAmountS(
+          ringInfo.makerId,
+          ringId,
+          ringInfo.makerPendingAmountS
+        )
         true
       case None ⇒ false
     }
@@ -82,13 +91,24 @@ class PendingRingPoolImpl()(
       case Some(_) ⇒
       case None ⇒
         ringMap += ring.id -> RingInfo(
-          ring.taker.id, ring.taker.pending.amountS,
-          ring.maker.id, ring.maker.pending.amountS,
+          ring.taker.id,
+          ring.taker.pending.amountS,
+          ring.maker.id,
+          ring.maker.pending.amountS,
           time.getCurrentTimeMillis()
         )
 
-        incrementOrderPendingAmountS(ring.taker.id, ring.id, ring.taker.pending.amountS)
-        incrementOrderPendingAmountS(ring.maker.id, ring.id, ring.maker.pending.amountS)
+        incrementOrderPendingAmountS(
+          ring.taker.id,
+          ring.id,
+          ring.taker.pending.amountS
+        )
+
+        incrementOrderPendingAmountS(
+          ring.maker.id,
+          ring.id,
+          ring.maker.pending.amountS
+        )
 
       // log.debug("pending_orders: " + orderMap.mkString("\n\t"))
     }
@@ -112,7 +132,11 @@ class PendingRingPoolImpl()(
   }.keys.foreach(deleteRing)
 
   // Private methods
-  private def decrementOrderPendingAmountS(orderId: String, ringId: String, pendingAmountS: BigInt) = {
+  private def decrementOrderPendingAmountS(
+    orderId: String,
+    ringId: String,
+    pendingAmountS: BigInt
+  ) = {
     orderMap.get(orderId) foreach { orderInfo ⇒
       val updated = orderInfo - OrderInfo(pendingAmountS, Set(ringId))
       if (updated.pendingAmountS <= 0) orderMap -= orderId
@@ -120,7 +144,11 @@ class PendingRingPoolImpl()(
     }
   }
 
-  def incrementOrderPendingAmountS(orderId: String, ringId: String, pendingAmountS: BigInt) = {
+  def incrementOrderPendingAmountS(
+    orderId: String,
+    ringId: String,
+    pendingAmountS: BigInt
+  ) = {
     orderMap += orderId ->
       (orderMap.getOrElse(orderId, OrderInfo()) +
         OrderInfo(pendingAmountS, Set(ringId)))

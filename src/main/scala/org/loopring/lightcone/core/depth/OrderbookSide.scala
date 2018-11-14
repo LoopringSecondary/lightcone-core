@@ -55,7 +55,9 @@ private[depth] trait OrderbookSide {
     replace(OrderbookSlot(getSlotForPriceId(price), amount, total))
 
   def increase(slot: OrderbookSlot): Unit = adjustInternal(slot, _ + _)
+
   def decrease(slot: OrderbookSlot): Unit = adjustInternal(slot, _ - _)
+
   def replace(slot: OrderbookSlot): Unit =
     adjustInternal(slot, (old: OrderbookSlot, new_ : OrderbookSlot) ⇒ new_)
 
@@ -88,7 +90,8 @@ private[depth] trait OrderbookSide {
     slotMap = SortedMap.empty
     updatedSlots = Map.empty
   }
-  def getSlots(num: Int): Seq[OrderbookSlot] = slotMap.take(num).values.toList
+  def getSlots(num: Int): Seq[OrderbookSlot] =
+    slotMap.take(num).values.toList
 
   def takeUpdatedSlots(): Seq[OrderbookSlot] = {
     if (!maintainUpdatedSlots) {

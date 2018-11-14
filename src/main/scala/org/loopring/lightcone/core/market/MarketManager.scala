@@ -27,6 +27,7 @@ trait MarketManager {
       taker: Order,
       orderbookUpdate: Option[OrderbookUpdate]
   )
+
   def submitOrder(order: Order, minFiatValue: Double): MatchResult
   def deleteOrder(orderId: String): Option[OrderbookUpdate]
   def deletePendingRing(ringId: String): Option[OrderbookUpdate]

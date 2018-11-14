@@ -39,10 +39,16 @@ final class RingIncomeEstimatorImpl()(
 
   private def getExpectedFillIncomeFiatValue(fill: ExpectedFill) = {
 
-    val (order, pending, amountMargin) = (fill.order, fill.pending, fill.amountMargin)
+    val (order, pending, amountMargin) =
+      (fill.order, fill.pending, fill.amountMargin)
 
-    val rate = (1 - order.walletSplitPercentage) * (1 - tmm.getBurnRate(order.tokenFee))
-    val fiatFee = rate * tve.getEstimatedValue(order.tokenFee, pending.amountFee)
+    val rate = (1 - order.walletSplitPercentage) *
+      (1 - tmm.getBurnRate(order.tokenFee))
+
+    val fiatFee = rate * tve.getEstimatedValue(
+      order.tokenFee,
+      pending.amountFee
+    )
 
     // when we do not know the price of tokenS, try to use tokenB's price to calculate
     // the price.
@@ -50,8 +56,10 @@ final class RingIncomeEstimatorImpl()(
       if (tmm.hasToken(order.tokenS)) {
         tve.getEstimatedValue(order.tokenS, amountMargin)
       } else {
-        val amountBMargin = Rational(amountMargin * order.amountS, order.amountB).bigintValue()
-        tve.getEstimatedValue(order.tokenB, amountBMargin)
+        tve.getEstimatedValue(
+          order.tokenB,
+          Rational(amountMargin * order.amountS, order.amountB)
+        )
       }
     fiatFee + fiatMargin
   }

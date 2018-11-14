@@ -72,11 +72,13 @@ class OrderbookManager(config: OrderbookConfig) {
     }
 
     trait ConverstionSupport { self: OrderbookSide ⇒
-      private def slotToItem(slot: OrderbookSlot) = OrderbookItem(
-        priceFormat.format(slot.slot / priceScaling),
-        amountFormat.format(slot.amount),
-        totalFormat.format(slot.total)
-      )
+      private def slotToItem(slot: OrderbookSlot) =
+        OrderbookItem(
+          priceFormat.format(slot.slot / priceScaling),
+          amountFormat.format(slot.amount),
+          totalFormat.format(slot.total)
+        )
+
       def getDepth(num: Int): Seq[OrderbookItem] =
         getSlots(num)
           .filter(_.slot != 0)

@@ -71,7 +71,9 @@ case class Order(
     } else if (token == tokenS && tokenFee != tokenS) {
       outstanding.amountS
     } else if (token != tokenS && tokenFee == tokenB) {
-      if (outstanding.amountFee > outstanding.amountB) outstanding.amountFee - outstanding.amountB else 0
+      if (outstanding.amountFee > outstanding.amountB)
+        outstanding.amountFee - outstanding.amountB
+      else 0
     } else {
       outstanding.amountFee
     }
@@ -92,13 +94,21 @@ case class Order(
     if (token == tokenS && tokenFee == tokenS) {
       val r = Rational(amountS, amountFee + amountS)
       val reservedAmountS = (Rational(v) * r).bigintValue()
-      copy(_reserved = Some(OrderState(reservedAmountS, 0, v - reservedAmountS))).updateActual()
+      copy(_reserved = Some(
+        OrderState(reservedAmountS, 0, v - reservedAmountS)
+      )).updateActual()
     } else if (token == tokenS && tokenFee != tokenS) {
-      copy(_reserved = Some(OrderState(v, 0, reserved.amountFee))).updateActual()
+      copy(_reserved = Some(
+        OrderState(v, 0, reserved.amountFee)
+      )).updateActual()
     } else if (token != tokenS && tokenFee == tokenB) {
-      copy(_reserved = Some(OrderState(reserved.amountS, 0, v))).updateActual()
+      copy(_reserved = Some(
+        OrderState(reserved.amountS, 0, v)
+      )).updateActual()
     } else {
-      copy(_reserved = Some(OrderState(reserved.amountS, 0, v))).updateActual()
+      copy(_reserved = Some(
+        OrderState(reserved.amountS, 0, v)
+      )).updateActual()
     }
 
   // Private methods

@@ -25,7 +25,9 @@ class TokenValueEstimator()(implicit tmm: TokenMetadataManager) {
       case None ⇒ 0
       case Some(metadata) ⇒
         val scaling = Math.pow(10, metadata.decimals)
-        (Rational(metadata.currentPrice) * Rational(amount) / Rational(scaling)).doubleValue
+        (Rational(metadata.currentPrice) *
+          Rational(amount) /
+          Rational(scaling)).doubleValue
     }
   }
 }
