@@ -14,36 +14,27 @@
  * limitations under the License.
  */
 
-package org.loopring.lightcone.core.order
+package org.loopring.lightcone.core.account
 import org.loopring.lightcone.core.data._
 
 import org.slf4s.Logging
 
-class OrderPool extends Object with Logging {
+class AccountOrderPoolImpl extends AccountOrderPoolWithUpdatedOrdersTracing with Logging {
 
-  type Callback = Order ⇒ Unit
+  private var callbacks = Set.empty[Callback]
+  private[account] var orderMap = Map.empty[String, Order]
 
-  private var callbacks = Seq.empty[Callback]
-  private[order] var orderMap = Map.empty[String, Order]
-
-  def apply(id: String): Order = orderMap(id)
-  def getOrder(id: String): Option[Order] = orderMap.get(id)
-  def contains(id: String): Boolean = orderMap.contains(id)
-  def orders() = orderMap.values
-  def add(id: String, order: Order): Unit = orderMap += id -> order
-  def delete(id: String): Unit = orderMap -= id
+  def apply(id: String) = orderMap(id)
+  def getOrder(id: String) = orderMap.get(id)
+  def contains(id: String) = orderMap.contains(id)
   def size: Int = orderMap.size
 
-  private[core] def toMap = orderMap
-
-  def addCallback(callback: Callback) = {
-    callbacks :+= callback
-    callbacks
+  def addCallback(callback: Callback) {
+    callbacks += callback
   }
 
-  def removeCallback(callback: Callback) = {
-    callbacks = callbacks.dropWhile(_ == callback)
-    callbacks
+  def removeCallback(callback: Callback) {
+    callbacks -= callback
   }
 
   def +=(order: Order) = {
@@ -67,4 +58,8 @@ class OrderPool extends Object with Logging {
   }
 
   override def toString() = orderMap.toString
+
+  private def add(id: String, order: Order): Unit = orderMap += id -> order
+  private def delete(id: String): Unit = orderMap -= id
+
 }

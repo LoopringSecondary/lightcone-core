@@ -14,15 +14,15 @@
  * limitations under the License.
  */
 
-package org.loopring.lightcone.core.order
+package org.loopring.lightcone.core.account
 
-import org.loopring.lightcone.core.CommonSpec
+import org.loopring.lightcone.core.OrderAwareSpec
 import org.loopring.lightcone.core.data._
 import org.scalatest._
 
-class OrderManagerImplSpec_MultipleOrders extends CommonSpec {
+class AccountManagerImplSpec_MultipleOrders extends OrderAwareSpec {
   "last order" should "fail when available balance for tokenS is smaller than required" in {
-    dai.init(999, 999)
+    dai.setBalanceAndAllowance(999, 999)
 
     (1 to 9) foreach { i ⇒
       val order = sellDAI(100, 1)
@@ -38,8 +38,8 @@ class OrderManagerImplSpec_MultipleOrders extends CommonSpec {
   }
 
   "last order" should "fail when available balance for tokenFee is smaller than required" in {
-    dai.init(10000000, 10000000)
-    lrc.init(999, 999)
+    dai.setBalanceAndAllowance(10000000, 10000000)
+    lrc.setBalanceAndAllowance(999, 999)
 
     (1 to 9) foreach { i ⇒
       val order = sellDAI(100, 1, 100)
@@ -55,7 +55,7 @@ class OrderManagerImplSpec_MultipleOrders extends CommonSpec {
   }
 
   "delete orders" should "scale up following orders according to tokenS" in {
-    dai.init(1500, 500)
+    dai.setBalanceAndAllowance(1500, 500)
 
     val order1 = sellDAI(500, 50)
     val order2 = sellDAI(400, 40)
@@ -94,8 +94,8 @@ class OrderManagerImplSpec_MultipleOrders extends CommonSpec {
   }
 
   "delete orders" should "scale up following orders according to tokenFee" in {
-    dai.init(100000, 100000)
-    lrc.init(150, 50)
+    dai.setBalanceAndAllowance(100000, 100000)
+    lrc.setBalanceAndAllowance(150, 50)
 
     val order1 = sellDAI(500, 50, 50)
     val order2 = sellDAI(400, 40, 40)

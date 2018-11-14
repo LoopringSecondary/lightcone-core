@@ -14,19 +14,19 @@
  * limitations under the License.
  */
 
-package org.loopring.lightcone.core
+package org.loopring.lightcone.core.base
 
-import org.scalatest._
-import org.slf4s.Logging
+import org.loopring.lightcone.core.data._
 
-trait CommonSpec
-  extends FlatSpec
-  with BeforeAndAfterEach
-  with BeforeAndAfterAll
-  with Matchers
-  with Logging {
-
-  override def beforeAll() {
-    println(s"[To run this spec, use `testOnly *${getClass.getSimpleName}`]")
+class TokenValueEstimator()(implicit tmm: TokenMetadataManager) {
+  def getEstimatedValue(token: String, amount: BigInt): Double = {
+    if (amount.signum <= 0) 0
+    else tmm.getToken(token) match {
+      case None ⇒ 0
+      case Some(metadata) ⇒
+        val scaling = Math.pow(10, metadata.decimals)
+        (Rational(metadata.currentPrice) * Rational(amount) / Rational(scaling)).doubleValue
+    }
   }
 }
+

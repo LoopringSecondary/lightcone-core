@@ -14,19 +14,22 @@
  * limitations under the License.
  */
 
-package org.loopring.lightcone.core
+package org.loopring.lightcone.core.account
+import org.loopring.lightcone.core.data._
 
-import org.scalatest._
-import org.slf4s.Logging
+trait AccountManager {
+  def hasTokenManager(token: String): Boolean
+  def addTokenManager(tm: AccountTokenManager): AccountTokenManager
+  def getTokenManager(token: String): AccountTokenManager
 
-trait CommonSpec
-  extends FlatSpec
-  with BeforeAndAfterEach
-  with BeforeAndAfterAll
-  with Matchers
-  with Logging {
+  def submitOrder(order: Order): Boolean
+  def cancelOrder(orderId: String): Boolean
+  def adjustOrder(orderId: String, outstandingAmountS: BigInt): Boolean
+}
 
-  override def beforeAll() {
-    println(s"[To run this spec, use `testOnly *${getClass.getSimpleName}`]")
-  }
+object AccountManager {
+  def default()(
+    implicit
+    orderPool: AccountOrderPoolWithUpdatedOrdersTracing
+  ): AccountManager = new AccountManagerImpl()
 }

@@ -14,19 +14,19 @@
  * limitations under the License.
  */
 
-package org.loopring.lightcone.core.order
-import org.loopring.lightcone.core.data._
+package org.loopring.lightcone.core.data
 
-trait OrderManager {
-  def hasTokenReserveManager(token: String): Boolean
-  def addTokenReserveManager(tm: TokenReserveManager): TokenReserveManager
-  def getTokenReserveManager(token: String): TokenReserveManager
+case class OrderbookUpdate(sells: Seq[OrderbookSlot], buys: Seq[OrderbookSlot])
 
-  def submitOrder(order: Order): Boolean
-  def cancelOrder(orderId: String): Boolean
-  def adjustOrder(orderId: String, outstandingAmountS: BigInt): Boolean
-}
+case class OrderbookSlot(slot: Long, amount: Double, total: Double)
 
-object OrderManager {
-  def default()(implicit orderPool: OrderPool): OrderManager = new OrderManagerImpl()
-}
+case class OrderbookItem(price: String, amount: String, total: String)
+
+case class Orderbook(sells: Seq[OrderbookItem], buys: Seq[OrderbookItem])
+
+case class OrderbookConfig(
+    levels: Int = 1,
+    priceDecimals: Int,
+    precisionForAmount: Int,
+    precisionForTotal: Int
+)

@@ -20,5 +20,5 @@ final object ExecutedStatus extends Enumeration {
   type ExecutedStatus = Value
 
   val FAILED = Value
-  val SUCCESS = Value
+  val SUCCEEDED = Value
 }

@@ -18,7 +18,7 @@ package org.loopring.lightcone.core.market
 
 import org.loopring.lightcone.core.data._
 import org.loopring.lightcone.core.depth._
-import org.loopring.lightcone.core.order.DustOrderEvaluator
+import org.loopring.lightcone.core.base.DustOrderEvaluator
 
 import org.slf4s.Logging
 import scala.annotation.tailrec
@@ -59,47 +59,46 @@ class MarketManagerImpl(
   private[core] val bids = SortedSet.empty[Order] // order.tokenS == marketId.primary
   private[core] val asks = SortedSet.empty[Order] // order.tokenS == marketId.secondary
   private[core] val orderMap = MMap.empty[String, Order]
-
-  private[core] val depthAggregator = new Level0DepthAggregator(config.priceDecimals)
+  private[core] val aggregator = new OrderbookAggregator(config.priceDecimals)
 
   private[core] val sides = Map(
     marketId.primary -> bids,
     marketId.secondary -> asks
   )
 
-  def submitOrder(order: Order, minFiatValue: Double = 0): SubmitOrderResult = {
+  def submitOrder(order: Order, minFiatValue: Double = 0): MatchResult = {
     // Allow re-submission of an existing order. In such case, we need to remove the original
     // copy of the order first.
     deleteOrder(order.id)
 
     val res = matchOrders(order, minFiatValue)
 
-    res.matchedMakers.get(order.id) match {
+    res.makers.find(_.id == order.id) match {
       case None ⇒
         addOrderToSide(order) // why none???
-      case Some(o) if !dustOrderEvaluator.isDust(o) ⇒
+      case Some(o) if !dustOrderEvaluator.isMatchableDust(o) ⇒
         addOrderToSide(o)
       case _ ⇒ //此时完全匹配，不需要再添加到订单薄
     }
     res
   }
 
+  def triggerMatch(sellOrderAsTaker: Boolean, minFiatValue: Double = 0, offset: Int = 0): Option[MatchResult] = {
+    val side = if (sellOrderAsTaker) asks else bids
+    val takerOption = side.drop(offset).headOption
+    takerOption.map(submitOrder(_, minFiatValue))
+  }
+
   // Recursively match the taker with makers. The taker order will NOT be added to its side
   // by this method.
-  private[core] def matchOrders(order: Order, minFiatValue: Double): SubmitOrderResult = {
+  private[core] def matchOrders(order: Order, minFiatValue: Double): MatchResult = {
     log.debug(s"taker order: $order , ${pendingRingPool.getOrderPendingAmountS(order.id)} ")
 
-    var rings = Set.empty[OrderRing]
-    var makersToAddBack = Set.empty[Order]
+    var rings = Seq.empty[OrderRing]
+    var makersToAddBack = Seq.empty[Order]
     var matchedMakers = Map.empty[String, Order]
 
     var taker = updateOrderMatchable(order)
-
-    if (dustOrderEvaluator.isDust(taker)) {
-      matchedMakers += taker.id → taker.copy(_matchable = Some(OrderState()))
-
-      return SubmitOrderResult(rings, matchedMakers, Some(taker))
-    }
 
     @tailrec
     def recursivelyMatchOrders(): Unit = {
@@ -109,7 +108,7 @@ class MarketManagerImpl(
       } match {
         case Some((maker, Left(failure))) ⇒
           log.debug(s"match failure $failure, taker: $taker, maker: $maker")
-          makersToAddBack += maker
+          makersToAddBack +:= maker
 
           if (failure == INCOME_TOO_SMALL) {
             recursivelyMatchOrders()
@@ -127,18 +126,16 @@ class MarketManagerImpl(
             updatedMaker: $updatedMaker
             ring: $ring """)
 
-          rings += ring
+          rings +:= ring
 
           if (dustOrderEvaluator.isMatchableDust(updatedMaker)) {
             matchedMakers += updatedMaker.id → updatedMaker.copy(_matchable = Some(OrderState()))
           } else {
             matchedMakers += updatedMaker.id → updatedMaker
-            makersToAddBack += updatedMaker
+            makersToAddBack +:= updatedMaker
           }
 
-          if (dustOrderEvaluator.isMatchableDust(taker)) {
-            matchedMakers += taker.id → taker.copy(_matchable = Some(OrderState()))
-          } else {
+          if (!dustOrderEvaluator.isMatchableDust(taker)) {
             recursivelyMatchOrders()
           }
 
@@ -149,70 +146,37 @@ class MarketManagerImpl(
       }
     }
 
-    recursivelyMatchOrders()
-
-    // add each skipped maker orders back
-    makersToAddBack.foreach(addOrderToSide)
-
-    // put rings to the pendign pool
-    rings.foreach(pendingRingPool.addRing)
-
-    SubmitOrderResult(rings, matchedMakers, Some(taker))
-  }
-
-  def triggerMatch(minFiatValue: Double): SubmitOrderResult = {
-    val maxBidsPrice = (bids.headOption map {
-      head ⇒ Rational(head.amountS, head.amountB)
-    }).getOrElse(Rational(0))
-    val rationalOne = Rational(1)
-
-    var rings = Set.empty[OrderRing]
-    var makersToAddBack = Set.empty[Order]
-    var matchedMakers = Map.empty[String, Order]
-
-    @tailrec
-    def recursivelyReMatch(): Unit = {
-      popOrder(asks) match {
-        case Some(taker) ⇒
-          log.debug(s"triggerMatch --- ask:${taker.id}")
-          //submitOrder会在在taker最后不为灰尘单时，会重新放入首部，
-          //因此需要保证不会taker再放入asks
-          val submitRes = matchOrders(taker, minFiatValue)
-          submitRes.matchedMakers.get(taker.id) match {
-            case None ⇒
-              makersToAddBack += taker
-            case Some(o) if !dustOrderEvaluator.isDust(o) ⇒
-              makersToAddBack += o
-            case _ ⇒
-          }
-          rings ++= submitRes.rings
-          matchedMakers ++= submitRes.matchedMakers
-          if (Rational(taker.amountS, taker.amountB) * maxBidsPrice >= rationalOne) {
-            recursivelyReMatch()
-          }
-        case _ ⇒
-      }
+    if (!dustOrderEvaluator.isMatchableDust(taker)) {
+      recursivelyMatchOrders()
+      // add each skipped maker orders back
+      makersToAddBack.foreach(addOrderToSide)
+      // put rings to the pendign pool
+      rings.foreach(pendingRingPool.addRing)
     }
 
-    recursivelyReMatch()
-
-    makersToAddBack.foreach(asks.add)
-
-    SubmitOrderResult(rings, matchedMakers, None)
+    MatchResult(
+      rings,
+      matchedMakers.values.toSeq,
+      Some(taker),
+      Some(aggregator.getOrderbookUpdate())
+    )
   }
 
-  def deleteOrder(orderId: String): Boolean = {
+  // TODO
+  def deleteOrder(orderId: String): Option[OrderbookUpdate] = {
     orderMap.get(orderId) match {
-      case None ⇒ false
+      case None ⇒ None
       case Some(order) ⇒
         orderMap -= order.id
         sides(order.tokenS) -= order
-        true
+        None
     }
   }
 
-  def deletePendingRing(ring: OrderRing): Unit = {
+  // TODO
+  def deletePendingRing(ring: OrderRing): Option[OrderbookUpdate] = {
     pendingRingPool.removeRing(ring.id)
+    None
   }
 
   // TODO(dongw)

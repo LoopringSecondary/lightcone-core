@@ -14,30 +14,30 @@
  * limitations under the License.
  */
 
-package org.loopring.lightcone.core.order
+package org.loopring.lightcone.core.account
 import org.loopring.lightcone.core.data._
 
 import org.slf4s.Logging
 
-final private[core] class OrderManagerImpl()(
+final private[core] class AccountManagerImpl()(
     implicit
-    orderPool: OrderPool
-) extends OrderManager with Logging {
+    orderPool: AccountOrderPoolWithUpdatedOrdersTracing
+) extends AccountManager with Logging {
   import OrderStatus._
 
-  private[core] implicit var tokens = Map.empty[String, TokenReserveManager]
+  private[core] implicit var tokens = Map.empty[String, AccountTokenManager]
 
-  def hasTokenReserveManager(token: String): Boolean = {
+  def hasTokenManager(token: String): Boolean = {
     tokens.contains(token)
   }
-  def addTokenReserveManager(tm: TokenReserveManager) = {
-    assert(!hasTokenReserveManager(tm.token))
+  def addTokenManager(tm: AccountTokenManager) = {
+    assert(!hasTokenManager(tm.token))
     tokens += tm.token -> tm
     tm
   }
 
-  def getTokenReserveManager(token: String): TokenReserveManager = {
-    assert(hasTokenReserveManager(token))
+  def getTokenManager(token: String): AccountTokenManager = {
+    assert(hasTokenManager(token))
     tokens(token)
   }
 
@@ -94,8 +94,8 @@ final private[core] class OrderManagerImpl()(
   }
 
   implicit private class MagicOrder(order: Order) {
-    def callOnTokenS[R](method: TokenReserveManager ⇒ R) = method(tokens(order.tokenS))
-    def callOnTokenFee[R](method: TokenReserveManager ⇒ R) = method(tokens(order.tokenFee))
+    def callOnTokenS[R](method: AccountTokenManager ⇒ R) = method(tokens(order.tokenS))
+    def callOnTokenFee[R](method: AccountTokenManager ⇒ R) = method(tokens(order.tokenFee))
 
     // 删除订单应该有以下几种情况:
     // 1.用户主动删除订单
@@ -105,7 +105,7 @@ final private[core] class OrderManagerImpl()(
     // tokenManager的release动作不能由tokenManager本身调用,
     // 只能由orderManager根据并汇总tokenS&tokenFee情况后删除,
     // 删除时tokenS&tokenFee都要删,不能只留一个
-    def callOnTokenSAndTokenFee(method: TokenReserveManager ⇒ Set[String]) = {
+    def callOnTokenSAndTokenFee(method: AccountTokenManager ⇒ Set[String]) = {
       val ordersToDelete = callOnTokenS(method) ++ callOnTokenFee(method)
       ordersToDelete.map { orderId ⇒
         callOnTokenS(_.release(orderId))

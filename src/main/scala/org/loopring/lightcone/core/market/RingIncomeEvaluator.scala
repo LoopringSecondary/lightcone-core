@@ -16,8 +16,8 @@
 
 package org.loopring.lightcone.core.market
 
+import org.loopring.lightcone.core.base._
 import org.loopring.lightcone.core.data._
-import org.loopring.lightcone.core.order._
 
 trait RingIncomeEstimator {
   def getRingIncome(ring: OrderRing): Double
@@ -43,16 +43,16 @@ final class RingIncomeEstimatorImpl()(
     val (order, pending, amountMargin) = (fill.order, fill.pending, fill.amountMargin)
 
     val rate = (1 - order.walletSplitPercentage) * (1 - tmm.getBurnRate(order.tokenFee))
-    val fiatFee = rate * tve.getFiatValue(order.tokenFee, pending.amountFee)
+    val fiatFee = rate * tve.getEstimatedValue(order.tokenFee, pending.amountFee)
 
     // when we do not know the price of tokenS, try to use tokenB's price to calculate
     // the price.
     val fiatMargin =
       if (tmm.hasToken(order.tokenS)) {
-        tve.getFiatValue(order.tokenS, amountMargin)
+        tve.getEstimatedValue(order.tokenS, amountMargin)
       } else {
         val amountBMargin = Rational(amountMargin * order.amountS, order.amountB).bigintValue()
-        tve.getFiatValue(order.tokenB, amountBMargin)
+        tve.getEstimatedValue(order.tokenB, amountBMargin)
       }
     fiatFee + fiatMargin
   }

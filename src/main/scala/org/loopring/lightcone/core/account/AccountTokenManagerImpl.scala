@@ -14,33 +14,29 @@
  * limitations under the License.
  */
 
-package org.loopring.lightcone.core.order
+package org.loopring.lightcone.core.account
 
+import org.loopring.lightcone.core.base._
 import org.loopring.lightcone.core.data._
 
 import org.slf4s.Logging
 import OrderStatus._
 
 /*
- * TokenReserveManager manages reserving balance and allowance for orders.
+ * AccountTokenManagerImpl manages reserving balance and allowance for orders.
  * An order can be 'reserved' if and only if the available (unservered) balance
  * is no less than the order's size.
  */
-class TokenReserveManager(
+
+class AccountTokenManagerImpl(
     val token: String,
     val maxNumOrders: Int = 1000
 )(
     implicit
-    orderPool: OrderPool,
+    orderPool: AccountOrderPool,
     dustEvaluator: DustOrderEvaluator
-) extends Object with Logging {
-
-  case class TokenBalance(
-      balance: BigInt,
-      allowance: BigInt,
-      availableBalance: BigInt,
-      availableAllowance: BigInt
-  )
+)
+  extends AccountTokenManager with Logging {
 
   case class Reservation(
       orderId: String,
@@ -55,19 +51,27 @@ class TokenReserveManager(
   private var availableBalance: BigInt = 0
   private var availableAllowance: BigInt = 0
 
+  def getBalance() = balance
+  def getAllowance() = allowance
+  def getAvailableBalance() = availableBalance
+  def getAvailableAllowance() = availableAllowance
+
   // `cursor1 indicates the index to begin rebalancing
-  private[order] var cursor: Int = -1
+  private[account] var cursor: Int = -1
   // indexMap is the map of order id to order's index in `reservations`
-  private[order] var indexMap = Map.empty[String, Int]
-  private[order] var reservations = Seq.empty[Reservation]
+  private[account] var indexMap = Map.empty[String, Int]
+  private[account] var reservations = Seq.empty[Reservation]
 
   def size() = reservations.size
   def hasTooManyOrders() = size >= maxNumOrders
-  def tokenBalance = TokenBalance(balance, allowance, availableBalance, availableAllowance)
 
   // Initlize the balance and allowance and triger rebalancing.
   // Returns the ids of orders to delete
-  def init(balance: BigInt, allowance: BigInt): Set[String] = {
+
+  def setBalance(balance: BigInt) = setBalanceAndAllowance(balance, this.allowance)
+  def setAllowance(allowance: BigInt) = setBalanceAndAllowance(this.balance, allowance)
+
+  def setBalanceAndAllowance(balance: BigInt, allowance: BigInt): Set[String] = {
     val cursor1 =
       if (balance >= this.balance) cursor
       else {

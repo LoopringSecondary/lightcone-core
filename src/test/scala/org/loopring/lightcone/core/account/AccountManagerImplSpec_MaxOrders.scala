@@ -14,15 +14,15 @@
  * limitations under the License.
  */
 
-package org.loopring.lightcone.core.order
+package org.loopring.lightcone.core.account
 
-import org.loopring.lightcone.core.CommonSpec
+import org.loopring.lightcone.core.OrderAwareSpec
 import org.loopring.lightcone.core.data._
 import org.scalatest._
 
-class OrderManagerImplSpec_MaxOrders extends CommonSpec {
+class AccountManagerImplSpec_MaxOrders extends OrderAwareSpec {
   "submit order" should "fail when max orders received for tokenS" in {
-    dai.init(dai.maxNumOrders * 10, dai.maxNumOrders * 10)
+    dai.setBalanceAndAllowance(dai.maxNumOrders * 10, dai.maxNumOrders * 10)
 
     (1 to dai.maxNumOrders) foreach { i ⇒
       val order = sellDAI(10, 1)
@@ -37,9 +37,9 @@ class OrderManagerImplSpec_MaxOrders extends CommonSpec {
   }
 
   "submit order" should "fail when max orders received for tokenFee" in {
-    lrc.init(lrc.maxNumOrders * 10, lrc.maxNumOrders * 10)
-    dai.init(dai.maxNumOrders * 10, dai.maxNumOrders * 10)
-    gto.init(gto.maxNumOrders * 10, gto.maxNumOrders * 10)
+    lrc.setBalanceAndAllowance(lrc.maxNumOrders * 10, lrc.maxNumOrders * 10)
+    dai.setBalanceAndAllowance(dai.maxNumOrders * 10, dai.maxNumOrders * 10)
+    gto.setBalanceAndAllowance(gto.maxNumOrders * 10, gto.maxNumOrders * 10)
 
     (1 to dai.maxNumOrders / 2) foreach { i ⇒
       val order = sellDAI(10, 1, 10)

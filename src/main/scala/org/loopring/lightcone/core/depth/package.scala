@@ -14,26 +14,20 @@
  * limitations under the License.
  */
 
-package org.loopring.lightcone.core.order
+package org.loopring.lightcone.core
 
 import org.loopring.lightcone.core.data._
 
-trait TokenValueEstimator {
-  def getFiatValue(token: String, amount: BigInt): Double
-}
+package object depth {
+  implicit class RichOrderbookSlot(this_ : OrderbookSlot) {
+    def +(that: OrderbookSlot) = {
+      assert(this_.slot == that.slot)
+      OrderbookSlot(this_.slot, this_.amount + that.amount, this_.total + that.total)
+    }
 
-class TokenValueEstimatorImpl()(
-    implicit
-    tmm: TokenMetadataManager
-) extends TokenValueEstimator {
-  def getFiatValue(token: String, amount: BigInt): Double = {
-    if (amount.signum <= 0) 0
-    else tmm.getToken(token) match {
-      case None ⇒ 0
-      case Some(metadata) ⇒
-        val scaling = Math.pow(10, metadata.decimals)
-        (Rational(metadata.currentPrice) * Rational(amount) / Rational(scaling)).doubleValue
+    def -(that: OrderbookSlot) = {
+      assert(this_.slot == that.slot)
+      OrderbookSlot(this_.slot, this_.amount - that.amount, this_.total - that.total)
     }
   }
 }
-

@@ -14,19 +14,27 @@
  * limitations under the License.
  */
 
-package org.loopring.lightcone.core
+package org.loopring.lightcone.core.base
 
-import org.scalatest._
-import org.slf4s.Logging
+trait Counter[T] {
+  def incr(key: T, delta: Long = 1): Long
+  def decr(key: T, delta: Long = 1): Long
+  def get(keuy: T): Long
+  def remove(key: T): Unit
+  def clear(): Unit
+}
 
-trait CommonSpec
-  extends FlatSpec
-  with BeforeAndAfterEach
-  with BeforeAndAfterAll
-  with Matchers
-  with Logging {
+class SimpleCounter[T] extends Counter[T] {
+  private var counts = Map.empty[T, Long]
 
-  override def beforeAll() {
-    println(s"[To run this spec, use `testOnly *${getClass.getSimpleName}`]")
+  def incr(key: T, delta: Long = 1) = {
+    val count = get(key) + delta
+    counts += (key -> count)
+    count
   }
+
+  def decr(key: T, delta: Long = 1) = incr(key, -delta)
+  def get(key: T) = counts.getOrElse(key, 0)
+  def remove(key: T) = { counts -= key }
+  def clear() { counts = Map.empty }
 }

@@ -14,18 +14,18 @@
  * limitations under the License.
  */
 
-package org.loopring.lightcone.core.order
+package org.loopring.lightcone.core.account
 
-import org.loopring.lightcone.core.CommonSpec
+import org.loopring.lightcone.core.OrderAwareSpec
 import org.loopring.lightcone.core.data._
 import org.scalatest._
 
-class OrderManagerImplSpec_RequestAmount extends CommonSpec {
+class AccountManagerImplSpec_RequestAmount extends OrderAwareSpec {
 
-  "OrderManagerImpl" should "calulate request amount correctly (legacy code)" in {
-    lrc.init(100, 200)
-    gto.init(100, 200)
-    weth.init(100, 200)
+  "AccountManagerImpl" should "calulate request amount correctly (legacy code)" in {
+    lrc.setBalanceAndAllowance(100, 200)
+    gto.setBalanceAndAllowance(100, 200)
+    weth.setBalanceAndAllowance(100, 200)
 
     var order = newOrder(
       LRC,
