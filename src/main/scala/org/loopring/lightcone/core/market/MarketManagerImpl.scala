@@ -64,11 +64,23 @@ class MarketManagerImpl(
     marketId.secondary -> asks
   )
 
+  def getOrder(orderId: String) = orderMap.get(orderId).map(updateOrderMatchable)
+
   def submitOrder(order: Order, minFiatValue: Double = 0): MatchResult = {
-    // Allow re-submission of an existing order. In such case, we need to remove the original
-    // copy of the order first.
+    // Allow re-submission of an existing order.
     deleteOrderInternal(order.id)
     matchOrders(order, minFiatValue)
+  }
+
+  def deleteOrder(orderId: String): Option[OrderbookUpdate] = {
+    deleteOrderInternal(orderId)
+    pendingRingPool.deleteOrder(orderId)
+    None
+  }
+
+  def deletePendingRing(ringId: String): Option[OrderbookUpdate] = {
+    pendingRingPool.deleteRing(ringId)
+    None
   }
 
   def triggerMatch(
@@ -81,16 +93,6 @@ class MarketManagerImpl(
     takerOption.map(submitOrder(_, minFiatValue))
   }
 
-  // Recursively match the taker with makers. The taker order will NOT be added to its side
-  // by this method.
-
-  // case class MatchResult(
-  //     rings: Seq[OrderRing],
-  //     makers: Seq[Order],
-  //     taker: Option[Order],
-  //     orderbookUpdate: Option[OrderbookUpdate]
-  // )
-
   private[core] def matchOrders(order: Order, minFiatValue: Double): MatchResult = {
     if (dustOrderEvaluator.isOriginalDust(order)) {
       MatchResult(Nil, order.copy(status = DUST_ORDER), None)
@@ -98,15 +100,13 @@ class MarketManagerImpl(
       MatchResult(Nil, order.copy(status = PENDING), None)
     } else {
       var taker = order.copy(status = PENDING)
-
       var rings = Seq.empty[OrderRing]
       var ordersToAddBack = Seq.empty[Order]
-      // var matchedMakers = Map.empty[String, Order]
 
-      // The result of this recursive method is to populate `rings` and `ordersToAddBack`.
+      // The result of this recursive method is to populate
+      // `rings` and `ordersToAddBack`.
       @tailrec
       def recursivelyMatchOrders(): Unit = {
-
         taker = updateOrderMatchable(order)
         if (dustOrderEvaluator.isMatchableDust(taker)) return
 
@@ -141,7 +141,6 @@ class MarketManagerImpl(
                 pendingRingPool.addRing(ring)
                 recursivelyMatchOrders()
             }
-
         }
       }
 
@@ -159,18 +158,6 @@ class MarketManagerImpl(
         Some(aggregator.getOrderbookUpdate())
       )
     }
-  }
-
-  def getOrder(orderId: String) = orderMap.get(orderId)
-  // TODO
-  def deleteOrder(orderId: String): Option[OrderbookUpdate] = {
-    pendingRingPool.deleteOrder(orderId)
-    deleteOrderInternal(orderId)
-  }
-
-  def deletePendingRing(ringId: String): Option[OrderbookUpdate] = {
-    pendingRingPool.deleteRing(ringId)
-    None
   }
 
   private def deleteOrderInternal(orderId: String): Option[OrderbookUpdate] = {
