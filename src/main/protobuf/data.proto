@@ -85,6 +85,10 @@ message MarketId {
     string secondary = 2;
 }
 
+message MarketManagerConfig {
+    int32 maxNumbersOfOrders = 1;
+    int32 priceDecimals = 2;
+}
 
 message MarketMetadata {
     int32 numBuys = 1;
