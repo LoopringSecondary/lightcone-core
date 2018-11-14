@@ -20,8 +20,8 @@ import org.loopring.lightcone.core.data._
 
 trait PendingRingPool {
   def getOrderPendingAmountS(orderId: String): BigInt
-  def deleteOrder(orderId: String): Unit
-  def deleteRing(ringId: String)
+  def deleteOrder(orderId: String): Boolean
+  def deleteRing(ringId: String): Boolean
 
   def hasRing(ringId: String): Boolean
   def addRing(ring: OrderRing): Unit

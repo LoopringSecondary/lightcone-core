@@ -28,18 +28,14 @@ object PendingRingPoolImpl {
     assert(pendingAmountS >= 0)
 
     def +(another: OrderInfo) = OrderInfo(
-      maxOfZero(pendingAmountS + another.pendingAmountS),
+      (pendingAmountS + another.pendingAmountS).max(0),
       ringIds ++ another.ringIds
     )
 
     def -(another: OrderInfo) = OrderInfo(
-      maxOfZero(pendingAmountS - another.pendingAmountS),
+      (pendingAmountS - another.pendingAmountS).max(0),
       ringIds ++ another.ringIds
     )
-
-    private def maxOfZero(v: BigInt): BigInt = {
-      if (v > 0) v else 0
-    }
   }
 
   case class RingInfo(
@@ -63,9 +59,13 @@ class PendingRingPoolImpl()(
   def getOrderPendingAmountS(orderId: String): BigInt =
     orderMap.get(orderId).map(_.pendingAmountS).getOrElse(0)
 
-  def deleteOrder(orderId: String) = { orderMap -= orderId }
+  def deleteOrder(orderId: String) = {
+    val result = orderMap.contains(orderId)
+    orderMap -= orderId
+    result
+  }
 
-  def deleteRing(ringId: String) =
+  def deleteRing(ringId: String): Boolean =
     ringMap.get(ringId) match {
       case Some(ringInfo) ⇒
         ringMap -= ringId
