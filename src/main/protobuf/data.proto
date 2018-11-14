@@ -4,12 +4,87 @@ option java_multiple_files = true;
 option java_package = "org.loopring.lightcone.core";
 package org.loopring.lightcone.core;
 
+enum MatchingFailure {
+    NO_ERROR = 0;
+    ORDERS_NOT_TRADABLE = 1;
+    INCOME_TOO_SMALL = 2;
+    HAS_BEEN_FULL_FILLED = 3;
+}
+
+enum OrderStatus {
+    NEW = 0;
+    PENDING = 1;
+    EXPIRED = 2;
+    DUST_ORDER = 3;
+    PARTIALLY_FILLED = 4;
+    COMPLETELY_FILLED = 5; // 完全成交
+    INVALID_DATA = 6;
+    UNSUPPORTED_MARKET = 7;
+    CANCELLED_BY_USER = 8;
+    CANCELLED_LOW_BALANCE = 9;
+    CANCELLED_LOW_FEE_BALANCE = 10;
+    CANCELLED_TOO_MANY_ORDERS = 11;
+    CANCELLED_TOO_MANY_FAILED_SETTLEMENTS = 12;
+}
+
+enum ExecutedStatus {
+    UNKNOWN = 0;
+    FAILED = 1;
+    SUCCEEDED = 2;
+}
+
+
+message RawOrderState {
+    bytes amountS=1;
+    bytes amountB=2;
+    bytes amountFee=3;
+}
+
+message RawOrder{
+    string id=1;
+    string tokenS=2;
+    string tokenB=3;
+    string tokenFee=4;
+    bytes amountS=5;
+    bytes amountB=6;
+    bytes amountFee=7;
+    int64 createdAt=8;
+    ExecutedStatus status=9;
+    double walletSplitPercentage=10;
+    RawOrderState _outstanding=11;
+    RawOrderState _reserved=12;
+    RawOrderState _actual=13;
+    RawOrderState _matchable=14;
+}
+
+
+message RawExpectedFill {
+    RawOrder order=1;
+    RawOrderState pending=2;
+    bytes amountMargin=3;
+}
+
+message RawOrderRing {
+    RawExpectedFill maker=1;
+    RawExpectedFill taker=2;
+}
+
+message RawSettlement {
+    repeated RawOrderRing rings=1;
+    int32 nonce=2;
+    int64 createdAt=3;
+    string txid=4;
+    int64 committedAt=5;
+    int64 confirmedBlock=6;
+}
+
 
 // For ABC/XYZ market, ABC is secondary, XYZ is primary
 message MarketId {
     string primary=1;
     string secondary=2;
 }
+
 
 message MarketMetadata {
     int32 numBuys=1;
@@ -58,31 +133,4 @@ message TokenMetadata {
     double currentPrice=4;
 }
 
-enum MatchingFailure {
-    NO_ERROR = 0;
-    ORDERS_NOT_TRADABLE = 1;
-    INCOME_TOO_SMALL = 2;
-    HAS_BEEN_FULL_FILLED = 3;
-}
 
-enum OrderStatus {
-    NEW = 0;
-    PENDING = 1;
-    EXPIRED = 2;
-    DUST_ORDER = 3;
-    PARTIALLY_FILLED = 4;
-    COMPLETELY_FILLED = 5; // 完全成交
-    INVALID_DATA = 6;
-    UNSUPPORTED_MARKET = 7;
-    CANCELLED_BY_USER = 8;
-    CANCELLED_LOW_BALANCE = 9;
-    CANCELLED_LOW_FEE_BALANCE = 10;
-    CANCELLED_TOO_MANY_ORDERS = 11;
-    CANCELLED_TOO_MANY_FAILED_SETTLEMENTS = 12;
-}
-
-enum ExecutedStatus {
-    UNKNOWN = 0;
-    FAILED = 1;
-    SUCCEEDED = 2;
-}
