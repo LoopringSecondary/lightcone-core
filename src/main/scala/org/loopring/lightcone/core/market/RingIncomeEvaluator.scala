@@ -24,7 +24,6 @@ trait RingIncomeEstimator {
   def isProfitable(ring: OrderRing, fiatValueThreshold: Double): Boolean
 }
 
-// TODO(hongyu): we should deduct the gas cost.
 final class RingIncomeEstimatorImpl()(
     implicit
     tmm: TokenMetadataManager,
