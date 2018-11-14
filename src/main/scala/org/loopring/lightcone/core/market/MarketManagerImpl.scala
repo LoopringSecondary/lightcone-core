@@ -131,7 +131,7 @@ class MarketManagerImpl(
             // we alsways need to add maker back even if it is PENDING-fully-matched.
             ordersToAddBack +:= maker
             matchResult match {
-              case Left(PRICES_DO_NOT_MATCH) ⇒
+              case Left(ORDERS_NOT_TRADABLE) ⇒
 
               case Left(_) ⇒
                 recursivelyMatchOrders()

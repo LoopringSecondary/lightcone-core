@@ -19,7 +19,7 @@ package org.loopring.lightcone.core.data
 final object MatchingFailure extends Enumeration {
   type MatchingFailure = Value
 
-  val PRICES_DO_NOT_MATCH = Value
+  val ORDERS_NOT_TRADABLE = Value
   val INCOME_TOO_SMALL = Value
   // val HAS_BEEN_FULL_FILLED = Value
 }

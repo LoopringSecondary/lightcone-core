@@ -33,7 +33,7 @@ class RingMatcherImpl()(
     makeRing(maker, taker) match {
       case Some(ring) if ringIncomeEstimator.isProfitable(ring, minFiatValue) ⇒ Right(ring)
       case Some(ring) ⇒ Left(INCOME_TOO_SMALL)
-      case None ⇒ Left(PRICES_DO_NOT_MATCH)
+      case None ⇒ Left(ORDERS_NOT_TRADABLE)
     }
   }
 
