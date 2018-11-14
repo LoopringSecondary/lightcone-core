@@ -51,7 +51,11 @@ class RingMatcherImpl()(
       maker.amountB.signum <= 0 ||
       taker.amountB.signum <= 0 ||
       maker._matchable.isEmpty ||
-      taker._matchable.isEmpty) {
+      taker._matchable.isEmpty ||
+      maker.matchable.amountB <= 0 ||
+      taker.matchable.amountB <= 0 ||
+      maker.matchable.amountS <= 0 ||
+      taker.matchable.amountS <= 0) {
       None
     } else {
       /*合约逻辑：

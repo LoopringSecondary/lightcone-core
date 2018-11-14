@@ -18,9 +18,8 @@ package org.loopring.lightcone.core.market
 
 import org.loopring.lightcone.core.CommonSpec
 import org.loopring.lightcone.core.data._
-import org.loopring.lightcone.core.testkit._
 
-class RingMatcherImplSpec_AmountCalculation extends CommonSpec with RingMatcherAssert {
+class RingMatcherImplSpec_AmountCalculation extends CommonSpec {
 
   val ringIncomeEstimator = new RingIncomeEstimatorImpl()
 
@@ -36,118 +35,152 @@ class RingMatcherImplSpec_AmountCalculation extends CommonSpec with RingMatcherA
     def isProfitable(ring: OrderRing, fiatValueThreshold: Double) = true
   }
 
-  "RingMatcherImpl" should "calculate volume in case of price just match " in {
+  var decimal = ""
+  decimal += "0"
+  (0 until 18).foreach(i ⇒ decimal += "0")
+
+  "RingMatcherImpl" +
+    "" should "calculate volume in case of price just match " in {
+      implicit val incomeEstimator = alwaysProfitable
+      val matcher = new RingMatcherImpl()
+      val (makerAmountS, makerAmountB, makerFee) = (BigInt("100000000000" + decimal), BigInt("10000000000" + decimal), BigInt("10" + decimal))
+      val (takerAmountS, takerAmountB, takerFee) = (BigInt("10000000000" + decimal), BigInt("100000000000" + decimal), BigInt("10" + decimal))
+      val maker = sellDAI(makerAmountS, makerAmountB, makerFee)
+      val taker = buyDAI(takerAmountS, takerAmountB, takerFee)
+
+      info("matchable is raw amount")
+      val res = matcher.matchOrders(
+        taker.copy(_matchable = Some(OrderState(amountS = takerAmountS, amountB = takerAmountB, amountFee = takerFee))),
+        maker.copy(_matchable = Some(OrderState(amountS = makerAmountS, amountB = makerAmountB, amountFee = makerFee)))
+      )
+      val expectRing = OrderRing(
+        taker = ExpectedFill(
+          order = taker.copy(_matchable = Some(OrderState())),
+          pending = OrderState(amountS = takerAmountS, amountB = takerAmountB, amountFee = takerFee),
+          amountMargin = BigInt(0)
+        ),
+        maker = ExpectedFill(
+          order = maker.copy(_matchable = Some(OrderState())),
+          pending = OrderState(amountS = makerAmountS, amountB = makerAmountB, amountFee = makerFee),
+          amountMargin = BigInt(0)
+        )
+      )
+      res.right should be(Some(expectRing))
+
+      info("both matchables are half of raw amount")
+      val res1 = matcher.matchOrders(
+        taker.copy(_matchable = Some(OrderState(amountS = takerAmountS / 2, amountB = takerAmountB / 2, amountFee = takerFee / 2))),
+        maker.copy(_matchable = Some(OrderState(amountS = makerAmountS / 2, amountB = makerAmountB / 2, amountFee = makerFee / 2)))
+      )
+      val expectRing1 = OrderRing(
+        taker = ExpectedFill(
+          order = taker.copy(_matchable = Some(OrderState())),
+          pending = OrderState(amountS = takerAmountS / 2, amountB = takerAmountB / 2, amountFee = takerFee / 2),
+          amountMargin = BigInt(0)
+        ),
+        maker = ExpectedFill(
+          order = maker.copy(_matchable = Some(OrderState())),
+          pending = OrderState(amountS = makerAmountS / 2, amountB = makerAmountB / 2, amountFee = makerFee / 2),
+          amountMargin = BigInt(0)
+        )
+      )
+      res1.right should be(Some(expectRing1))
+
+      info("both matchables are a third of raw amount")
+      val res4 = matcher.matchOrders(
+        taker.copy(_matchable = Some(OrderState(amountS = takerAmountS / 3, amountB = takerAmountB / 3, amountFee = takerFee / 3))),
+        maker.copy(_matchable = Some(OrderState(amountS = makerAmountS / 3, amountB = makerAmountB / 3, amountFee = makerFee / 3)))
+      )
+      val expectRing4 = OrderRing(
+        taker = ExpectedFill(
+          order = taker.copy(_matchable = Some(OrderState())),
+          pending = OrderState(amountS = takerAmountS / 3, amountB = takerAmountB / 3, amountFee = takerFee / 3),
+          amountMargin = BigInt(0)
+        ),
+        maker = ExpectedFill(
+          order = maker.copy(_matchable = Some(OrderState())),
+          pending = OrderState(amountS = makerAmountS / 3, amountB = makerAmountB / 3, amountFee = makerFee / 3),
+          amountMargin = BigInt(0)
+        )
+      )
+      res4.right should be(Some(expectRing4))
+
+      info("one of the matchables are half of raw amount")
+      val res2 = matcher.matchOrders(
+        taker.copy(_matchable = Some(OrderState(amountS = takerAmountS / 2, amountB = takerAmountB / 2, amountFee = takerFee / 2))),
+        maker.copy(_matchable = Some(OrderState(amountS = makerAmountS, amountB = makerAmountB, amountFee = makerFee)))
+      )
+
+      val expectRing2 = OrderRing(
+        taker = ExpectedFill(
+          order = taker.copy(_matchable = Some(OrderState())),
+          pending = OrderState(amountS = takerAmountS / 2, amountB = takerAmountB / 2, amountFee = takerFee / 2),
+          amountMargin = BigInt(0)
+        ),
+        maker = ExpectedFill(
+          order = maker.copy(_matchable = Some(OrderState(
+            amountS = makerAmountS - takerAmountB / 2,
+            amountB = makerAmountB - takerAmountS / 2,
+            amountFee = Rational(makerFee) - Rational(makerFee * (makerAmountS - takerAmountB / 2), makerAmountS)
+          ))),
+          pending = OrderState(
+            amountS =
+              takerAmountB / 2,
+            amountB = takerAmountS / 2,
+            amountFee = Rational(makerFee * (makerAmountS - takerAmountB / 2), makerAmountS)
+          ),
+          amountMargin = BigInt(0)
+        )
+      )
+      res2.right should be(Some(expectRing2))
+    }
+
+  "RingMatcherImpl1" should "calulate volume in case of price with margin " in {
     implicit val incomeEstimator = alwaysProfitable
     val matcher = new RingMatcherImpl()
-    val maker = sellDAI(100, 10, 10)
-    val taker = buyDAI(10, 100, 10)
-
-    val res1 = matcher.matchOrders(
-      taker.copy(_matchable = Some(OrderState(amountS = 5, amountB = 50, amountFee = 5))),
-      maker.copy(_matchable = Some(OrderState(amountS = 50, amountB = 5, amountFee = 5)))
-    )
+    val (makerAmountS, makerAmountB, makerFee) = (BigInt("1500000000000" + decimal), BigInt("90000000000" + decimal), BigInt("90" + decimal))
+    val (takerAmountS, takerAmountB, takerFee) = (BigInt("10000000000" + decimal), BigInt("100000000000" + decimal), BigInt("10" + decimal))
+    val maker = sellDAI(makerAmountS, makerAmountB, makerFee)
+    val taker = buyDAI(takerAmountS, takerAmountB, takerFee)
 
     info("matchable is raw amount")
     val res = matcher.matchOrders(
-      taker.copy(_matchable = Some(OrderState(amountS = 10, amountB = 100, amountFee = 10))),
-      maker.copy(_matchable = Some(OrderState(amountS = 100, amountB = 10, amountFee = 10)))
+      taker.copy(_matchable = Some(OrderState(amountS = takerAmountS, amountB = takerAmountB, amountFee = takerFee))),
+      maker.copy(_matchable = Some(OrderState(amountS = makerAmountS, amountB = makerAmountB, amountFee = makerFee)))
     )
     val expectRing = OrderRing(
       taker = ExpectedFill(
         order = taker.copy(_matchable = Some(OrderState())),
-        pending = OrderState(amountS = 10, amountB = 100, amountFee = 10),
-        amountMargin = BigInt(0)
+        pending = OrderState(amountS = takerAmountS, amountB = takerAmountB, amountFee = takerFee),
+        amountMargin = BigInt("4000000000" + decimal)
       ),
       maker = ExpectedFill(
-        order = maker.copy(_matchable = Some(OrderState())),
-        pending = OrderState(amountS = 100, amountB = 10, amountFee = 10),
+        order = maker.copy(_matchable = Some(OrderState(amountS = BigInt("1400000000000" + decimal), amountB = BigInt("84000000000" + decimal), amountFee = BigInt("84" + decimal)))),
+        pending = OrderState(amountS = BigInt("100000000000" + decimal), amountB = BigInt("6000000000" + decimal), amountFee = BigInt("6" + decimal)),
         amountMargin = BigInt(0)
       )
     )
-    shouldRing(res, Some(expectRing))
-
-    info("both matchables is half of raw amount")
-    val expectRing1 = OrderRing(
-      taker = ExpectedFill(
-        order = taker.copy(_matchable = Some(OrderState())),
-        pending = OrderState(amountS = 5, amountB = 50, amountFee = 5),
-        amountMargin = BigInt(0)
-      ),
-      maker = ExpectedFill(
-        order = maker.copy(_matchable = Some(OrderState())),
-        pending = OrderState(amountS = 50, amountB = 5, amountFee = 5),
-        amountMargin = BigInt(0)
-      )
-    )
-    shouldRing(res1, Some(expectRing1))
-
-    info("one of the matchables are half of raw amount")
-    val res2 = matcher.matchOrders(
-      taker.copy(_matchable = Some(OrderState(amountS = 5, amountB = 50, amountFee = 5))),
-      maker.copy(_matchable = Some(OrderState(amountS = 80, amountB = 8, amountFee = 8)))
-    )
-    val expectRing2 = OrderRing(
-      taker = ExpectedFill(
-        order = taker.copy(_matchable = Some(OrderState())),
-        pending = OrderState(amountS = 5, amountB = 50, amountFee = 5),
-        amountMargin = BigInt(0)
-      ),
-      maker = ExpectedFill(
-        order = maker.copy(_matchable = Some(OrderState(amountS = 30, amountB = 3, amountFee = 3))),
-        pending = OrderState(amountS = 50, amountB = 5, amountFee = 5),
-        amountMargin = BigInt(0)
-      )
-    )
-    shouldRing(res2, Some(expectRing2))
-
-  }
-
-  "RingMatcherImpl" should "calulate volume in case of price with margin " in {
-    implicit val incomeEstimator = alwaysProfitable
-    val matcher = new RingMatcherImpl()
-
-    val maker = sellDAI(1500, 90, 90)
-    val taker = buyDAI(10, 100, 10)
-
-    info("matchable is raw amount")
-    val res = matcher.matchOrders(
-      taker.copy(_matchable = Some(OrderState(amountS = 10, amountB = 100, amountFee = 10))),
-      maker.copy(_matchable = Some(OrderState(amountS = 1500, amountB = 90, amountFee = 90)))
-    )
-    val expectRing = OrderRing(
-      taker = ExpectedFill(
-        order = taker.copy(_matchable = Some(OrderState())),
-        pending = OrderState(amountS = 10, amountB = 100, amountFee = 10),
-        amountMargin = BigInt(4)
-      ),
-      maker = ExpectedFill(
-        order = maker.copy(_matchable = Some(OrderState(amountS = 1400, amountB = 84, amountFee = 84))),
-        pending = OrderState(amountS = 100, amountB = 6, amountFee = 6),
-        amountMargin = BigInt(0)
-      )
-    )
-    shouldRing(res, Some(expectRing))
+    res.right should be(Some(expectRing))
 
     info("both matchables are half of raw amount")
     val res1 = matcher.matchOrders(
-      taker.copy(_matchable = Some(OrderState(amountS = 5, amountB = 50, amountFee = 5))),
-      maker.copy(_matchable = Some(OrderState(amountS = 750, amountB = 45, amountFee = 45)))
+      taker.copy(_matchable = Some(OrderState(amountS = takerAmountS / 2, amountB = takerAmountB / 2, amountFee = takerFee / 2))),
+      maker.copy(_matchable = Some(OrderState(amountS = makerAmountS / 2, amountB = takerAmountB / 2, amountFee = takerFee / 2)))
     )
     val expectRing1 = OrderRing(
       taker = ExpectedFill(
         order = taker.copy(_matchable = Some(OrderState())),
-        pending = OrderState(amountS = 5, amountB = 50, amountFee = 5),
-        amountMargin = BigInt(2)
+        pending = OrderState(amountS = takerAmountS / 2, amountB = takerAmountB / 2, amountFee = takerFee / 2),
+        amountMargin = BigInt("2000000000" + decimal)
       ),
       maker = ExpectedFill(
-        order = maker.copy(_matchable = Some(OrderState(amountS = 700, amountB = 42, amountFee = 42))),
-        pending = OrderState(amountS = 50, amountB = 3, amountFee = 3),
+        order = maker.copy(_matchable = Some(OrderState(amountS = BigInt("700000000000" + decimal), amountB = BigInt("47000000000" + decimal), amountFee = BigInt("46666666666666666667")))),
+        pending = OrderState(amountS = BigInt("50000000000" + decimal), amountB = BigInt("3000000000" + decimal), amountFee = BigInt("3333333333333333333")),
         amountMargin = BigInt(0)
       )
     )
-    shouldRing(res1, Some(expectRing1))
+    res1.right should be(Some(expectRing1))
   }
-
   "RingMatcherImpl" should "calulate fee in case of only token fee" in {
     implicit val incomeEstimator = ringIncomeEstimator
     val matcher = new RingMatcherImpl()
@@ -173,7 +206,7 @@ class RingMatcherImplSpec_AmountCalculation extends CommonSpec with RingMatcherA
       maker.copy(_matchable = Some(OrderState(amountS = 50, amountB = 5, amountFee = 5))),
       10
     )
-    shouldIncomeTooSmall(res)
+    res.left should be(Left(MatchingFailure.INCOME_TOO_SMALL))
 
     info("set minFiatValue=10, then the income is enough:")
     res = matcher.matchOrders(
@@ -181,7 +214,7 @@ class RingMatcherImplSpec_AmountCalculation extends CommonSpec with RingMatcherA
       maker.copy(_matchable = Some(OrderState(amountS = 50, amountB = 5, amountFee = 5))),
       9
     )
-    shouldRing(res)
+    res.isRight should be(true)
 
     //放开交易规模，收益足够
     info("info the income is enough when set matchable=amountS:")
@@ -190,7 +223,7 @@ class RingMatcherImplSpec_AmountCalculation extends CommonSpec with RingMatcherA
       maker.copy(_matchable = Some(OrderState(amountS = 100, amountB = 10, amountFee = 10))),
       10
     )
-    shouldRing(res1)
+    res1.isRight should be(true)
   }
 
   "RingMatcherImpl" should "calulate fee in case of only margin" in {
@@ -218,7 +251,7 @@ class RingMatcherImplSpec_AmountCalculation extends CommonSpec with RingMatcherA
       maker.copy(_matchable = Some(OrderState(amountS = 50, amountB = 5))),
       10
     )
-    shouldIncomeTooSmall(res)
+    res.left should be(MatchingFailure.INCOME_TOO_SMALL)
 
     info("set minFiatValue=9, then the income is enough:")
     res = matcher.matchOrders(
@@ -226,7 +259,7 @@ class RingMatcherImplSpec_AmountCalculation extends CommonSpec with RingMatcherA
       maker.copy(_matchable = Some(OrderState(amountS = 50, amountB = 5))),
       9
     )
-    shouldRing(res)
+    res.isRight should be(true)
 
     //放开交易规模，收益足够
     info("info the income is enough when set matchable=amountS:")
@@ -235,6 +268,6 @@ class RingMatcherImplSpec_AmountCalculation extends CommonSpec with RingMatcherA
       maker.copy(_matchable = Some(OrderState(amountS = 100, amountB = 10))),
       10
     )
-    shouldRing(res1)
+    res1.isRight should be(true)
   }
 }
