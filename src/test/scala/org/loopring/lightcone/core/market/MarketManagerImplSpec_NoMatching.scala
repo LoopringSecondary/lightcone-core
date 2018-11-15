@@ -20,30 +20,16 @@ import org.loopring.lightcone.core.base._
 import org.loopring.lightcone.core.data._
 import org.loopring.lightcone.core._
 import OrderStatus._
-// var marketId = MarketId(GTO, WETH)
-// var config = MarketManagerConfig(
-//   maxNumbersOfOrders = 100, /* unsupported */
-//   priceDecimals = 5
-// )
 
-// var fackRingMatcher: RingMatcher = _
-// var fakeDustOrderEvaluator: DustOrderEvaluator = _
-// var fakePendingRingPool: PendingRingPool = _
-// var marketManager: MarketManager = _
-
-class MarketManagerImplSpec_Basic extends MarketAwareSpec {
+class MarketManagerImplSpec_NoMatching extends MarketAwareSpec {
 
   "MarketManager" should "reject orders whose original size is dust" in {
     var order = sellGTO(1000, 1)
     (fakeDustOrderEvaluator.isOriginalDust _).when(order).returns(true)
 
-    marketManager.submitOrder(order, 0) should be(
-      MarketManager.MatchResult(
-        Nil,
-        order.copy(status = OrderStatus.DUST_ORDER),
-        OrderbookUpdate()
-      )
-    )
+    val result = marketManager.submitOrder(order, 0)
+    result should be(emptyMatchingResult(order, DUST_ORDER))
+
     noMatchingActivity()
   }
 
@@ -121,7 +107,6 @@ class MarketManagerImplSpec_Basic extends MarketAwareSpec {
   }
 
   //--------
-
   private def notDust(order: Order): Order = {
     (fakeDustOrderEvaluator.isOriginalDust _).when(order).returns(false)
     (fakeDustOrderEvaluator.isActualDust _).when(order).returns(false)
