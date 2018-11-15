@@ -105,19 +105,4 @@ class MarketManagerImplSpec_NoMatching extends MarketAwareSpec {
 
     marketManager.getSellOrders(100) should be(Nil)
   }
-
-  //--------
-  private def notDust(order: Order): Order = {
-    (fakeDustOrderEvaluator.isOriginalDust _).when(order).returns(false)
-    (fakeDustOrderEvaluator.isActualDust _).when(order).returns(false)
-    order
-  }
-
-  private def emptyMatchingResult(order: Order, newStatus: OrderStatus) =
-    MarketManager.MatchResult(Nil, order.copy(status = newStatus), OrderbookUpdate())
-
-  private def noMatchingActivity() = {
-    (fackRingMatcher.matchOrders(_: Order, _: Order, _: Double))
-      .verify(*, *, *).never
-  }
 }

@@ -56,4 +56,18 @@ trait MarketAwareSpec extends OrderAwareSpec {
       fakeAggregator
     )
   }
+
+  def notDust(order: Order): Order = {
+    (fakeDustOrderEvaluator.isOriginalDust _).when(order).returns(false)
+    (fakeDustOrderEvaluator.isActualDust _).when(order).returns(false)
+    order
+  }
+
+  def emptyMatchingResult(order: Order, newStatus: OrderStatus) =
+    MarketManager.MatchResult(Nil, order.copy(status = newStatus), OrderbookUpdate())
+
+  def noMatchingActivity() = {
+    (fackRingMatcher.matchOrders(_: Order, _: Order, _: Double))
+      .verify(*, *, *).never
+  }
 }
