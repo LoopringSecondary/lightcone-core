@@ -43,6 +43,8 @@ private[depth] trait OrderbookSide {
   val aggregationScaling = Math.pow(10, aggregationLevel)
   val priceScaling = Math.pow(10, priceDecimals)
   var slotMap = SortedMap.empty[Long, OrderbookSlot]
+
+  var oldSlots = Map.empty[Long, OrderbookSlot]
   var updatedSlots = Map.empty[Long, OrderbookSlot]
 
   def increase(price: Double, amount: Double, total: Double): Unit =
@@ -71,23 +73,26 @@ private[depth] trait OrderbookSide {
   ) = {
     val id = getAggregationSlotFor(slot.slot)
 
-    var updated = op(
-      slotMap.getOrElse(id, OrderbookSlot(id, 0, 0)),
-      slot.copy(slot = id)
-    )
+    val old = slotMap.getOrElse(id, OrderbookSlot(id, 0, 0))
+    if (maintainUpdatedSlots && !oldSlots.contains(id)) {
+      oldSlots += id -> old
+    }
+
+    var updated = op(old, slot.copy(slot = id))
     if (updated.amount <= 0 || updated.total <= 0) {
       updated = OrderbookSlot(id, 0, 0)
       slotMap -= id
     } else {
       slotMap += id -> updated
     }
-    if (maintainUpdatedSlots) {
+    if (maintainUpdatedSlots && old != updated) {
       updatedSlots += id -> updated
     }
   }
 
   def reset() = {
     slotMap = SortedMap.empty
+    oldSlots = Map.empty
     updatedSlots = Map.empty
   }
   def getSlots(num: Int): Seq[OrderbookSlot] =
@@ -97,7 +102,11 @@ private[depth] trait OrderbookSide {
     if (!maintainUpdatedSlots) {
       throw new UnsupportedOperationException("maintainUpdatedSlots is false")
     }
-    val slots = updatedSlots.values.toList
+    val slots = updatedSlots.filter {
+      case (id, slot) ⇒ oldSlots(id) != slot
+    }.values.toList
+
+    oldSlots = Map.empty
     updatedSlots = Map.empty
     slots
   }

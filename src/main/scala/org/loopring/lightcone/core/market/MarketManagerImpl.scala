@@ -22,12 +22,7 @@ import org.loopring.lightcone.core.base._
 
 import org.slf4s.Logging
 import scala.annotation.tailrec
-import scala.collection.mutable.{ SortedSet, Map ⇒ MMap }
-
-case class MarketManagerConfig(
-    maxNumbersOfOrders: Int, // TODO(daniel): this is not supported yet.
-    priceDecimals: Int
-)
+import scala.collection.mutable.{ SortedSet, Map }
 
 object MarketManagerImpl {
   private def defaultOrdering() = new Ordering[Order] {
@@ -44,6 +39,7 @@ object MarketManagerImpl {
 class MarketManagerImpl(
     val marketId: MarketId,
     val config: MarketManagerConfig,
+    val tokenMetadataManager: TokenMetadataManager,
     val ringMatcher: RingMatcher,
     val pendingRingPool: PendingRingPool,
     val dustOrderEvaluator: DustOrderEvaluator
@@ -53,6 +49,8 @@ class MarketManagerImpl(
   import MatchingFailure._
   import OrderStatus._
 
+  private implicit val marketId_ = marketId
+  private implicit val tmm_ = tokenMetadataManager
   private implicit val ordering = defaultOrdering()
 
   private var isLastTakerSell = false
@@ -60,8 +58,8 @@ class MarketManagerImpl(
 
   private[core] val bids = SortedSet.empty[Order] // order.tokenS == marketId.primary
   private[core] val asks = SortedSet.empty[Order] // order.tokenS == marketId.secondary
-  private[core] val orderMap = MMap.empty[String, Order]
-  val aggregator = new OrderbookAggregator(config.priceDecimals)
+  private[core] val orderMap = Map.empty[String, Order]
+  val aggregator = new OrderAwareOrderbookAggregator(config.priceDecimals)
 
   private[core] val sides = Map(
     marketId.primary -> bids,
@@ -72,19 +70,19 @@ class MarketManagerImpl(
 
   def submitOrder(order: Order, minFiatValue: Double = 0): MatchResult = {
     // Allow re-submission of an existing order.
-    deleteOrderInternal(order.id)
+    removeFromSide(order.id)
     matchOrders(order, minFiatValue)
   }
 
-  def deleteOrder(orderId: String): Option[OrderbookUpdate] = {
-    deleteOrderInternal(orderId)
+  def deleteOrder(orderId: String): OrderbookUpdate = {
+    removeFromSide(orderId)
     pendingRingPool.deleteOrder(orderId)
-    None
+    aggregator.getOrderbookUpdate()
   }
 
-  def deletePendingRing(ringId: String): Option[OrderbookUpdate] = {
+  def deletePendingRing(ringId: String): OrderbookUpdate = {
     pendingRingPool.deleteRing(ringId)
-    None
+    aggregator.getOrderbookUpdate()
   }
 
   def triggerMatch(
@@ -99,10 +97,10 @@ class MarketManagerImpl(
 
   private[core] def matchOrders(order: Order, minFiatValue: Double): MatchResult = {
     if (dustOrderEvaluator.isOriginalDust(order)) {
-      MatchResult(Nil, order.copy(status = DUST_ORDER), None)
+      MatchResult(Nil, order.copy(status = DUST_ORDER), OrderbookUpdate(Nil, Nil))
 
     } else if (dustOrderEvaluator.isActualDust(order)) {
-      MatchResult(Nil, order.copy(status = COMPLETELY_FILLED), None)
+      MatchResult(Nil, order.copy(status = COMPLETELY_FILLED), OrderbookUpdate(Nil, Nil))
 
     } else {
       var taker = order.copy(status = PENDING)
@@ -162,18 +160,8 @@ class MarketManagerImpl(
       MatchResult(
         rings,
         taker.resetMatchable,
-        Some(aggregator.getOrderbookUpdate())
+        aggregator.getOrderbookUpdate()
       )
-    }
-  }
-
-  private def deleteOrderInternal(orderId: String): Option[OrderbookUpdate] = {
-    orderMap.get(orderId) match {
-      case None ⇒ None
-      case Some(order) ⇒
-        orderMap -= order.id
-        sides(order.tokenS) -= order
-        None
     }
   }
 
@@ -190,11 +178,22 @@ class MarketManagerImpl(
   )
 
   // Add an order to its side.
-  private def addToSide(order: Order) = {
+  private def addToSide(order: Order) {
     // always make sure _matchable is None.
     val order_ = order.copy(_matchable = None)
+    aggregator.addOrder(order)
     orderMap += order.id -> order_
     sides(order.tokenS) += order_
+  }
+
+  private def removeFromSide(orderId: String) {
+    orderMap.get(orderId) match {
+      case None ⇒
+      case Some(order) ⇒
+        aggregator.deleteOrder(order)
+        orderMap -= order.id
+        sides(order.tokenS) -= order
+    }
   }
 
   // Remove and return the top taker order for a taker order.
@@ -204,6 +203,7 @@ class MarketManagerImpl(
   // Remove and return the top order from one side.
   private def popOrder(side: SortedSet[Order]): Option[Order] = {
     side.headOption.map { order ⇒
+      aggregator.deleteOrder(order)
       orderMap -= order.id
       side -= order
       order
@@ -216,4 +216,5 @@ class MarketManagerImpl(
     val scale = Rational(matchableAmountS, order.original.amountS)
     order.copy(_matchable = Some(order.original.scaleBy(scale)))
   }
+
 }
