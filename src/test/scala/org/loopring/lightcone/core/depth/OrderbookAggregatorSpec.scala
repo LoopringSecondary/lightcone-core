@@ -38,6 +38,16 @@ class OrderbookAggregatorSpec extends CommonSpec {
     agg.getOrderbookUpdate(0) should be(OrderbookUpdate(Nil, Nil))
   }
 
+  "OrderbookAggregator" should "not return unchanged slots" in {
+    agg.increaseSell(0.987654321, 50, 5000)
+    agg.decreaseSell(0.987654321, 50, 5000)
+    agg.getOrderbookUpdate(0) should be(OrderbookUpdate(Nil, Nil))
+
+    agg.increaseBuy(0.987654321, 50, 5000)
+    agg.decreaseBuy(0.987654321, 50, 5000)
+    agg.getOrderbookUpdate(0) should be(OrderbookUpdate(Nil, Nil))
+  }
+
   "OrderbookAggregator" should "increase and decrease sell amounts correctly" in {
     agg.increaseSell(0.987654321, 50, 5000)
     agg.getOrderbookUpdate() should be(OrderbookUpdate(
