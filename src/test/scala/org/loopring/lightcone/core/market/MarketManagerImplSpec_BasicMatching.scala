@@ -91,6 +91,8 @@ class MarketManagerImplSpec_BasicMatching extends MarketAwareSpec {
     marketManager.getBuyOrders(100) should be(Seq(
       buyOrder.copy(status = PENDING)
     ))
+
+    (fakePendingRingPool.addRing _).verify(ring).once
   }
 
   "MarketManager" should "generate a ring for buy order as taker" in {
@@ -122,6 +124,8 @@ class MarketManagerImplSpec_BasicMatching extends MarketAwareSpec {
     marketManager.getBuyOrders(100) should be(Seq(
       buyOrder.copy(status = PENDING)
     ))
+
+    (fakePendingRingPool.addRing _).verify(ring).once
   }
 
 }
