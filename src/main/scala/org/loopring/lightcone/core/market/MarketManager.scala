@@ -36,7 +36,13 @@ trait MarketManager {
   def deletePendingRing(ringId: String): OrderbookUpdate
 
   def getOrder(orderId: String): Option[Order]
+
+  def getNumOfOrders(): Int
+  def getNumOfBuyOrders(): Int
+  def getNumOfSellOrders(): Int
+
   def getMetadata(): MarketMetadata
+
   def triggerMatch(
     sellOrderAsTaker: Boolean,
     minFiatValue: Double,

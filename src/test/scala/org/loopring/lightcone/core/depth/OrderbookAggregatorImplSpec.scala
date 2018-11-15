@@ -20,14 +20,14 @@ import org.loopring.lightcone.core.data._
 import org.loopring.lightcone.core.CommonSpec
 import org.scalatest._
 
-class OrderbookAggregatorSpec extends CommonSpec {
+class OrderbookAggregatorImplSpec extends CommonSpec {
   var agg: OrderbookAggregator = _
 
   override def beforeEach() {
-    agg = new OrderbookAggregator(5)
+    agg = new OrderbookAggregatorImpl(5)
   }
 
-  "OrderbookAggregator" should "not handle 0-valued adjustment" in {
+  "OrderbookAggregatorImpl" should "not handle 0-valued adjustment" in {
     agg.increaseBuy(0, 1, 2)
     agg.getOrderbookUpdate(0) should be(OrderbookUpdate(Nil, Nil))
 
@@ -38,7 +38,7 @@ class OrderbookAggregatorSpec extends CommonSpec {
     agg.getOrderbookUpdate(0) should be(OrderbookUpdate(Nil, Nil))
   }
 
-  "OrderbookAggregator" should "not return unchanged slots" in {
+  "OrderbookAggregatorImpl" should "not return unchanged slots" in {
     agg.increaseSell(0.987654321, 50, 5000)
     agg.decreaseSell(0.987654321, 50, 5000)
     agg.getOrderbookUpdate(0) should be(OrderbookUpdate(Nil, Nil))
@@ -48,7 +48,7 @@ class OrderbookAggregatorSpec extends CommonSpec {
     agg.getOrderbookUpdate(0) should be(OrderbookUpdate(Nil, Nil))
   }
 
-  "OrderbookAggregator" should "increase and decrease sell amounts correctly" in {
+  "OrderbookAggregatorImpl" should "increase and decrease sell amounts correctly" in {
     agg.increaseSell(0.987654321, 50, 5000)
     agg.getOrderbookUpdate() should be(OrderbookUpdate(
       Seq(OrderbookSlot(98766, 50, 5000)), Nil
@@ -80,7 +80,7 @@ class OrderbookAggregatorSpec extends CommonSpec {
     agg.getOrderbookUpdate(3) should be(OrderbookUpdate(Nil, Nil))
   }
 
-  "OrderbookAggregator" should "increase and decrease buy amounts correctly" in {
+  "OrderbookAggregatorImpl" should "increase and decrease buy amounts correctly" in {
     agg.increaseBuy(0.123456789, 50, 5000)
     agg.getOrderbookUpdate() should be(OrderbookUpdate(
       Nil, Seq(OrderbookSlot(12345, 50, 5000))

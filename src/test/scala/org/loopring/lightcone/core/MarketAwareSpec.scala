@@ -19,6 +19,7 @@ package org.loopring.lightcone.core
 import org.loopring.lightcone.core.base._
 import org.loopring.lightcone.core.data._
 import org.loopring.lightcone.core.market._
+import org.loopring.lightcone.core.depth._
 
 trait MarketAwareSpec extends OrderAwareSpec {
   type MR = MarketManager.MatchResult
@@ -27,7 +28,7 @@ trait MarketAwareSpec extends OrderAwareSpec {
     def getCurrentTimeMillis = -1
   }
 
-  var marketId = MarketId(GTO, WETH)
+  var marketId = MarketId(primary = WETH, secondary = GTO)
   var config = MarketManagerConfig(
     maxNumbersOfOrders = 100, /* unsupported */
     priceDecimals = 5
@@ -36,12 +37,14 @@ trait MarketAwareSpec extends OrderAwareSpec {
   var fackRingMatcher: RingMatcher = _
   var fakeDustOrderEvaluator: DustOrderEvaluator = _
   var fakePendingRingPool: PendingRingPool = _
+  var fakeAggregator: OrderAwareOrderbookAggregator = _
   var marketManager: MarketManager = _
 
   override def beforeEach() {
     fackRingMatcher = stub[RingMatcher]
     fakeDustOrderEvaluator = stub[DustOrderEvaluator]
     fakePendingRingPool = stub[PendingRingPool]
+    fakeAggregator = stub[OrderAwareOrderbookAggregator]
 
     marketManager = new MarketManagerImpl(
       marketId,
@@ -49,7 +52,8 @@ trait MarketAwareSpec extends OrderAwareSpec {
       tmm,
       fackRingMatcher,
       fakePendingRingPool,
-      fakeDustOrderEvaluator
+      fakeDustOrderEvaluator,
+      fakeAggregator
     )
   }
 }

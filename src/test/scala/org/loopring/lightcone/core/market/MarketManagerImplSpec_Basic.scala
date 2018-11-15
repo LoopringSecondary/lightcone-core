@@ -44,10 +44,7 @@ class MarketManagerImplSpec_Basic extends MarketAwareSpec {
         OrderbookUpdate()
       )
     )
-
-    // verify matching is not involved
-    (fackRingMatcher.matchOrders(_: Order, _: Order, _: Double))
-      .verify(*, *, *).never
+    noMatchingActivity()
   }
 
   "MarketManager" should "reject orders whose actual size is dust" in {
@@ -55,25 +52,50 @@ class MarketManagerImplSpec_Basic extends MarketAwareSpec {
     (fakeDustOrderEvaluator.isOriginalDust _).when(order).returns(false)
     (fakeDustOrderEvaluator.isActualDust _).when(order).returns(true)
 
-    marketManager.submitOrder(order, 0) should be(emptyMatchingResult(order, COMPLETELY_FILLED))
+    val result = marketManager.submitOrder(order, 0)
+    result should be(emptyMatchingResult(order, COMPLETELY_FILLED))
 
-    // verify matching is not involved
-    (fackRingMatcher.matchOrders(_: Order, _: Order, _: Double))
-      .verify(*, *, *).never
+    noMatchingActivity()
   }
 
-  "MarketManager" should "accept a single sell order" in {
+  "MarketManager" should "accept sell orders" in {
     var order1 = notDust(sellGTO(100000, 100))
     var order2 = notDust(sellGTO(100000, 101))
+
     (fakePendingRingPool.getOrderPendingAmountS _).when(*).returns(0)
+    (fakeAggregator.getOrderbookUpdate _).when(0).returns(OrderbookUpdate())
 
-    marketManager.submitOrder(order1, 0) should be(emptyMatchingResult(order1, PENDING))
-    marketManager.submitOrder(order2, 0) should be(emptyMatchingResult(order2, PENDING))
+    var result = marketManager.submitOrder(order1, 0)
+    result should be(emptyMatchingResult(order1, PENDING))
 
-    // verify matching is not involved
-    (fackRingMatcher.matchOrders(_: Order, _: Order, _: Double))
-      .verify(*, *, *).never
+    result = marketManager.submitOrder(order2, 0)
+    result should be(emptyMatchingResult(order2, PENDING))
 
+    noMatchingActivity()
+
+    marketManager.getNumOfSellOrders() should be(2)
+    marketManager.getNumOfBuyOrders() should be(0)
+    marketManager.getNumOfOrders() should be(2)
+  }
+
+  "MarketManager" should "accept buy orders" in {
+    var order1 = notDust(buyGTO(100000, 100))
+    var order2 = notDust(buyGTO(100000, 101))
+
+    (fakePendingRingPool.getOrderPendingAmountS _).when(*).returns(0)
+    (fakeAggregator.getOrderbookUpdate _).when(0).returns(OrderbookUpdate())
+
+    var result = marketManager.submitOrder(order1, 0)
+    result should be(emptyMatchingResult(order1, PENDING))
+
+    result = marketManager.submitOrder(order2, 0)
+    result should be(emptyMatchingResult(order2, PENDING))
+
+    noMatchingActivity()
+
+    marketManager.getNumOfSellOrders() should be(0)
+    marketManager.getNumOfBuyOrders() should be(2)
+    marketManager.getNumOfOrders() should be(2)
   }
 
   private def notDust(order: Order): Order = {
@@ -84,4 +106,9 @@ class MarketManagerImplSpec_Basic extends MarketAwareSpec {
 
   private def emptyMatchingResult(order: Order, newStatus: OrderStatus) =
     MarketManager.MatchResult(Nil, order.copy(status = newStatus), OrderbookUpdate())
+
+  private def noMatchingActivity() = {
+    (fackRingMatcher.matchOrders(_: Order, _: Order, _: Double))
+      .verify(*, *, *).never
+  }
 }

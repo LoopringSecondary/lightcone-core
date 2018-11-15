@@ -17,27 +17,8 @@
 package org.loopring.lightcone.core.depth
 
 import org.loopring.lightcone.core.data._
-import org.loopring.lightcone.core.base._
 
-class OrderAwareOrderbookAggregator(priceDecimals: Int)(
-    implicit
-    marketId: MarketId,
-    tokenMetadataManager: TokenMetadataManager
-) extends OrderbookAggregator(priceDecimals) {
-
-  def addOrder(order: Order) = adjustAmount(
-    order.isSell,
-    true,
-    order.displayablePrice,
-    order.displayableAmount,
-    order.displayableTotal
-  )
-
-  def deleteOrder(order: Order) = adjustAmount(
-    order.isSell,
-    false,
-    order.displayablePrice,
-    order.displayableAmount,
-    order.displayableTotal
-  )
+trait OrderAwareOrderbookAggregator extends OrderbookAggregator {
+  def addOrder(order: Order): Unit
+  def deleteOrder(order: Order): Unit
 }

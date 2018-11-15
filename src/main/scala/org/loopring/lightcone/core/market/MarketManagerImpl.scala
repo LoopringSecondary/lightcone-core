@@ -42,7 +42,8 @@ class MarketManagerImpl(
     val tokenMetadataManager: TokenMetadataManager,
     val ringMatcher: RingMatcher,
     val pendingRingPool: PendingRingPool,
-    val dustOrderEvaluator: DustOrderEvaluator
+    val dustOrderEvaluator: DustOrderEvaluator,
+    val aggregator: OrderAwareOrderbookAggregator
 ) extends MarketManager with Logging {
 
   import MarketManager._
@@ -57,18 +58,21 @@ class MarketManagerImpl(
   private var isLastTakerSell = false
   private var lastPrice: Double = 0
 
-  private[core] val bids = SortedSet.empty[Order] // order.tokenS == marketId.primary
-  private[core] val asks = SortedSet.empty[Order] // order.tokenS == marketId.secondary
+  private[core] val buys = SortedSet.empty[Order] // order.tokenS == marketId.primary
+  private[core] val sells = SortedSet.empty[Order] // order.tokenS == marketId.secondary
 
   private[core] val orderMap = Map.empty[String, Order]
-  val aggregator = new OrderAwareOrderbookAggregator(config.priceDecimals)
-
   private[core] val sides = Map(
-    marketId.primary -> bids,
-    marketId.secondary -> asks
+    marketId.primary -> buys,
+    marketId.secondary -> sells
   )
 
-  def getOrder(orderId: String) = orderMap.get(orderId).map(updateOrderMatchable)
+  def getNumOfOrders = orderMap.size
+  def getNumOfSellOrders = sells.size
+  def getNumOfBuyOrders = buys.size
+
+  def getOrder(orderId: String) =
+    orderMap.get(orderId).map(updateOrderMatchable)
 
   def submitOrder(order: Order, minFiatValue: Double = 0): MatchResult = {
     // Allow re-submission of an existing order.
@@ -92,7 +96,7 @@ class MarketManagerImpl(
     minFiatValue: Double = 0,
     offset: Int = 0
   ): Option[MatchResult] = {
-    val side = if (sellOrderAsTaker) asks else bids
+    val side = if (sellOrderAsTaker) sells else buys
     val takerOption = side.drop(offset).headOption
     takerOption.map(submitOrder(_, minFiatValue))
   }
@@ -169,8 +173,8 @@ class MarketManagerImpl(
 
   // TODO(dongw)
   def getMetadata() = MarketMetadata(
-    numBuys = bids.size,
-    numSells = asks.size,
+    numBuys = buys.size,
+    numSells = sells.size,
     numHiddenBuys = 0,
     numHiddenSells = 0,
     bestBuyPrice = 0.0,

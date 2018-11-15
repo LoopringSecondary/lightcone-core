@@ -33,12 +33,12 @@ class OrderbookManagerImplSpec extends CommonSpec {
     obm = new OrderbookManagerImpl(config)
   }
 
-  "OrderbookManagerSpec" should "return empty order book after initialized" in {
+  "OrderbookManagerImplSpec" should "return empty order book after initialized" in {
     obm.getOrderbook(0, 100) should be(Orderbook(Nil, Nil))
     obm.getOrderbook(1, 100) should be(Orderbook(Nil, Nil))
   }
 
-  "OrderbookManagerSpec" should "process very small slot" in {
+  "OrderbookManagerImplSpec" should "process very small slot" in {
     obm.processUpdate(OrderbookUpdate(Seq(
       OrderbookSlot(1, 10, 100)
     ), Nil))
@@ -52,7 +52,7 @@ class OrderbookManagerImplSpec extends CommonSpec {
     ), Nil))
   }
 
-  "OrderbookManagerSpec" should "skip 0 value slots" in {
+  "OrderbookManagerImplSpec" should "skip 0 value slots" in {
     obm.processUpdate(OrderbookUpdate(Seq(
       OrderbookSlot(0, 10, 100)
     ), Seq(
@@ -62,7 +62,7 @@ class OrderbookManagerImplSpec extends CommonSpec {
     obm.getOrderbook(1, 100) should be(Orderbook(Nil, Nil))
   }
 
-  "OrderbookManagerSpec" should "process sell slot and round up" in {
+  "OrderbookManagerImplSpec" should "process sell slot and round up" in {
     obm.processUpdate(OrderbookUpdate(Seq(
       OrderbookSlot(12344, 10, 100)
     ), Nil))
@@ -75,7 +75,7 @@ class OrderbookManagerImplSpec extends CommonSpec {
     ), Nil))
   }
 
-  "OrderbookManagerSpec" should "process buy slot and round down" in {
+  "OrderbookManagerImplSpec" should "process buy slot and round down" in {
     obm.processUpdate(OrderbookUpdate(Nil, Seq(
       OrderbookSlot(12344, 10, 100)
     )))
@@ -88,7 +88,7 @@ class OrderbookManagerImplSpec extends CommonSpec {
     )))
   }
 
-  "OrderbookManagerSpec" should "process sell slot with new lower values" in {
+  "OrderbookManagerImplSpec" should "process sell slot with new lower values" in {
     obm.processUpdate(OrderbookUpdate(Seq(
       OrderbookSlot(12344, 10, 100),
       OrderbookSlot(12345, 20, 200)
@@ -109,7 +109,7 @@ class OrderbookManagerImplSpec extends CommonSpec {
     ), Nil))
   }
 
-  "OrderbookManagerSpec" should "process buy slot with new lower values" in {
+  "OrderbookManagerImplSpec" should "process buy slot with new lower values" in {
     obm.processUpdate(OrderbookUpdate(Nil, Seq(
       OrderbookSlot(12344, 10, 100),
       OrderbookSlot(12345, 20, 200)
