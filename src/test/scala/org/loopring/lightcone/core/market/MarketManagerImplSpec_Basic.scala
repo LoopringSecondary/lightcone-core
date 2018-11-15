@@ -59,8 +59,8 @@ class MarketManagerImplSpec_Basic extends MarketAwareSpec {
   }
 
   "MarketManager" should "accept sell orders" in {
-    var order1 = notDust(sellGTO(100000, 100))
-    var order2 = notDust(sellGTO(100000, 101))
+    var order1 = notDust(sellGTO(100000, 100)) // price =  100000/100.0 = 1000.00
+    var order2 = notDust(sellGTO(100000, 101)) // price =  100000/101.0 = 989.12
 
     (fakePendingRingPool.getOrderPendingAmountS _).when(*).returns(0)
     (fakeAggregator.getOrderbookUpdate _).when(0).returns(OrderbookUpdate())
@@ -76,11 +76,22 @@ class MarketManagerImplSpec_Basic extends MarketAwareSpec {
     marketManager.getNumOfSellOrders() should be(2)
     marketManager.getNumOfBuyOrders() should be(0)
     marketManager.getNumOfOrders() should be(2)
+
+    marketManager.getSellOrders(3) should be(Seq(
+      order2.copy(status = PENDING),
+      order1.copy(status = PENDING)
+    ))
+
+    marketManager.getSellOrders(1) should be(Seq(
+      order2.copy(status = PENDING)
+    ))
+
+    marketManager.getBuyOrders(100) should be(Nil)
   }
 
   "MarketManager" should "accept buy orders" in {
-    var order1 = notDust(buyGTO(100000, 100))
-    var order2 = notDust(buyGTO(100000, 101))
+    var order1 = notDust(buyGTO(100, 100000)) // price =  100000/100.0 = 1000.00
+    var order2 = notDust(buyGTO(101, 100000)) // price =  100000/101.0 = 989.12
 
     (fakePendingRingPool.getOrderPendingAmountS _).when(*).returns(0)
     (fakeAggregator.getOrderbookUpdate _).when(0).returns(OrderbookUpdate())
@@ -96,7 +107,20 @@ class MarketManagerImplSpec_Basic extends MarketAwareSpec {
     marketManager.getNumOfSellOrders() should be(0)
     marketManager.getNumOfBuyOrders() should be(2)
     marketManager.getNumOfOrders() should be(2)
+
+    marketManager.getBuyOrders(3) should be(Seq(
+      order1.copy(status = PENDING),
+      order2.copy(status = PENDING)
+    ))
+
+    marketManager.getBuyOrders(1) should be(Seq(
+      order1.copy(status = PENDING)
+    ))
+
+    marketManager.getSellOrders(100) should be(Nil)
   }
+
+  //--------
 
   private def notDust(order: Order): Order = {
     (fakeDustOrderEvaluator.isOriginalDust _).when(order).returns(false)

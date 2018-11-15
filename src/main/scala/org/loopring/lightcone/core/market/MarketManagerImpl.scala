@@ -26,7 +26,7 @@ import scala.collection.mutable.{ SortedSet, Map }
 
 object MarketManagerImpl {
   private def defaultOrdering() = new Ordering[Order] {
-    def compare(a: Order, b: Order) = {
+    def compare(b: Order, a: Order) = {
       if (a.rate < b.rate) -1
       else if (a.rate > b.rate) 1
       else if (a.createdAt < b.createdAt) -1
@@ -70,6 +70,9 @@ class MarketManagerImpl(
   def getNumOfOrders = orderMap.size
   def getNumOfSellOrders = sells.size
   def getNumOfBuyOrders = buys.size
+
+  def getSellOrders(num: Int) = sells.take(num).toSeq
+  def getBuyOrders(num: Int) = buys.take(num).toSeq
 
   def getOrder(orderId: String) =
     orderMap.get(orderId).map(updateOrderMatchable)
