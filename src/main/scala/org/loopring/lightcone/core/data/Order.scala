@@ -187,5 +187,4 @@ case class Order(
     val decimals = metadata.decimals
     (Rational(amount) / Rational(Math.pow(10, decimals))).doubleValue
   }
-
 }

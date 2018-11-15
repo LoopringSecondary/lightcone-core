@@ -102,6 +102,7 @@ private[depth] trait OrderbookSide {
     if (!maintainUpdatedSlots) {
       throw new UnsupportedOperationException("maintainUpdatedSlots is false")
     }
+
     val slots = updatedSlots.filter {
       case (id, slot) ⇒ oldSlots(id) != slot
     }.values.toList

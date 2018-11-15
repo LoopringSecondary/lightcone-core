@@ -58,6 +58,7 @@ class MarketManagerImpl(
 
   private[core] val bids = SortedSet.empty[Order] // order.tokenS == marketId.primary
   private[core] val asks = SortedSet.empty[Order] // order.tokenS == marketId.secondary
+
   private[core] val orderMap = Map.empty[String, Order]
   val aggregator = new OrderAwareOrderbookAggregator(config.priceDecimals)
 
@@ -216,5 +217,4 @@ class MarketManagerImpl(
     val scale = Rational(matchableAmountS, order.original.amountS)
     order.copy(_matchable = Some(order.original.scaleBy(scale)))
   }
-
 }
