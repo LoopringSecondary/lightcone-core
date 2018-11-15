@@ -27,6 +27,6 @@ trait CommonSpec
   with Logging {
 
   override def beforeAll() {
-    println(s"[To run this spec, use `testOnly *${getClass.getSimpleName}`]")
+    println(s">>>>>> To run this spec, use `testOnly *${getClass.getSimpleName}`")
   }
 }
