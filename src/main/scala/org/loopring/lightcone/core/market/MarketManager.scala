@@ -18,15 +18,18 @@ package org.loopring.lightcone.core.market
 
 import org.loopring.lightcone.core.data._
 
-trait MarketManager {
-  val marketId: MarketId
-  val pendingRingPool: PendingRingPool
-
+object MarketManager {
   case class MatchResult(
       rings: Seq[OrderRing],
       taker: Order,
       orderbookUpdate: OrderbookUpdate
   )
+}
+trait MarketManager {
+  import MarketManager._
+
+  val marketId: MarketId
+  val pendingRingPool: PendingRingPool
 
   def submitOrder(order: Order, minFiatValue: Double): MatchResult
   def deleteOrder(orderId: String): OrderbookUpdate

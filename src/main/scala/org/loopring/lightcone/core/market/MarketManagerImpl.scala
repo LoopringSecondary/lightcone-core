@@ -45,6 +45,7 @@ class MarketManagerImpl(
     val dustOrderEvaluator: DustOrderEvaluator
 ) extends MarketManager with Logging {
 
+  import MarketManager._
   import MarketManagerImpl._
   import MatchingFailure._
   import OrderStatus._
@@ -112,7 +113,7 @@ class MarketManagerImpl(
       // `rings` and `ordersToAddBack`.
       @tailrec
       def recursivelyMatchOrders(): Unit = {
-        taker = updateOrderMatchable(order)
+        taker = updateOrderMatchable(taker)
         if (dustOrderEvaluator.isMatchableDust(taker)) return
 
         popBestMakerOrder(taker).map { order ⇒
