@@ -20,7 +20,7 @@ import org.loopring.lightcone.core.data._
 import org.loopring.lightcone.core.CommonSpec
 import org.scalatest._
 
-class OrderbookManagerSpec extends CommonSpec {
+class OrderbookManagerImplSpec extends CommonSpec {
   var obm: OrderbookManager = _
   val config = OrderbookConfig(
     levels = 2,
@@ -30,7 +30,7 @@ class OrderbookManagerSpec extends CommonSpec {
   )
 
   override def beforeEach() {
-    obm = new OrderbookManager(config)
+    obm = new OrderbookManagerImpl(config)
   }
 
   "OrderbookManagerSpec" should "return empty order book after initialized" in {
