@@ -122,8 +122,45 @@ case class Order(
     )
   }
 
-  private[core] def resetMatchable() =
-    copy(_matchable = None)
+  private[core] def resetMatchable() = copy(_matchable = None)
+
+  private[core] def displayableAmountS()(implicit tokenMetadataManager: TokenMetadataManager) =
+    calcDisplayableAmount(tokenS, actual.amountS)
+
+  private[core] def displayableAmountB()(implicit tokenMetadataManager: TokenMetadataManager) =
+    calcDisplayableAmount(tokenB, actual.amountB)
+
+  private[core] def displayableAmountFee()(implicit tokenMetadataManager: TokenMetadataManager) =
+    calcDisplayableAmount(tokenFee, actual.amountFee)
+
+  private[core] def isSell()(implicit marketId: MarketId) =
+    (tokenS == marketId.secondary)
+
+  private[core] def displayablePrice()(
+    implicit
+    marketId: MarketId,
+    tokenMetadataManager: TokenMetadataManager
+  ) = {
+    if (tokenS == marketId.secondary) Rational(amountS, amountB).doubleValue
+    else Rational(amountB, amountS).doubleValue
+  }
+
+  private[core] def displayableAmount()(
+    implicit
+    marketId: MarketId, tokenMetadataManager: TokenMetadataManager
+  ) = {
+    if (tokenS == marketId.secondary) displayableAmountS
+    else displayableAmountB
+  }
+
+  private[core] def displayableTotal()(
+    implicit
+    marketId: MarketId,
+    tokenMetadataManager: TokenMetadataManager
+  ) = {
+    if (tokenS == marketId.secondary) displayableAmountB
+    else displayableAmountS
+  }
 
   private def updateActual() = {
     var r = Rational(reserved.amountS, amountS)
@@ -137,6 +174,18 @@ case class Order(
       }
     }
     copy(_actual = Some(original.scaleBy(r)))
+  }
+
+  private def calcDisplayableAmount(token: String, amount: BigInt)(
+    implicit
+    tokenMetadataManager: TokenMetadataManager
+  ) = {
+    if (!tokenMetadataManager.hasToken(token)) {
+      throw new IllegalStateException(s"no metadata available for token $token")
+    }
+    val metadata = tokenMetadataManager.getToken(token).get
+    val decimals = metadata.decimals
+    (Rational(amount) / Rational(Math.pow(10, decimals))).doubleValue
   }
 
 }

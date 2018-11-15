@@ -14,29 +14,30 @@
  * limitations under the License.
  */
 
-package org.loopring.lightcone.core.market
+package org.loopring.lightcone.core.depth
 
 import org.loopring.lightcone.core.data._
+import org.loopring.lightcone.core.base._
 
-trait MarketManager {
-  val marketId: MarketId
-  val pendingRingPool: PendingRingPool
+class OrderAwareOrderbookAggregator(priceDecimals: Int)(
+    implicit
+    marketId: MarketId,
+    tokenMetadataManager: TokenMetadataManager
+) extends OrderbookAggregator(priceDecimals) {
 
-  case class MatchResult(
-      rings: Seq[OrderRing],
-      taker: Order,
-      orderbookUpdate: OrderbookUpdate
+  def addOrder(order: Order) = adjustAmount(
+    order.isSell,
+    true,
+    order.displayablePrice,
+    order.displayableAmount,
+    order.displayableTotal
   )
 
-  def submitOrder(order: Order, minFiatValue: Double): MatchResult
-  def deleteOrder(orderId: String): OrderbookUpdate
-  def deletePendingRing(ringId: String): OrderbookUpdate
-  def getOrder(orderId: String): Option[Order]
-  def getMetadata(): MarketMetadata
-  def triggerMatch(
-    sellOrderAsTaker: Boolean,
-    minFiatValue: Double,
-    offset: Int = 0
-  ): Option[MatchResult]
-
+  def deleteOrder(order: Order) = adjustAmount(
+    order.isSell,
+    false,
+    order.displayablePrice,
+    order.displayableAmount,
+    order.displayableTotal
+  )
 }
