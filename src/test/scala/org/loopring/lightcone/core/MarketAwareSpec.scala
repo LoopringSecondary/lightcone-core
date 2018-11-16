@@ -20,6 +20,8 @@ import org.loopring.lightcone.core.base._
 import org.loopring.lightcone.core.data._
 import org.loopring.lightcone.core.market._
 import org.loopring.lightcone.core.depth._
+import OrderStatus._
+import MatchingFailure._
 
 trait MarketAwareSpec extends OrderAwareSpec {
   type MR = MarketManager.MatchResult
@@ -57,10 +59,11 @@ trait MarketAwareSpec extends OrderAwareSpec {
     )
   }
 
-  def notDust(order: Order): Order = {
-    (fakeDustOrderEvaluator.isOriginalDust _).when(order).returns(false)
-    (fakeDustOrderEvaluator.isActualDust _).when(order).returns(false)
-    order
+  def actualNotDust(order: Order): Order = {
+    val o = order.copy(_actual = Some(order.original))
+    (fakeDustOrderEvaluator.isOriginalDust _).when(o).returns(false)
+    (fakeDustOrderEvaluator.isActualDust _).when(o).returns(false)
+    o
   }
 
   def emptyMatchingResult(order: Order, newStatus: OrderStatus) =
@@ -69,5 +72,15 @@ trait MarketAwareSpec extends OrderAwareSpec {
   def noMatchingActivity() = {
     (fackRingMatcher.matchOrders(_: Order, _: Order, _: Double))
       .verify(*, *, *).never
+  }
+
+  implicit class RichOrder(order: Order) {
+    def asPending() = order.copy(status = PENDING)
+
+    def withSameActual() = order.copy(_actual =
+      Some(OrderState(order.amountS, order.amountB, order.amountFee)))
+
+    def withSameMatchable() = order.copy(_matchable =
+      Some(OrderState(order.actual.amountS, order.actual.amountB, order.actual.amountFee)))
   }
 }

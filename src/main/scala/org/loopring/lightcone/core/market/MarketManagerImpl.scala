@@ -26,7 +26,7 @@ import scala.collection.mutable.{ SortedSet, Map }
 
 object MarketManagerImpl {
   private def defaultOrdering() = new Ordering[Order] {
-    def compare(b: Order, a: Order) = {
+    def compare(a: Order, b: Order) = {
       if (a.rate < b.rate) -1
       else if (a.rate > b.rate) 1
       else if (a.createdAt < b.createdAt) -1
@@ -106,11 +106,17 @@ class MarketManagerImpl(
 
   private[core] def matchOrders(order: Order, minFiatValue: Double): MatchResult = {
     if (dustOrderEvaluator.isOriginalDust(order)) {
-      MatchResult(Nil, order.copy(status = DUST_ORDER), OrderbookUpdate(Nil, Nil))
-
+      MatchResult(
+        Nil,
+        order.copy(status = DUST_ORDER),
+        OrderbookUpdate(Nil, Nil)
+      )
     } else if (dustOrderEvaluator.isActualDust(order)) {
-      MatchResult(Nil, order.copy(status = COMPLETELY_FILLED), OrderbookUpdate(Nil, Nil))
-
+      MatchResult(
+        Nil,
+        order.copy(status = COMPLETELY_FILLED),
+        OrderbookUpdate(Nil, Nil)
+      )
     } else {
       var taker = order.copy(status = PENDING)
       var rings = Seq.empty[OrderRing]
@@ -125,6 +131,7 @@ class MarketManagerImpl(
 
         popBestMakerOrder(taker).map { order ⇒
           val maker = updateOrderMatchable(order)
+
           val matchResult =
             if (dustOrderEvaluator.isMatchableDust(maker)) Left(INCOME_TOO_SMALL)
             else ringMatcher.matchOrders(taker, maker, minFiatValue)
@@ -219,10 +226,15 @@ class MarketManagerImpl(
     }
   }
 
-  private def updateOrderMatchable(order: Order): Order = {
+  private[core] def updateOrderMatchable(order: Order): Order = {
     val pendingAmountS = pendingRingPool.getOrderPendingAmountS(order.id)
     val matchableAmountS = (order.actual.amountS - pendingAmountS).max(0)
     val scale = Rational(matchableAmountS, order.original.amountS)
-    order.copy(_matchable = Some(order.original.scaleBy(scale)))
+    val o = order.copy(_matchable = Some(order.original.scaleBy(scale)))
+
+    println(s"============== ${scale}: $o")
+    println(o.original)
+    println(o.matchable)
+    o
   }
 }
