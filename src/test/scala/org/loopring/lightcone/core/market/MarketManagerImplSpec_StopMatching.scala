@@ -22,11 +22,11 @@ import org.loopring.lightcone.core._
 import OrderStatus._
 import MatchingFailure._
 
-class MarketManagerImplSpec_SkipOrderMatching extends MarketAwareSpec {
-  "MarketManager" should "skip non-profitable orders" in {
+class MarketManagerImplSpec_StopMatching extends MarketAwareSpec {
+  "MarketManager" should "stop matching on the first price mismatch" in {
     val buy1 = actualNotDust(buyGTO(100, 100050)) // worst price
-    val buy2 = actualNotDust(buyGTO(100, 100040)).copy(_actual = Some(OrderState(30, 50020, 0)))
-    val buy3 = actualNotDust(buyGTO(100, 100030)).withSameActual() // best price
+    val buy2 = actualNotDust(buyGTO(100, 100040))
+    val buy3 = actualNotDust(buyGTO(100, 100030)) // best price
 
     (fakeDustOrderEvaluator.isMatchableDust _).when(*).returns(false)
     (fakePendingRingPool.getOrderPendingAmountS _).when(*).returns(0)
@@ -43,18 +43,17 @@ class MarketManagerImplSpec_SkipOrderMatching extends MarketAwareSpec {
     ))
 
     (fackRingMatcher.matchOrders(_: Order, _: Order, _: Double))
-      .when(*, buy3.asPending.withSameMatchable, *)
-      .returns(Left(INCOME_TOO_SMALL))
-
-    (fackRingMatcher.matchOrders(_: Order, _: Order, _: Double))
-      .when(*, buy2.asPending.copy(_matchable =
-        Some(OrderState(30, 100040 * 3 / 10, 0))), // scale actual based on original ratio
-        *)
-      .returns(Left(INCOME_TOO_SMALL))
+      .when(*, buy3.asPending.withSameMatchable.withSameActual, *)
+      .returns(Left(ORDERS_NOT_TRADABLE))
 
     val ring = OrderRing(null, null)
+
     (fackRingMatcher.matchOrders(_: Order, _: Order, _: Double))
-      .when(*, buy1.asPending.withSameMatchable().withSameActual(), *)
+      .when(*, buy2.asPending.withSameMatchable.withSameActual, *)
+      .returns(Right(ring))
+
+    (fackRingMatcher.matchOrders(_: Order, _: Order, _: Double))
+      .when(*, buy1.asPending.withSameMatchable.withSameActual, *)
       .returns(Right(ring))
 
     // Submit a sell order as the taker
@@ -62,7 +61,7 @@ class MarketManagerImplSpec_SkipOrderMatching extends MarketAwareSpec {
     val result = marketManager.submitOrder(sell1, 0)
 
     result should be(MarketManager.MatchResult(
-      Seq(ring),
+      Nil,
       sell1.copy(status = PENDING),
       OrderbookUpdate()
     ))
@@ -79,7 +78,7 @@ class MarketManagerImplSpec_SkipOrderMatching extends MarketAwareSpec {
 
     (fackRingMatcher.matchOrders(_: Order, _: Order, _: Double))
       .verify(*, *, *)
-      .repeated(3)
+      .repeated(1)
   }
 
 }
