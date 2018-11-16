@@ -174,7 +174,7 @@ class MarketManagerImpl(
       ordersToAddBack.map(_.resetMatchable).foreach(addToSide)
 
       MatchResult(
-        rings,
+        rings.reverse,
         taker.resetMatchable,
         aggregator.getOrderbookUpdate()
       )
