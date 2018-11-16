@@ -42,9 +42,11 @@ class MarketManagerImpl(
     val tokenMetadataManager: TokenMetadataManager,
     val ringMatcher: RingMatcher,
     val pendingRingPool: PendingRingPool,
-    val dustOrderEvaluator: DustOrderEvaluator
+    val dustOrderEvaluator: DustOrderEvaluator,
+    val aggregator: OrderAwareOrderbookAggregator
 ) extends MarketManager with Logging {
 
+  import MarketManager._
   import MarketManagerImpl._
   import MatchingFailure._
   import OrderStatus._
@@ -56,18 +58,24 @@ class MarketManagerImpl(
   private var isLastTakerSell = false
   private var lastPrice: Double = 0
 
-  private[core] val bids = SortedSet.empty[Order] // order.tokenS == marketId.primary
-  private[core] val asks = SortedSet.empty[Order] // order.tokenS == marketId.secondary
+  private[core] val buys = SortedSet.empty[Order] // order.tokenS == marketId.primary
+  private[core] val sells = SortedSet.empty[Order] // order.tokenS == marketId.secondary
 
   private[core] val orderMap = Map.empty[String, Order]
-  val aggregator = new OrderAwareOrderbookAggregator(config.priceDecimals)
-
   private[core] val sides = Map(
-    marketId.primary -> bids,
-    marketId.secondary -> asks
+    marketId.primary -> buys,
+    marketId.secondary -> sells
   )
 
-  def getOrder(orderId: String) = orderMap.get(orderId).map(updateOrderMatchable)
+  def getNumOfOrders = orderMap.size
+  def getNumOfSellOrders = sells.size
+  def getNumOfBuyOrders = buys.size
+
+  def getSellOrders(num: Int) = sells.take(num).toSeq
+  def getBuyOrders(num: Int) = buys.take(num).toSeq
+
+  def getOrder(orderId: String) =
+    orderMap.get(orderId).map(updateOrderMatchable)
 
   def submitOrder(order: Order, minFiatValue: Double = 0): MatchResult = {
     // Allow re-submission of an existing order.
@@ -91,18 +99,24 @@ class MarketManagerImpl(
     minFiatValue: Double = 0,
     offset: Int = 0
   ): Option[MatchResult] = {
-    val side = if (sellOrderAsTaker) asks else bids
+    val side = if (sellOrderAsTaker) sells else buys
     val takerOption = side.drop(offset).headOption
     takerOption.map(submitOrder(_, minFiatValue))
   }
 
   private[core] def matchOrders(order: Order, minFiatValue: Double): MatchResult = {
     if (dustOrderEvaluator.isOriginalDust(order)) {
-      MatchResult(Nil, order.copy(status = DUST_ORDER), OrderbookUpdate(Nil, Nil))
-
+      MatchResult(
+        Nil,
+        order.copy(status = DUST_ORDER),
+        OrderbookUpdate(Nil, Nil)
+      )
     } else if (dustOrderEvaluator.isActualDust(order)) {
-      MatchResult(Nil, order.copy(status = COMPLETELY_FILLED), OrderbookUpdate(Nil, Nil))
-
+      MatchResult(
+        Nil,
+        order.copy(status = COMPLETELY_FILLED),
+        OrderbookUpdate(Nil, Nil)
+      )
     } else {
       var taker = order.copy(status = PENDING)
       var rings = Seq.empty[OrderRing]
@@ -112,11 +126,12 @@ class MarketManagerImpl(
       // `rings` and `ordersToAddBack`.
       @tailrec
       def recursivelyMatchOrders(): Unit = {
-        taker = updateOrderMatchable(order)
+        taker = updateOrderMatchable(taker)
         if (dustOrderEvaluator.isMatchableDust(taker)) return
 
         popBestMakerOrder(taker).map { order ⇒
           val maker = updateOrderMatchable(order)
+
           val matchResult =
             if (dustOrderEvaluator.isMatchableDust(maker)) Left(INCOME_TOO_SMALL)
             else ringMatcher.matchOrders(taker, maker, minFiatValue)
@@ -159,7 +174,7 @@ class MarketManagerImpl(
       ordersToAddBack.map(_.resetMatchable).foreach(addToSide)
 
       MatchResult(
-        rings,
+        rings.reverse,
         taker.resetMatchable,
         aggregator.getOrderbookUpdate()
       )
@@ -168,8 +183,8 @@ class MarketManagerImpl(
 
   // TODO(dongw)
   def getMetadata() = MarketMetadata(
-    numBuys = bids.size,
-    numSells = asks.size,
+    numBuys = buys.size,
+    numSells = sells.size,
     numHiddenBuys = 0,
     numHiddenSells = 0,
     bestBuyPrice = 0.0,
@@ -211,7 +226,7 @@ class MarketManagerImpl(
     }
   }
 
-  private def updateOrderMatchable(order: Order): Order = {
+  private[core] def updateOrderMatchable(order: Order): Order = {
     val pendingAmountS = pendingRingPool.getOrderPendingAmountS(order.id)
     val matchableAmountS = (order.actual.amountS - pendingAmountS).max(0)
     val scale = Rational(matchableAmountS, order.original.amountS)

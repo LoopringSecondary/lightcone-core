@@ -17,14 +17,28 @@
 package org.loopring.lightcone.core.depth
 
 import org.loopring.lightcone.core.data._
+import org.loopring.lightcone.core.base._
 
-trait OrderbookAggregator {
-  def getOrderbookUpdate(num: Int = 0): OrderbookUpdate
-  def increaseSell(price: Double, amount: Double, total: Double): Unit
+class OrderAwareOrderbookAggregatorImpl(priceDecimals: Int)(
+    implicit
+    marketId: MarketId,
+    tokenMetadataManager: TokenMetadataManager
+) extends OrderbookAggregatorImpl(priceDecimals)
+  with OrderAwareOrderbookAggregator {
 
-  def decreaseSell(price: Double, amount: Double, total: Double): Unit
-  def increaseBuy(price: Double, amount: Double, total: Double): Unit
-  def decreaseBuy(price: Double, amount: Double, total: Double): Unit
-  def adjustAmount(isSell: Boolean, increase: Boolean, price: Double, amount: Double, total: Double): Unit
-  def reset(): Unit
+  def addOrder(order: Order) = adjustAmount(
+    order.isSell,
+    true,
+    order.displayablePrice,
+    order.displayableAmount,
+    order.displayableTotal
+  )
+
+  def deleteOrder(order: Order) = adjustAmount(
+    order.isSell,
+    false,
+    order.displayablePrice,
+    order.displayableAmount,
+    order.displayableTotal
+  )
 }

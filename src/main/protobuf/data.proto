@@ -33,52 +33,6 @@ enum ExecutionStatus {
     SUCCEEDED = 2;
 }
 
-
-message POrderState {
-    bytes amountS = 1;
-    bytes amountB = 2;
-    bytes amountFee = 3;
-}
-
-message POrder{
-    string id = 1;
-    string tokenS = 2;
-    string tokenB = 3;
-    string tokenFee = 4;
-    bytes amountS = 5;
-    bytes amountB = 6;
-    bytes amountFee = 7;
-    int64 createdAt = 8;
-    ExecutionStatus status = 9;
-    double walletSplitPercentage = 10;
-    POrderState _outstanding = 11;
-    POrderState _reserved = 12;
-    POrderState _actual = 13;
-    POrderState _matchable = 14;
-}
-
-
-message PExpectedFill {
-    POrder order = 1;
-    POrderState pending = 2;
-    bytes amountMargin = 3;
-}
-
-message POrderRing {
-    PExpectedFill maker = 1;
-    PExpectedFill taker = 2;
-}
-
-message PSettlement {
-    repeated POrderRing rings = 1;
-    int32 nonce = 2;
-    int64 createdAt = 3;
-    string txid = 4;
-    int64 committedAt = 5;
-    int64 confirmedBlock = 6;
-}
-
-
 // For ABC/XYZ market, ABC is secondary, XYZ is primary
 message MarketId {
     string primary = 1;
