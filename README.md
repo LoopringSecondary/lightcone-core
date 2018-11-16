@@ -1,5 +1,11 @@
 
 # 关于
+
+## TODO(dongw)
+
+- [ ] optimize MarketManagerImpl
+- [ ] optimize AccountTokenManagerImpl
+
 ## 以太坊块数据的处理
 
 整个系统对以太坊上面路印的所有交易数据都需要做处理，进而调整pending ring和order的状态。以太坊区块里面的路印交易数据包括两类，一类是失败的环路，一类是成功的环路。对于这两种不同的环路，调用`lightcone-core`的方式不一样：

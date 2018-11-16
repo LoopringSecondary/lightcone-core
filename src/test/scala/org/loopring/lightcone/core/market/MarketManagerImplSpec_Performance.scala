@@ -81,7 +81,7 @@ class MarketManagerImplSpec_Performance extends OrderAwareSpec {
 
   "a" should "b" in {
     val now = System.currentTimeMillis
-    val num = 2
+    val num = 100
     var rings = 0
     (1 to num) foreach { i ⇒
       var result = marketManager.submitOrder(createGTOSellOrder(0.12, 5000), 0)
@@ -91,7 +91,7 @@ class MarketManagerImplSpec_Performance extends OrderAwareSpec {
       rings += result.rings.size
     }
     val cost = System.currentTimeMillis - now
-    val avg = num / cost
+    val avg = 1000 * num / cost
 
     val sells = marketManager.getSellOrders(100)
     val buys = marketManager.getBuyOrders(100)
