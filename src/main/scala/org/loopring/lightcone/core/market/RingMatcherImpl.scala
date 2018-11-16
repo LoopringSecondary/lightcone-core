@@ -28,7 +28,8 @@ class RingMatcherImpl()(implicit rie: RingIncomeEstimator)
     maker: Order,
     minFiatValue: Double = 0
   ): Either[MatchingFailure, OrderRing] = {
-    makeRing(maker, taker) match {
+    val ringOpt = makeRing(maker, taker)
+    ringOpt match {
       case Some(ring) if rie.isProfitable(ring, minFiatValue) ⇒ Right(ring)
       case Some(ring) ⇒ Left(INCOME_TOO_SMALL)
       case None ⇒ Left(ORDERS_NOT_TRADABLE)

@@ -230,9 +230,19 @@ class MarketManagerImpl(
   }
 
   private[core] def updateOrderMatchable(order: Order): Order = {
+
     val pendingAmountS = pendingRingPool.getOrderPendingAmountS(order.id)
+
     val matchableAmountS = (order.actual.amountS - pendingAmountS).max(0)
     val scale = Rational(matchableAmountS, order.original.amountS)
-    order.copy(_matchable = Some(order.original.scaleBy(scale)))
+    val copy = order.copy(_matchable = Some(order.original.scaleBy(scale)))
+    println(s"""
+      original: $order
+      pendingAmountS: $pendingAmountS
+      actualAmount: ${order.actual}
+      matchableAmountS: $matchableAmountS
+      scale: $scale
+      new : $copy""")
+    copy
   }
 }
