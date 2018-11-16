@@ -43,6 +43,7 @@ trait MarketAwareSpec extends OrderAwareSpec {
   var marketManager: MarketManager = _
 
   override def beforeEach() {
+    nextId = 1
     fackRingMatcher = stub[RingMatcher]
     fakeDustOrderEvaluator = stub[DustOrderEvaluator]
     fakePendingRingPool = stub[PendingRingPool]

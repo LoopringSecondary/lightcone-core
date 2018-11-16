@@ -71,11 +71,23 @@ class MarketManagerImpl(
   def getNumOfSellOrders = sells.size
   def getNumOfBuyOrders = buys.size
 
-  def getSellOrders(num: Int) = sells.take(num).toSeq
-  def getBuyOrders(num: Int) = buys.take(num).toSeq
+  def getSellOrders(num: Int, returnMatchableAmounts: Boolean = false) = {
+    val orders = sells.take(num).toSeq
+    if (!returnMatchableAmounts) orders
+    else orders.map(updateOrderMatchable)
+  }
 
-  def getOrder(orderId: String) =
-    orderMap.get(orderId).map(updateOrderMatchable)
+  def getBuyOrders(num: Int, returnMatchableAmounts: Boolean = false) = {
+    val orders = buys.take(num).toSeq
+    if (!returnMatchableAmounts) orders
+    else orders.map(updateOrderMatchable)
+  }
+
+  def getOrder(orderId: String, returnMatchableAmounts: Boolean = false) = {
+    val order = orderMap.get(orderId)
+    if (!returnMatchableAmounts) order
+    else order.map(updateOrderMatchable)
+  }
 
   def submitOrder(order: Order, minFiatValue: Double = 0): MatchResult = {
     // Allow re-submission of an existing order.
@@ -141,11 +153,10 @@ class MarketManagerImpl(
             else ringMatcher.matchOrders(taker, maker, minFiatValue)
 
           log.debug(
-            s"""recursively match orders ===>
-            >> taker: $taker,
-            >> maker: $maker,
-            >> matchResult: $matchResult
-            """
+            s"""\n\n------ recursive matching (${taker.id} ⇒ ${maker.id}) ------
+[taker]  : $taker,
+[maker]  : $maker,
+[result] : $matchResult\n\n"""
           )
           (maker, matchResult)
         } match {
@@ -236,13 +247,13 @@ class MarketManagerImpl(
     val matchableAmountS = (order.actual.amountS - pendingAmountS).max(0)
     val scale = Rational(matchableAmountS, order.original.amountS)
     val copy = order.copy(_matchable = Some(order.original.scaleBy(scale)))
-    println(s"""
-      original: $order
-      pendingAmountS: $pendingAmountS
-      actualAmount: ${order.actual}
-      matchableAmountS: $matchableAmountS
-      scale: $scale
-      new : $copy""")
+    // println(s"""
+    //   original: $order
+    //   pendingAmountS: $pendingAmountS
+    //   actualAmount: ${order.actual}
+    //   matchableAmountS: $matchableAmountS
+    //   scale: $scale
+    //   new : $copy""")
     copy
   }
 }

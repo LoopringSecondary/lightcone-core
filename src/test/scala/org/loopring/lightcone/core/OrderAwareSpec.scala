@@ -21,7 +21,7 @@ import org.loopring.lightcone.core.data._
 import org.loopring.lightcone.core.account._
 
 trait OrderAwareSpec extends CommonSpec {
-  val rand = new scala.util.Random
+  var nextId = 1
 
   val LRC = "LRC"
   val GTO = "GTO"
@@ -52,6 +52,7 @@ trait OrderAwareSpec extends CommonSpec {
   var updatedOrders = Map.empty[String, Order]
 
   override def beforeEach() {
+    nextId = 1
     orderPool = new AccountOrderPoolImpl()
     updatedOrders = Map.empty[String, Order]
     orderPool.addCallback { order ⇒
@@ -116,7 +117,7 @@ trait OrderAwareSpec extends CommonSpec {
     amountB: BigInt,
     amountFee: BigInt = 0
   ) = Order(
-    rand.nextLong().toString,
+    getNextId(),
     tokenS,
     tokenB,
     tokenFee,
@@ -151,6 +152,12 @@ trait OrderAwareSpec extends CommonSpec {
   }
 
   implicit def longToBigInt(l: Long) = BigInt(l)
+
+  def getNextId() = {
+    val id = nextId
+    nextId += 1
+    id.toString
+  }
 
   implicit class RichOrder(order: Order) {
     def asPending() = order.copy(status = OrderStatus.PENDING)

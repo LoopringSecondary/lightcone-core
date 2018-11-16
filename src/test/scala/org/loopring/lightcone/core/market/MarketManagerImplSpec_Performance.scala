@@ -56,6 +56,7 @@ class MarketManagerImplSpec_Performance extends OrderAwareSpec {
   var marketManager: MarketManager = _
 
   override def beforeEach() {
+    nextId = 1
     fackRingIncomeEstimator = stub[RingIncomeEstimator]
     fakeDustOrderEvaluator = stub[DustOrderEvaluator]
 
@@ -80,7 +81,7 @@ class MarketManagerImplSpec_Performance extends OrderAwareSpec {
 
   "a" should "b" in {
     val now = System.currentTimeMillis
-    val num = 10
+    val num = 2
     var rings = 0
     (1 to num) foreach { i ⇒
       var result = marketManager.submitOrder(createGTOSellOrder(0.12, 5000), 0)
@@ -92,11 +93,24 @@ class MarketManagerImplSpec_Performance extends OrderAwareSpec {
     val cost = System.currentTimeMillis - now
     val avg = num / cost
 
+    val sells = marketManager.getSellOrders(100)
+    val buys = marketManager.getBuyOrders(100)
+
+    println(s"""
+      -----------
+      sells: ${sells.mkString("\n", "\n\n", "\n")}
+
+      -----------
+      buys: ${buys.mkString("\n", "\n\n", "\n")}
+
+      """)
+
     println(s"""
       number of orders :${marketManager.getNumOfOrders}
       time cost for $num orders: $cost ($avg/second)
       num of rings: $rings
       """)
+
   }
 
   private def createGTOSellOrder(price: Double, amount: Double) = {
