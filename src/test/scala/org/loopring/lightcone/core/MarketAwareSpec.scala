@@ -43,6 +43,7 @@ trait MarketAwareSpec extends OrderAwareSpec {
   var marketManager: MarketManager = _
 
   override def beforeEach() {
+    nextId = 1
     fackRingMatcher = stub[RingMatcher]
     fakeDustOrderEvaluator = stub[DustOrderEvaluator]
     fakePendingRingPool = stub[PendingRingPool]
@@ -74,13 +75,4 @@ trait MarketAwareSpec extends OrderAwareSpec {
       .verify(*, *, *).never
   }
 
-  implicit class RichOrder(order: Order) {
-    def asPending() = order.copy(status = PENDING)
-
-    def withSameActual() = order.copy(_actual =
-      Some(OrderState(order.amountS, order.amountB, order.amountFee)))
-
-    def withSameMatchable() = order.copy(_matchable =
-      Some(OrderState(order.actual.amountS, order.actual.amountB, order.actual.amountFee)))
-  }
 }

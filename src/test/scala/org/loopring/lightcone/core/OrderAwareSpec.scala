@@ -21,7 +21,7 @@ import org.loopring.lightcone.core.data._
 import org.loopring.lightcone.core.account._
 
 trait OrderAwareSpec extends CommonSpec {
-  val rand = new scala.util.Random
+  var nextId = 1
 
   val LRC = "LRC"
   val GTO = "GTO"
@@ -29,9 +29,9 @@ trait OrderAwareSpec extends CommonSpec {
   val WETH = "WETH"
 
   val LRC_TOKEN = TokenMetadata(LRC, 0, 0.1, 1.0)
-  val GTO_TOKEN = TokenMetadata(GTO, 1, 0.2, 1400.0)
-  val DAI_TOKEN = TokenMetadata(DAI, 2, 0.3, 7.0)
-  val WETH_TOKEN = TokenMetadata(WETH, 3, 0.4, 0.5)
+  val GTO_TOKEN = TokenMetadata(GTO, 10, 0.2, 1400.0)
+  val DAI_TOKEN = TokenMetadata(DAI, 20, 0.3, 7.0)
+  val WETH_TOKEN = TokenMetadata(WETH, 23, 0.4, 0.5)
 
   implicit val tmm = new TokenMetadataManager()
   tmm.addToken(LRC_TOKEN)
@@ -52,6 +52,7 @@ trait OrderAwareSpec extends CommonSpec {
   var updatedOrders = Map.empty[String, Order]
 
   override def beforeEach() {
+    nextId = 1
     orderPool = new AccountOrderPoolImpl()
     updatedOrders = Map.empty[String, Order]
     orderPool.addCallback { order ⇒
@@ -116,7 +117,7 @@ trait OrderAwareSpec extends CommonSpec {
     amountB: BigInt,
     amountFee: BigInt = 0
   ) = Order(
-    rand.nextLong().toString,
+    getNextId(),
     tokenS,
     tokenB,
     tokenFee,
@@ -152,7 +153,16 @@ trait OrderAwareSpec extends CommonSpec {
 
   implicit def longToBigInt(l: Long) = BigInt(l)
 
-  implicit class richOrder(order: Order) {
-    def !() = order.copy(_matchable = Some(order.original))
+  def getNextId() = {
+    val id = nextId
+    nextId += 1
+    id.toString
+  }
+
+  implicit class RichOrder(order: Order) {
+    def asPending() = order.copy(status = OrderStatus.PENDING)
+    def withActualAsOriginal() = order.copy(_actual = Some(order.original))
+    def withMatchableAsActual() = order.copy(_matchable = Some(order.actual))
+    def matchableAsOriginal() = order.copy(_matchable = Some(order.original))
   }
 }

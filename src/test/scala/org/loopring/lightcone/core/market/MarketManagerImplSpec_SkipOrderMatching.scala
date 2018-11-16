@@ -26,7 +26,7 @@ class MarketManagerImplSpec_SkipOrderMatching extends MarketAwareSpec {
   "MarketManager" should "skip non-profitable orders" in {
     val buy1 = actualNotDust(buyGTO(100, 100050)) // worst price
     val buy2 = actualNotDust(buyGTO(100, 100040)).copy(_actual = Some(OrderState(30, 50020, 0)))
-    val buy3 = actualNotDust(buyGTO(100, 100030)).withSameActual() // best price
+    val buy3 = actualNotDust(buyGTO(100, 100030)).withActualAsOriginal() // best price
 
     (fakeDustOrderEvaluator.isMatchableDust _).when(*).returns(false)
     (fakePendingRingPool.getOrderPendingAmountS _).when(*).returns(0)
@@ -43,7 +43,7 @@ class MarketManagerImplSpec_SkipOrderMatching extends MarketAwareSpec {
     ))
 
     (fackRingMatcher.matchOrders(_: Order, _: Order, _: Double))
-      .when(*, buy3.asPending.withSameMatchable, *)
+      .when(*, buy3.asPending.withMatchableAsActual, *)
       .returns(Left(INCOME_TOO_SMALL))
 
     (fackRingMatcher.matchOrders(_: Order, _: Order, _: Double))
@@ -54,7 +54,7 @@ class MarketManagerImplSpec_SkipOrderMatching extends MarketAwareSpec {
 
     val ring = OrderRing(null, null)
     (fackRingMatcher.matchOrders(_: Order, _: Order, _: Double))
-      .when(*, buy1.asPending.withSameMatchable().withSameActual(), *)
+      .when(*, buy1.asPending.withMatchableAsActual().withActualAsOriginal(), *)
       .returns(Right(ring))
 
     // Submit a sell order as the taker

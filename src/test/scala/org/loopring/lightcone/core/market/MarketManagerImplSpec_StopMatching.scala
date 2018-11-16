@@ -43,17 +43,17 @@ class MarketManagerImplSpec_StopMatching extends MarketAwareSpec {
     ))
 
     (fackRingMatcher.matchOrders(_: Order, _: Order, _: Double))
-      .when(*, buy3.asPending.withSameMatchable.withSameActual, *)
+      .when(*, buy3.asPending.withMatchableAsActual.withActualAsOriginal, *)
       .returns(Left(ORDERS_NOT_TRADABLE))
 
     val ring = OrderRing(null, null)
 
     (fackRingMatcher.matchOrders(_: Order, _: Order, _: Double))
-      .when(*, buy2.asPending.withSameMatchable.withSameActual, *)
+      .when(*, buy2.asPending.withMatchableAsActual.withActualAsOriginal, *)
       .returns(Right(ring))
 
     (fackRingMatcher.matchOrders(_: Order, _: Order, _: Double))
-      .when(*, buy1.asPending.withSameMatchable.withSameActual, *)
+      .when(*, buy1.asPending.withMatchableAsActual.withActualAsOriginal, *)
       .returns(Right(ring))
 
     // Submit a sell order as the taker

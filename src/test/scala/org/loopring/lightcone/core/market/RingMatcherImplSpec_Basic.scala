@@ -31,43 +31,56 @@ class RingMatcherImplSpec_Basic extends OrderAwareSpec {
   val matcher = new RingMatcherImpl()
 
   "RingMatcherImpl" should "not match untradable orders" in {
-    val maker = sellDAI(100000000, 100000001)!
-    val taker = buyDAI(100000000, 100000000)!
+    val maker = sellDAI(100000000, 100000001).matchableAsOriginal
+    val taker = buyDAI(100000000, 100000000).matchableAsOriginal
 
     matcher.matchOrders(taker, maker, 0) should be(Left(ORDERS_NOT_TRADABLE))
   }
 
   "RingMatcherImpl" should "not match orders if one of them has tokenB as 0 " in {
     matcher.matchOrders(
-      sellDAI(10, 0)!,
-      buyDAI(10, 10)!
+      sellDAI(10, 0).matchableAsOriginal,
+      buyDAI(10, 10).matchableAsOriginal
     ) should be(Left(ORDERS_NOT_TRADABLE))
 
     matcher.matchOrders(
-      sellDAI(10, 10)!,
-      buyDAI(10, 0)!
+      sellDAI(10, 10).matchableAsOriginal,
+      buyDAI(10, 0).matchableAsOriginal
     ) should be(Left(ORDERS_NOT_TRADABLE))
 
     matcher.matchOrders(
-      sellDAI(10, 0)!,
-      buyDAI(10, 0)!
+      sellDAI(10, 0).matchableAsOriginal,
+      buyDAI(10, 0).matchableAsOriginal
     ) should be(Left(ORDERS_NOT_TRADABLE))
   }
 
   "RingMatcherImpl" should "not match orders if one of them has tokenS as 0 " in {
     matcher.matchOrders(
-      sellDAI(0, 10)!,
-      buyDAI(10, 10)!
+      sellDAI(0, 10).matchableAsOriginal,
+      buyDAI(10, 10).matchableAsOriginal
     ) should be(Left(ORDERS_NOT_TRADABLE))
 
     matcher.matchOrders(
-      sellDAI(10, 10)!,
-      buyDAI(0, 10)!
+      sellDAI(10, 10).matchableAsOriginal,
+      buyDAI(0, 10).matchableAsOriginal
     ) should be(Left(ORDERS_NOT_TRADABLE))
 
     matcher.matchOrders(
-      sellDAI(0, 10)!,
-      buyDAI(0, 10)!
+      sellDAI(0, 10).matchableAsOriginal,
+      buyDAI(0, 10).matchableAsOriginal
     ) should be(Left(ORDERS_NOT_TRADABLE))
+  }
+
+  "RingMatcherImpl" should "verify two orders in MarketManagerImplSpec_Performance should be matched in a ring " in {
+    matcher.matchOrders(
+      taker = Order("taker", WETH, GTO, LRC,
+        BigInt("60000000000000006000000000"),
+        BigInt("50000000000000"),
+        0, -1, OrderStatus.PENDING, 0.0, None, None, None, Some(OrderState(0, 0, 0))).matchableAsOriginal,
+      maker = Order("maker", GTO, WETH, LRC,
+        BigInt("50000000000000"),
+        BigInt("60000000000000006000000000"),
+        0, -1, OrderStatus.PENDING, 0.0, None, None, None, Some(OrderState(0, 0, 0))).matchableAsOriginal
+    ).isRight should be(true)
   }
 }

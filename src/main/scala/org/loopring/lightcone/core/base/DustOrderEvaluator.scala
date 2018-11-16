@@ -23,18 +23,18 @@ class DustOrderEvaluator(threshold: Double = 0.0)(
     tve: TokenValueEstimator
 ) {
   def isOriginalDust(order: Order) =
-    _isDust(order.tokenS, order.original.amountS)
+    isDust(order.tokenS, order.original.amountS)
 
   def isOutstandingDust(order: Order) =
-    _isDust(order.tokenS, order.outstanding.amountS)
+    isDust(order.tokenS, order.outstanding.amountS)
 
   def isActualDust(order: Order) =
-    _isDust(order.tokenS, order.actual.amountS)
+    isDust(order.tokenS, order.actual.amountS)
 
   def isMatchableDust(order: Order) =
-    _isDust(order.tokenS, order.matchable.amountS)
+    isDust(order.tokenS, order.matchable.amountS)
 
-  private def _isDust(tokenS: String, amountS: BigInt): Boolean = {
+  private def isDust(tokenS: String, amountS: BigInt): Boolean = {
     tve.getEstimatedValue(tokenS, amountS) < threshold
   }
 }
