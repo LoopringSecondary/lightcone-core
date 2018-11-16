@@ -8,7 +8,10 @@ enum MatchingFailure {
     NO_ERROR = 0;
     ORDERS_NOT_TRADABLE = 1;
     INCOME_TOO_SMALL = 2;
-    HAS_BEEN_FULL_FILLED = 3;
+    MAKER_COMPLETELY_FILLED = 3;
+    TAKER_COMPLETELY_FILLED = 4;
+    INVALID_MAKER_ORDER = 5;
+    INVALID_TAKER_ORDER = 6;
 }
 
 enum OrderStatus {

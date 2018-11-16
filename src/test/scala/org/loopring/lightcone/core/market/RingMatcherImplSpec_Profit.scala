@@ -61,7 +61,7 @@ class RingMatcherImplSpec_Profit extends OrderAwareSpec {
     matcher.matchOrders(
       sellDAI(10, 10),
       buyDAI(10, 10)
-    ) should be(Left(ORDERS_NOT_TRADABLE))
+    ) should be(Left(TAKER_COMPLETELY_FILLED))
   }
 
 }
