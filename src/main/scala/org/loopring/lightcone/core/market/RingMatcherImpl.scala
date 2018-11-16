@@ -30,23 +30,23 @@ class RingMatcherImpl()(implicit rie: RingIncomeEstimator)
   ): Either[MatchingFailure, OrderRing] = {
     val ringOpt = makeRing(maker, taker)
     ringOpt match {
-      case Some(ring) if rie.isProfitable(ring, minFiatValue) ⇒ Right(ring)
-      case Some(ring) ⇒ Left(INCOME_TOO_SMALL)
-      case None ⇒ Left(ORDERS_NOT_TRADABLE)
+      case Right(ring) if !rie.isProfitable(ring, minFiatValue) ⇒
+        Left(INCOME_TOO_SMALL)
+      case other ⇒ other
     }
   }
 
-  private def makeRing(maker: Order, taker: Order): Option[OrderRing] = {
-    if (maker.amountS * taker.amountS < maker.amountB * taker.amountB ||
-      maker.amountB.signum <= 0 ||
-      taker.amountB.signum <= 0 ||
-      maker._matchable.isEmpty ||
-      taker._matchable.isEmpty ||
-      maker.matchable.amountB <= 0 ||
-      taker.matchable.amountB <= 0 ||
-      maker.matchable.amountS <= 0 ||
-      taker.matchable.amountS <= 0) {
-      None
+  private def makeRing(maker: Order, taker: Order): Either[MatchingFailure, OrderRing] = {
+    if (taker.amountB <= 0 || taker.amountS <= 0) {
+      Left(INVALID_TAKER_ORDER)
+    } else if (maker.amountB <= 0 || maker.amountS <= 0) {
+      Left(INVALID_MAKER_ORDER)
+    } else if (taker.matchable.amountS <= 0 || taker.matchable.amountB <= 0) {
+      Left(TAKER_COMPLETELY_FILLED)
+    } else if (maker.matchable.amountS <= 0 || maker.matchable.amountB <= 0) {
+      Left(MAKER_COMPLETELY_FILLED)
+    } else if (maker.amountS * taker.amountS < maker.amountB * taker.amountB) {
+      Left(ORDERS_NOT_TRADABLE)
     } else {
       /*合约逻辑：
     取小的成交量计算，按照订单顺序，如果下一单的卖需要缩减，则第一单为最小单
@@ -94,7 +94,7 @@ class RingMatcherImpl()(implicit rie: RingIncomeEstimator)
       val makerMargin = makerVolume.amountS - takerVolume.amountB
       val takerMargin = takerVolume.amountS - makerVolume.amountB
 
-      Some(OrderRing(
+      Right(OrderRing(
         maker = ExpectedFill(
           order = maker.copy(
             _matchable = Some(OrderState(

@@ -165,7 +165,11 @@ class MarketManagerImpl(
             // we alsways need to add maker back even if it is PENDING-fully-matched.
             ordersToAddBack :+= maker
             matchResult match {
-              case Left(ORDERS_NOT_TRADABLE) ⇒
+              case Left(
+                ORDERS_NOT_TRADABLE |
+                TAKER_COMPLETELY_FILLED |
+                INVALID_TAKER_ORDER |
+                INVALID_MAKER_ORDER) ⇒ // stop redursive matching
 
               case Left(_) ⇒
                 recursivelyMatchOrders()
