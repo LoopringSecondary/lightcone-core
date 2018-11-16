@@ -137,11 +137,10 @@ class MarketManagerImpl(
             else ringMatcher.matchOrders(taker, maker, minFiatValue)
 
           log.debug(
-            s"""
-            recursively match orders ===>
-            - taker: $taker,
-            - maker: $maker,
-            - matchResult: $matchResult
+            s"""recursively match orders ===>
+            >> taker: $taker,
+            >> maker: $maker,
+            >> matchResult: $matchResult
             """
           )
           (maker, matchResult)
