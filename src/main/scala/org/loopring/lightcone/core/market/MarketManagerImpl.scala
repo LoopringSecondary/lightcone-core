@@ -83,15 +83,19 @@ class MarketManagerImpl(
     matchOrders(order, minFiatValue)
   }
 
-  def deleteOrder(orderId: String): OrderbookUpdate = {
-    removeFromSide(orderId)
-    pendingRingPool.deleteOrder(orderId)
-    aggregator.getOrderbookUpdate()
+  def cancelOrder(orderId: String): Option[OrderbookUpdate] = {
+    getOrder(orderId).map { order ⇒
+      removeFromSide(orderId)
+      pendingRingPool.deleteOrder(orderId)
+      aggregator.getOrderbookUpdate()
+    }
   }
 
-  def deletePendingRing(ringId: String): OrderbookUpdate = {
-    pendingRingPool.deleteRing(ringId)
-    aggregator.getOrderbookUpdate()
+  def deletePendingRing(ringId: String): Option[OrderbookUpdate] = {
+    if (pendingRingPool.hasRing(ringId)) {
+      pendingRingPool.deleteRing(ringId)
+      Some(aggregator.getOrderbookUpdate())
+    } else None
   }
 
   def triggerMatch(

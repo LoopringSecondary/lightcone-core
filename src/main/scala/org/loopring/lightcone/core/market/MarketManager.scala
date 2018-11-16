@@ -32,8 +32,8 @@ trait MarketManager {
   val pendingRingPool: PendingRingPool
 
   def submitOrder(order: Order, minFiatValue: Double): MatchResult
-  def deleteOrder(orderId: String): OrderbookUpdate
-  def deletePendingRing(ringId: String): OrderbookUpdate
+  def cancelOrder(orderId: String): Option[OrderbookUpdate]
+  def deletePendingRing(ringId: String): Option[OrderbookUpdate]
 
   def getOrder(orderId: String): Option[Order]
   def getSellOrders(num: Int): Seq[Order]
@@ -50,5 +50,4 @@ trait MarketManager {
     minFiatValue: Double,
     offset: Int = 0
   ): Option[MatchResult]
-
 }
