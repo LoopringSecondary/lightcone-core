@@ -152,7 +152,7 @@ class MarketManagerImpl(
           case None ⇒ // to maker to trade with
           case Some((maker, matchResult)) ⇒
             // we alsways need to add maker back even if it is PENDING-fully-matched.
-            ordersToAddBack +:= maker
+            ordersToAddBack :+= maker
             matchResult match {
               case Left(ORDERS_NOT_TRADABLE) ⇒
 
@@ -161,7 +161,7 @@ class MarketManagerImpl(
 
               case Right(ring) ⇒
                 isLastTakerSell = (taker.tokenS == marketId.secondary)
-                rings +:= ring
+                rings :+= ring
                 pendingRingPool.addRing(ring)
                 recursivelyMatchOrders()
             }
@@ -171,13 +171,13 @@ class MarketManagerImpl(
       recursivelyMatchOrders()
 
       // we alsways need to add the taker back even if it is PENDING-fully-matched.
-      ordersToAddBack +:= taker
+      ordersToAddBack :+= taker
 
       // add each skipped maker orders back
       ordersToAddBack.map(_.resetMatchable).foreach(addToSide)
 
       MatchResult(
-        rings.reverse,
+        rings,
         taker.resetMatchable,
         aggregator.getOrderbookUpdate()
       )
