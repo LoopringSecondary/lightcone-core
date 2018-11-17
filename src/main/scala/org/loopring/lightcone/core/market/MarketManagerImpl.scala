@@ -37,13 +37,14 @@ object MarketManagerImpl {
 }
 
 class MarketManagerImpl(
-  val marketId: MarketId,
-  val config: MarketManagerConfig,
-  val tokenMetadataManager: TokenMetadataManager,
-  val ringMatcher: RingMatcher,
-  val pendingRingPool: PendingRingPool,
-  val dustOrderEvaluator: DustOrderEvaluator,
-  val aggregator: OrderAwareOrderbookAggregator) extends MarketManager with Logging {
+    val marketId: MarketId,
+    val config: MarketManagerConfig,
+    val tokenMetadataManager: TokenMetadataManager,
+    val ringMatcher: RingMatcher,
+    val pendingRingPool: PendingRingPool,
+    val dustOrderEvaluator: DustOrderEvaluator,
+    val aggregator: OrderAwareOrderbookAggregator
+) extends MarketManager with Logging {
 
   import MarketManager._
   import MarketManagerImpl._
@@ -63,7 +64,8 @@ class MarketManagerImpl(
   private[core] val orderMap = Map.empty[String, Order]
   private[core] val sides = Map(
     marketId.primary -> buys,
-    marketId.secondary -> sells)
+    marketId.secondary -> sells
+  )
 
   def getNumOfOrders = orderMap.size
   def getNumOfSellOrders = sells.size
@@ -111,7 +113,8 @@ class MarketManagerImpl(
   def triggerMatch(
     sellOrderAsTaker: Boolean,
     minFiatValue: Double = 0,
-    offset: Int = 0): Option[MatchResult] = {
+    offset: Int = 0
+  ): Option[MatchResult] = {
     val side = if (sellOrderAsTaker) sells else buys
     val takerOption = side.drop(offset).headOption
     takerOption.map(submitOrder(_, minFiatValue))
@@ -122,12 +125,14 @@ class MarketManagerImpl(
       MatchResult(
         Nil,
         order.copy(status = DUST_ORDER),
-        OrderbookUpdate(Nil, Nil))
+        OrderbookUpdate(Nil, Nil)
+      )
     } else if (dustOrderEvaluator.isActualDust(order)) {
       MatchResult(
         Nil,
         order.copy(status = COMPLETELY_FILLED),
-        OrderbookUpdate(Nil, Nil))
+        OrderbookUpdate(Nil, Nil)
+      )
     } else {
       var taker = order.copy(status = PENDING)
       var rings = Seq.empty[OrderRing]
@@ -151,7 +156,8 @@ class MarketManagerImpl(
             s"""\n\n------ recursive matching (${taker.id} ⇒ ${maker.id}) ------
 [taker]  : $taker,
 [maker]  : $maker,
-[result] : $matchResult\n\n""")
+[result] : $matchResult\n\n"""
+          )
           (maker, matchResult)
         } match {
           case None ⇒ // to maker to trade with
@@ -188,7 +194,8 @@ class MarketManagerImpl(
       MatchResult(
         rings,
         taker.resetMatchable,
-        aggregator.getOrderbookUpdate())
+        aggregator.getOrderbookUpdate()
+      )
     }
   }
 
@@ -201,7 +208,8 @@ class MarketManagerImpl(
     bestBuyPrice = 0.0,
     bestSellPrice = 0.0,
     lastPrice = 0.0,
-    isLastTakerSell = isLastTakerSell)
+    isLastTakerSell = isLastTakerSell
+  )
 
   // Add an order to its side.
   private def addToSide(order: Order) {
