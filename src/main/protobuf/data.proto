@@ -1,8 +1,7 @@
 syntax = "proto3";
 
 option java_multiple_files = true;
-option java_package = "org.loopring.lightcone.core";
-package org.loopring.lightcone.core;
+package org.loopring.lightcone.core.data;
 
 enum MatchingFailure {
     NO_ERROR = 0;

@@ -10,4 +10,4 @@ lazy val core = (project in file("."))
     libraryDependencies ++= commonDependency)
   .settings(
     PB.targets in Compile := Seq(
-      scalapb.gen(flatPackage = false) -> (sourceManaged in Compile).value))
+      scalapb.gen(flatPackage = true) -> (sourceManaged in Compile).value))
