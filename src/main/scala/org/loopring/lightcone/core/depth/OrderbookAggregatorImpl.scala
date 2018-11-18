@@ -25,9 +25,9 @@ class OrderbookAggregatorImpl(priceDecimals: Int)
   private val buys = new OrderbookSide.Buys(priceDecimals, 0, true)
   private val lastPrice: Double = 0
 
-  def getOrderbookUpdate(num: Int = 0): OrderbookUpdate = {
-    if (num == 0) OrderbookUpdate(sells.takeUpdatedSlots, buys.takeUpdatedSlots)
-    else OrderbookUpdate(sells.getSlots(num), buys.getSlots(num))
+  def getXOrderbookUpdate(num: Int = 0): XOrderbookUpdate = {
+    if (num == 0) XOrderbookUpdate(sells.takeUpdatedSlots, buys.takeUpdatedSlots)
+    else XOrderbookUpdate(sells.getSlots(num), buys.getSlots(num))
   }
 
   def increaseSell(

@@ -37,8 +37,8 @@ object MarketManagerImpl {
 }
 
 class MarketManagerImpl(
-    val marketId: MarketId,
-    val config: MarketManagerConfig,
+    val marketId: XMarketId,
+    val config: XMarketManagerConfig,
     val tokenMetadataManager: TokenMetadataManager,
     val ringMatcher: RingMatcher,
     val pendingRingPool: PendingRingPool,
@@ -48,8 +48,8 @@ class MarketManagerImpl(
 
   import MarketManager._
   import MarketManagerImpl._
-  import MatchingFailure._
-  import OrderStatus._
+  import XMatchingFailure._
+  import XOrderStatus._
 
   private implicit val marketId_ = marketId
   private implicit val tmm_ = tokenMetadataManager
@@ -95,18 +95,18 @@ class MarketManagerImpl(
     matchOrders(order, minFiatValue)
   }
 
-  def cancelOrder(orderId: String): Option[OrderbookUpdate] = {
+  def cancelOrder(orderId: String): Option[XOrderbookUpdate] = {
     getOrder(orderId).map { order ⇒
       removeFromSide(orderId)
       pendingRingPool.deleteOrder(orderId)
-      aggregator.getOrderbookUpdate()
+      aggregator.getXOrderbookUpdate()
     }
   }
 
-  def deletePendingRing(ringId: String): Option[OrderbookUpdate] = {
+  def deletePendingRing(ringId: String): Option[XOrderbookUpdate] = {
     if (pendingRingPool.hasRing(ringId)) {
       pendingRingPool.deleteRing(ringId)
-      Some(aggregator.getOrderbookUpdate())
+      Some(aggregator.getXOrderbookUpdate())
     } else None
   }
 
@@ -125,13 +125,13 @@ class MarketManagerImpl(
       MatchResult(
         Nil,
         order.copy(status = DUST_ORDER),
-        OrderbookUpdate(Nil, Nil)
+        XOrderbookUpdate(Nil, Nil)
       )
     } else if (dustOrderEvaluator.isActualDust(order)) {
       MatchResult(
         Nil,
         order.copy(status = COMPLETELY_FILLED),
-        OrderbookUpdate(Nil, Nil)
+        XOrderbookUpdate(Nil, Nil)
       )
     } else {
       var taker = order.copy(status = PENDING)
@@ -194,7 +194,7 @@ class MarketManagerImpl(
       MatchResult(
         rings,
         taker.resetMatchable,
-        aggregator.getOrderbookUpdate()
+        aggregator.getXOrderbookUpdate()
       )
     }
   }

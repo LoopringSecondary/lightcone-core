@@ -38,7 +38,7 @@ class AccountManagerImplSpec_Cancellation extends OrderAwareSpec {
     cancelOrder(order1.id) should be(true)
     updatedOrders.size should be(1)
 
-    updatedOrders(order1.id).status should be(OrderStatus.CANCELLED_BY_USER)
+    updatedOrders(order1.id).status should be(XOrderStatus.CANCELLED_BY_USER)
     updatedOrders(order1.id).reserved should be(orderState(0, 0, 0))
     updatedOrders(order1.id).actual should be(orderState(0, 0, 0))
 

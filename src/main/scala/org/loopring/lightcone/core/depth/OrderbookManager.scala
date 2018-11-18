@@ -19,8 +19,8 @@ package org.loopring.lightcone.core.depth
 import org.loopring.lightcone.core.data._
 
 trait OrderbookManager {
-  def processUpdate(update: OrderbookUpdate): Unit
-  def getOrderbook(level: Int, size: Int): Orderbook
+  def processUpdate(update: XOrderbookUpdate): Unit
+  def getXOrderbook(level: Int, size: Int): XOrderbook
   def reset(): Unit
 }
 

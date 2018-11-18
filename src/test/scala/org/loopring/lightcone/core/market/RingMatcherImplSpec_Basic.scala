@@ -19,7 +19,7 @@ package org.loopring.lightcone.core.market
 import org.loopring.lightcone.core.OrderAwareSpec
 import org.loopring.lightcone.core.data._
 import org.scalatest._
-import MatchingFailure._
+import XMatchingFailure._
 
 class RingMatcherImplSpec_Basic extends OrderAwareSpec {
 
@@ -76,11 +76,11 @@ class RingMatcherImplSpec_Basic extends OrderAwareSpec {
       taker = Order("taker", WETH, GTO, LRC,
         BigInt("60000000000000006000000000"),
         BigInt("50000000000000"),
-        0, -1, OrderStatus.PENDING, 0.0, None, None, None, Some(OrderState(0, 0, 0))).matchableAsOriginal,
+        0, -1, XOrderStatus.PENDING, 0.0, None, None, None, Some(OrderState(0, 0, 0))).matchableAsOriginal,
       maker = Order("maker", GTO, WETH, LRC,
         BigInt("50000000000000"),
         BigInt("60000000000000006000000000"),
-        0, -1, OrderStatus.PENDING, 0.0, None, None, None, Some(OrderState(0, 0, 0))).matchableAsOriginal
+        0, -1, XOrderStatus.PENDING, 0.0, None, None, None, Some(OrderState(0, 0, 0))).matchableAsOriginal
     ).isRight should be(true)
   }
 }

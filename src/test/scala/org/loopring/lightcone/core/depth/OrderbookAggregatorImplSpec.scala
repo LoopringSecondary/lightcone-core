@@ -29,88 +29,88 @@ class OrderbookAggregatorImplSpec extends CommonSpec {
 
   "OrderbookAggregatorImpl" should "not handle 0-valued adjustment" in {
     agg.increaseBuy(0, 1, 2)
-    agg.getOrderbookUpdate(0) should be(OrderbookUpdate(Nil, Nil))
+    agg.getXOrderbookUpdate(0) should be(XOrderbookUpdate(Nil, Nil))
 
     agg.increaseBuy(1, 0, 2)
-    agg.getOrderbookUpdate(0) should be(OrderbookUpdate(Nil, Nil))
+    agg.getXOrderbookUpdate(0) should be(XOrderbookUpdate(Nil, Nil))
 
     agg.increaseBuy(1, 2, 0)
-    agg.getOrderbookUpdate(0) should be(OrderbookUpdate(Nil, Nil))
+    agg.getXOrderbookUpdate(0) should be(XOrderbookUpdate(Nil, Nil))
   }
 
   "OrderbookAggregatorImpl" should "not return unchanged slots" in {
     agg.increaseSell(0.987654321, 50, 5000)
     agg.decreaseSell(0.987654321, 50, 5000)
-    agg.getOrderbookUpdate(0) should be(OrderbookUpdate(Nil, Nil))
+    agg.getXOrderbookUpdate(0) should be(XOrderbookUpdate(Nil, Nil))
 
     agg.increaseBuy(0.987654321, 50, 5000)
     agg.decreaseBuy(0.987654321, 50, 5000)
-    agg.getOrderbookUpdate(0) should be(OrderbookUpdate(Nil, Nil))
+    agg.getXOrderbookUpdate(0) should be(XOrderbookUpdate(Nil, Nil))
   }
 
   "OrderbookAggregatorImpl" should "increase and decrease sell amounts correctly" in {
     agg.increaseSell(0.987654321, 50, 5000)
-    agg.getOrderbookUpdate() should be(OrderbookUpdate(
-      Seq(OrderbookSlot(98766, 50, 5000)), Nil
+    agg.getXOrderbookUpdate() should be(XOrderbookUpdate(
+      Seq(XOrderbookSlot(98766, 50, 5000)), Nil
     ))
-    agg.getOrderbookUpdate() should be(OrderbookUpdate(Nil, Nil))
+    agg.getXOrderbookUpdate() should be(XOrderbookUpdate(Nil, Nil))
 
     agg.increaseSell(0.987651234, 1, 1)
-    agg.getOrderbookUpdate() should be(OrderbookUpdate(
-      Seq(OrderbookSlot(98766, 51, 5001)), Nil
+    agg.getXOrderbookUpdate() should be(XOrderbookUpdate(
+      Seq(XOrderbookSlot(98766, 51, 5001)), Nil
     ))
-    agg.getOrderbookUpdate() should be(OrderbookUpdate(Nil, Nil))
+    agg.getXOrderbookUpdate() should be(XOrderbookUpdate(Nil, Nil))
 
     agg.increaseSell(0.1, 1, 1)
-    agg.getOrderbookUpdate() should be(OrderbookUpdate(
-      Seq(OrderbookSlot(10000, 1, 1)), Nil
+    agg.getXOrderbookUpdate() should be(XOrderbookUpdate(
+      Seq(XOrderbookSlot(10000, 1, 1)), Nil
     ))
-    agg.getOrderbookUpdate() should be(OrderbookUpdate(Nil, Nil))
-    agg.getOrderbookUpdate(3) should be(OrderbookUpdate(
-      Seq(OrderbookSlot(10000, 1, 1), OrderbookSlot(98766, 51, 5001)), Nil
+    agg.getXOrderbookUpdate() should be(XOrderbookUpdate(Nil, Nil))
+    agg.getXOrderbookUpdate(3) should be(XOrderbookUpdate(
+      Seq(XOrderbookSlot(10000, 1, 1), XOrderbookSlot(98766, 51, 5001)), Nil
     ))
 
     agg.decreaseSell(0.1, 2, 2)
-    agg.getOrderbookUpdate() should be(OrderbookUpdate(
-      Seq(OrderbookSlot(10000, 0, 0)), Nil
+    agg.getXOrderbookUpdate() should be(XOrderbookUpdate(
+      Seq(XOrderbookSlot(10000, 0, 0)), Nil
     ))
-    agg.getOrderbookUpdate() should be(OrderbookUpdate(Nil, Nil))
+    agg.getXOrderbookUpdate() should be(XOrderbookUpdate(Nil, Nil))
 
     agg.reset()
-    agg.getOrderbookUpdate(3) should be(OrderbookUpdate(Nil, Nil))
+    agg.getXOrderbookUpdate(3) should be(XOrderbookUpdate(Nil, Nil))
   }
 
   "OrderbookAggregatorImpl" should "increase and decrease buy amounts correctly" in {
     agg.increaseBuy(0.123456789, 50, 5000)
-    agg.getOrderbookUpdate() should be(OrderbookUpdate(
-      Nil, Seq(OrderbookSlot(12345, 50, 5000))
+    agg.getXOrderbookUpdate() should be(XOrderbookUpdate(
+      Nil, Seq(XOrderbookSlot(12345, 50, 5000))
     ))
-    agg.getOrderbookUpdate() should be(OrderbookUpdate(Nil, Nil))
+    agg.getXOrderbookUpdate() should be(XOrderbookUpdate(Nil, Nil))
 
     agg.increaseBuy(0.123456789, 1, 1)
-    agg.getOrderbookUpdate() should be(OrderbookUpdate(
-      Nil, Seq(OrderbookSlot(12345, 51, 5001))
+    agg.getXOrderbookUpdate() should be(XOrderbookUpdate(
+      Nil, Seq(XOrderbookSlot(12345, 51, 5001))
     ))
-    agg.getOrderbookUpdate() should be(OrderbookUpdate(Nil, Nil))
+    agg.getXOrderbookUpdate() should be(XOrderbookUpdate(Nil, Nil))
 
     agg.increaseBuy(0.1, 1, 1)
-    agg.getOrderbookUpdate() should be(OrderbookUpdate(
-      Nil, Seq(OrderbookSlot(10000, 1, 1))
+    agg.getXOrderbookUpdate() should be(XOrderbookUpdate(
+      Nil, Seq(XOrderbookSlot(10000, 1, 1))
     ))
-    agg.getOrderbookUpdate() should be(OrderbookUpdate(Nil, Nil))
+    agg.getXOrderbookUpdate() should be(XOrderbookUpdate(Nil, Nil))
 
-    agg.getOrderbookUpdate(3) should be(OrderbookUpdate(
-      Nil, Seq(OrderbookSlot(12345, 51, 5001), OrderbookSlot(10000, 1, 1))
+    agg.getXOrderbookUpdate(3) should be(XOrderbookUpdate(
+      Nil, Seq(XOrderbookSlot(12345, 51, 5001), XOrderbookSlot(10000, 1, 1))
     ))
 
     agg.decreaseBuy(0.1, 2, 2)
-    agg.getOrderbookUpdate() should be(OrderbookUpdate(
-      Nil, Seq(OrderbookSlot(10000, 0, 0))
+    agg.getXOrderbookUpdate() should be(XOrderbookUpdate(
+      Nil, Seq(XOrderbookSlot(10000, 0, 0))
     ))
-    agg.getOrderbookUpdate() should be(OrderbookUpdate(Nil, Nil))
+    agg.getXOrderbookUpdate() should be(XOrderbookUpdate(Nil, Nil))
 
     agg.reset()
-    agg.getOrderbookUpdate(3) should be(OrderbookUpdate(Nil, Nil))
+    agg.getXOrderbookUpdate(3) should be(XOrderbookUpdate(Nil, Nil))
   }
 
 }

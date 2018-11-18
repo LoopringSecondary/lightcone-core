@@ -3,7 +3,7 @@ syntax = "proto3";
 option java_multiple_files = true;
 package org.loopring.lightcone.core.data;
 
-enum MatchingFailure {
+enum XMatchingFailure {
     NO_ERROR = 0;
     ORDERS_NOT_TRADABLE = 1;
     INCOME_TOO_SMALL = 2;
@@ -13,7 +13,7 @@ enum MatchingFailure {
     INVALID_TAKER_ORDER = 6;
 }
 
-enum OrderStatus {
+enum XOrderStatus {
     NEW = 0;
     PENDING = 1;
     EXPIRED = 2;
@@ -29,19 +29,14 @@ enum OrderStatus {
     CANCELLED_TOO_MANY_FAILED_SETTLEMENTS = 12;
 }
 
-enum ExecutionStatus {
-    UNKNOWN = 0;
-    FAILED = 1;
-    SUCCEEDED = 2;
-}
 
 // For ABC/XYZ market, ABC is secondary, XYZ is primary
-message MarketId {
+message XMarketId {
     string primary = 1;
     string secondary = 2;
 }
 
-message MarketManagerConfig {
+message XMarketManagerConfig {
     int32 maxNumbersOfOrders = 1;
     int32 priceDecimals = 2;
 }
@@ -57,36 +52,36 @@ message MarketMetadata {
     bool isLastTakerSell = 8;
 }
 
-message OrderbookSlot {
+message XOrderbookSlot {
     int64 slot = 1;
     double amount = 2;
     double total = 3;
 }
 
-message OrderbookItem {
+message XOrderbookItem {
     string price = 1;
     string amount = 2;
     string total = 3;
 }
 
-message Orderbook {
-    repeated OrderbookItem sells = 1;
-    repeated OrderbookItem buys = 2;
+message XOrderbook {
+    repeated XOrderbookItem sells = 1;
+    repeated XOrderbookItem buys = 2;
 }
 
-message OrderbookConfig {
+message XOrderbookConfig {
     int32 levels = 1;
     int32 priceDecimals = 2;
     int32 precisionForAmount = 3;
     int32 precisionForTotal = 4;
 }
 
-message OrderbookUpdate {
-    repeated OrderbookSlot sells = 1;
-    repeated OrderbookSlot buys = 2;
+message XOrderbookUpdate {
+    repeated XOrderbookSlot sells = 1;
+    repeated XOrderbookSlot buys = 2;
 }
 
-message TokenMetadata {
+message XTokenMetadata {
     string address = 1;
     int32 decimals = 2;
     double burnRate = 3;

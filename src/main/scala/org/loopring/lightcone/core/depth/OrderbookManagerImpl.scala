@@ -19,21 +19,21 @@ package org.loopring.lightcone.core.depth
 import org.loopring.lightcone.core.data._
 import scala.collection.SortedMap
 
-class OrderbookManagerImpl(config: OrderbookConfig)
+class OrderbookManagerImpl(config: XOrderbookConfig)
   extends OrderbookManager {
 
   private[depth] val viewMap = (0 until config.levels).map {
     level ⇒ level -> new View(level)
   }.toMap
 
-  def processUpdate(update: OrderbookUpdate) = {
+  def processUpdate(update: XOrderbookUpdate) = {
     val diff = viewMap(0).getDiff(update)
     viewMap.values.foreach(_.processUpdate(diff))
   }
 
-  def getOrderbook(level: Int, size: Int) = viewMap.get(level) match {
-    case Some(view) ⇒ view.getOrderbook(size)
-    case None       ⇒ Orderbook(Nil, Nil)
+  def getXOrderbook(level: Int, size: Int) = viewMap.get(level) match {
+    case Some(view) ⇒ view.getXOrderbook(size)
+    case None       ⇒ XOrderbook(Nil, Nil)
   }
 
   def reset() = viewMap.values.foreach(_.reset)
@@ -52,20 +52,20 @@ class OrderbookManagerImpl(config: OrderbookConfig)
       config.priceDecimals, aggregationLevel, false
     ) with ConverstionSupport
 
-    def processUpdate(update: OrderbookUpdate) {
+    def processUpdate(update: XOrderbookUpdate) {
       update.sells.foreach(sellSide.increase)
       update.buys.foreach(buySide.increase)
     }
 
-    def getDiff(update: OrderbookUpdate) = {
-      OrderbookUpdate(
+    def getDiff(update: XOrderbookUpdate) = {
+      XOrderbookUpdate(
         update.sells.map(sellSide.getDiff),
         update.buys.map(buySide.getDiff)
       )
     }
 
-    def getOrderbook(size: Int) =
-      Orderbook(sellSide.getDepth(size), buySide.getDepth(size))
+    def getXOrderbook(size: Int) =
+      XOrderbook(sellSide.getDepth(size), buySide.getDepth(size))
 
     def reset() {
       sellSide.reset()
@@ -73,14 +73,14 @@ class OrderbookManagerImpl(config: OrderbookConfig)
     }
 
     trait ConverstionSupport { self: OrderbookSide ⇒
-      private def slotToItem(slot: OrderbookSlot) =
-        OrderbookItem(
+      private def slotToItem(slot: XOrderbookSlot) =
+        XOrderbookItem(
           priceFormat.format(slot.slot / priceScaling),
           amountFormat.format(slot.amount),
           totalFormat.format(slot.total)
         )
 
-      def getDepth(num: Int): Seq[OrderbookItem] =
+      def getDepth(num: Int): Seq[XOrderbookItem] =
         getSlots(num)
           .filter(_.slot != 0)
           .map(slotToItem(_))

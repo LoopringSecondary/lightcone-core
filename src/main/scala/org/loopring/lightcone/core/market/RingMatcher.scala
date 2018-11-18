@@ -23,5 +23,5 @@ trait RingMatcher {
     taker: Order,
     maker: Order,
     minFiatValue: Double
-  ): Either[MatchingFailure, OrderRing]
+  ): Either[XMatchingFailure, OrderRing]
 }

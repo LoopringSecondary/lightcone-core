@@ -19,8 +19,8 @@ package org.loopring.lightcone.core.market
 import org.loopring.lightcone.core.base._
 import org.loopring.lightcone.core.data._
 import org.loopring.lightcone.core._
-import OrderStatus._
-import MatchingFailure._
+import XOrderStatus._
+import XMatchingFailure._
 
 class MarketManagerImplSpec_BasicMatching extends MarketAwareSpec {
 
@@ -30,7 +30,7 @@ class MarketManagerImplSpec_BasicMatching extends MarketAwareSpec {
       var buyOrder = actualNotDust(sellGTO(100000, 100)) // price =  100000/100.0 = 1000.00
 
       (fakePendingRingPool.getOrderPendingAmountS _).when(*).returns(0)
-      (fakeAggregator.getOrderbookUpdate _).when(0).returns(OrderbookUpdate())
+      (fakeAggregator.getXOrderbookUpdate _).when(0).returns(XOrderbookUpdate())
 
       (fackRingMatcher.matchOrders(_: Order, _: Order, _: Double))
         .when(*, *, *)
@@ -49,7 +49,7 @@ class MarketManagerImplSpec_BasicMatching extends MarketAwareSpec {
       var buyOrder = actualNotDust(buyGTO(100000, 100)) // price =  100000/100.0 = 1000.00
 
       (fakePendingRingPool.getOrderPendingAmountS _).when(*).returns(0)
-      (fakeAggregator.getOrderbookUpdate _).when(0).returns(OrderbookUpdate())
+      (fakeAggregator.getXOrderbookUpdate _).when(0).returns(XOrderbookUpdate())
 
       (fackRingMatcher.matchOrders(_: Order, _: Order, _: Double))
         .when(*, *, *)
@@ -67,7 +67,7 @@ class MarketManagerImplSpec_BasicMatching extends MarketAwareSpec {
     var buyOrder = actualNotDust(buyGTO(100000, 100)) // price =  100000/100.0 = 1000.00
 
     (fakePendingRingPool.getOrderPendingAmountS _).when(*).returns(0)
-    (fakeAggregator.getOrderbookUpdate _).when(0).returns(OrderbookUpdate())
+    (fakeAggregator.getXOrderbookUpdate _).when(0).returns(XOrderbookUpdate())
 
     val ring = OrderRing(null, null)
     (fackRingMatcher.matchOrders(_: Order, _: Order, _: Double))
@@ -81,7 +81,7 @@ class MarketManagerImplSpec_BasicMatching extends MarketAwareSpec {
     buyResult should be(MarketManager.MatchResult(
       Seq(ring),
       buyOrder.asPending,
-      OrderbookUpdate()
+      XOrderbookUpdate()
     ))
 
     marketManager.getSellOrders(100) should be(Seq(
@@ -100,7 +100,7 @@ class MarketManagerImplSpec_BasicMatching extends MarketAwareSpec {
     var sellOrder = actualNotDust(sellGTO(100000, 101)) // price =  100000/101.0 = 989.12
 
     (fakePendingRingPool.getOrderPendingAmountS _).when(*).returns(0)
-    (fakeAggregator.getOrderbookUpdate _).when(0).returns(OrderbookUpdate())
+    (fakeAggregator.getXOrderbookUpdate _).when(0).returns(XOrderbookUpdate())
 
     val ring = OrderRing(null, null)
     (fackRingMatcher.matchOrders(_: Order, _: Order, _: Double))
@@ -114,7 +114,7 @@ class MarketManagerImplSpec_BasicMatching extends MarketAwareSpec {
     sellResult should be(MarketManager.MatchResult(
       Seq(ring),
       sellOrder.asPending,
-      OrderbookUpdate()
+      XOrderbookUpdate()
     ))
 
     marketManager.getSellOrders(100) should be(Seq(sellOrder.asPending))

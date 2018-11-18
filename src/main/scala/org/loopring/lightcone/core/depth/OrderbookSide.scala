@@ -42,45 +42,45 @@ private[depth] trait OrderbookSide {
 
   val aggregationScaling = Math.pow(10, aggregationLevel)
   val priceScaling = Math.pow(10, priceDecimals)
-  var slotMap = SortedMap.empty[Long, OrderbookSlot]
+  var slotMap = SortedMap.empty[Long, XOrderbookSlot]
 
-  var oldSlots = Map.empty[Long, OrderbookSlot]
-  var updatedSlots = Map.empty[Long, OrderbookSlot]
+  var oldSlots = Map.empty[Long, XOrderbookSlot]
+  var updatedSlots = Map.empty[Long, XOrderbookSlot]
 
   def increase(price: Double, amount: Double, total: Double): Unit =
-    increase(OrderbookSlot(getSlotForPriceId(price), amount, total))
+    increase(XOrderbookSlot(getSlotForPriceId(price), amount, total))
 
   def decrease(price: Double, amount: Double, total: Double): Unit =
-    decrease(OrderbookSlot(getSlotForPriceId(price), amount, total))
+    decrease(XOrderbookSlot(getSlotForPriceId(price), amount, total))
 
   def replace(price: Double, amount: Double, total: Double): Unit =
-    replace(OrderbookSlot(getSlotForPriceId(price), amount, total))
+    replace(XOrderbookSlot(getSlotForPriceId(price), amount, total))
 
-  def increase(slot: OrderbookSlot): Unit = adjustInternal(slot, _ + _)
+  def increase(slot: XOrderbookSlot): Unit = adjustInternal(slot, _ + _)
 
-  def decrease(slot: OrderbookSlot): Unit = adjustInternal(slot, _ - _)
+  def decrease(slot: XOrderbookSlot): Unit = adjustInternal(slot, _ - _)
 
-  def replace(slot: OrderbookSlot): Unit =
-    adjustInternal(slot, (old: OrderbookSlot, new_ : OrderbookSlot) ⇒ new_)
+  def replace(slot: XOrderbookSlot): Unit =
+    adjustInternal(slot, (old: XOrderbookSlot, new_ : XOrderbookSlot) ⇒ new_)
 
-  def getDiff(slot: OrderbookSlot) = {
-    slot - slotMap.getOrElse(slot.slot, OrderbookSlot(slot.slot, 0, 0))
+  def getDiff(slot: XOrderbookSlot) = {
+    slot - slotMap.getOrElse(slot.slot, XOrderbookSlot(slot.slot, 0, 0))
   }
 
   private def adjustInternal(
-    slot: OrderbookSlot,
-    op: (OrderbookSlot, OrderbookSlot) ⇒ OrderbookSlot
+    slot: XOrderbookSlot,
+    op: (XOrderbookSlot, XOrderbookSlot) ⇒ XOrderbookSlot
   ) = {
     val id = getAggregationSlotFor(slot.slot)
 
-    val old = slotMap.getOrElse(id, OrderbookSlot(id, 0, 0))
+    val old = slotMap.getOrElse(id, XOrderbookSlot(id, 0, 0))
     if (maintainUpdatedSlots && !oldSlots.contains(id)) {
       oldSlots += id -> old
     }
 
     var updated = op(old, slot.copy(slot = id))
     if (updated.amount <= 0 || updated.total <= 0) {
-      updated = OrderbookSlot(id, 0, 0)
+      updated = XOrderbookSlot(id, 0, 0)
       slotMap -= id
     } else {
       slotMap += id -> updated
@@ -95,10 +95,10 @@ private[depth] trait OrderbookSide {
     oldSlots = Map.empty
     updatedSlots = Map.empty
   }
-  def getSlots(num: Int): Seq[OrderbookSlot] =
+  def getSlots(num: Int): Seq[XOrderbookSlot] =
     slotMap.take(num).values.toList
 
-  def takeUpdatedSlots(): Seq[OrderbookSlot] = {
+  def takeUpdatedSlots(): Seq[XOrderbookSlot] = {
     if (!maintainUpdatedSlots) {
       throw new UnsupportedOperationException("maintainUpdatedSlots is false")
     }

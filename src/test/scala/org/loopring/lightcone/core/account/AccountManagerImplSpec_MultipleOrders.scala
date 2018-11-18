@@ -28,13 +28,13 @@ class AccountManagerImplSpec_MultipleOrders extends OrderAwareSpec {
       val order = sellDAI(100, 1)
       submitOrder(order) should be(true)
       orderPool.size should be(i)
-      updatedOrders(order.id).status should be(OrderStatus.PENDING)
+      updatedOrders(order.id).status should be(XOrderStatus.PENDING)
     }
 
     val order = sellDAI(100, 1)
     submitOrder(order) should be(false)
     orderPool.size should be(9)
-    updatedOrders(order.id).status should be(OrderStatus.CANCELLED_LOW_BALANCE)
+    updatedOrders(order.id).status should be(XOrderStatus.CANCELLED_LOW_BALANCE)
   }
 
   "last order" should "fail when available balance for tokenFee is smaller than required" in {
@@ -45,13 +45,13 @@ class AccountManagerImplSpec_MultipleOrders extends OrderAwareSpec {
       val order = sellDAI(100, 1, 100)
       submitOrder(order) should be(true)
       orderPool.size should be(i)
-      updatedOrders(order.id).status should be(OrderStatus.PENDING)
+      updatedOrders(order.id).status should be(XOrderStatus.PENDING)
     }
 
     val order = sellDAI(100, 1, 100)
     submitOrder(order) should be(false)
     orderPool.size should be(9)
-    updatedOrders(order.id).status should be(OrderStatus.CANCELLED_LOW_FEE_BALANCE)
+    updatedOrders(order.id).status should be(XOrderStatus.CANCELLED_LOW_FEE_BALANCE)
   }
 
   "delete orders" should "scale up following orders according to tokenS" in {
@@ -70,7 +70,7 @@ class AccountManagerImplSpec_MultipleOrders extends OrderAwareSpec {
     orderPool.size should be(2)
     updatedOrders.size should be(3)
 
-    updatedOrders(order1.id).status should be(OrderStatus.CANCELLED_BY_USER)
+    updatedOrders(order1.id).status should be(XOrderStatus.CANCELLED_BY_USER)
     updatedOrders(order1.id).reserved should be(orderState(0, 0, 0))
     updatedOrders(order1.id).actual should be(orderState(0, 0, 0))
 
@@ -84,7 +84,7 @@ class AccountManagerImplSpec_MultipleOrders extends OrderAwareSpec {
     orderPool.size should be(1)
     updatedOrders.size should be(2)
 
-    updatedOrders(order2.id).status should be(OrderStatus.CANCELLED_BY_USER)
+    updatedOrders(order2.id).status should be(XOrderStatus.CANCELLED_BY_USER)
     updatedOrders(order2.id).reserved should be(orderState(0, 0, 0))
     updatedOrders(order2.id).actual should be(orderState(0, 0, 0))
 
@@ -110,7 +110,7 @@ class AccountManagerImplSpec_MultipleOrders extends OrderAwareSpec {
     orderPool.size should be(2)
     updatedOrders.size should be(3)
 
-    updatedOrders(order1.id).status should be(OrderStatus.CANCELLED_BY_USER)
+    updatedOrders(order1.id).status should be(XOrderStatus.CANCELLED_BY_USER)
     updatedOrders(order1.id).reserved should be(orderState(0, 0, 0))
     updatedOrders(order1.id).actual should be(orderState(0, 0, 0))
 
@@ -124,7 +124,7 @@ class AccountManagerImplSpec_MultipleOrders extends OrderAwareSpec {
     orderPool.size should be(1)
     updatedOrders.size should be(2)
 
-    updatedOrders(order2.id).status should be(OrderStatus.CANCELLED_BY_USER)
+    updatedOrders(order2.id).status should be(XOrderStatus.CANCELLED_BY_USER)
     updatedOrders(order2.id).reserved should be(orderState(0, 0, 0))
     updatedOrders(order2.id).actual should be(orderState(0, 0, 0))
 

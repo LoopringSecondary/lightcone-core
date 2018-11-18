@@ -44,10 +44,10 @@ class AccountOrderPoolImpl()
       case Some(existing) if existing == order ⇒
 
       case _ ⇒ order.status match {
-        case OrderStatus.NEW ⇒
+        case XOrderStatus.NEW ⇒
           add(order.id, order)
 
-        case OrderStatus.PENDING ⇒
+        case XOrderStatus.PENDING ⇒
           add(order.id, order)
           callbacks.foreach(_(order))
 

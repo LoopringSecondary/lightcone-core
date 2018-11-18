@@ -36,8 +36,8 @@ import org.loopring.lightcone.core.base._
 import org.loopring.lightcone.core.data._
 import org.loopring.lightcone.core.depth._
 import org.loopring.lightcone.core._
-import OrderStatus._
-import MatchingFailure._
+import XOrderStatus._
+import XMatchingFailure._
 
 class MarketManagerImplSpec_Performance extends OrderAwareSpec {
 
@@ -45,8 +45,8 @@ class MarketManagerImplSpec_Performance extends OrderAwareSpec {
     def getCurrentTimeMillis = -1
   }
 
-  implicit val marketId = MarketId(primary = WETH, secondary = GTO)
-  var config = MarketManagerConfig(
+  implicit val marketId = XMarketId(primary = WETH, secondary = GTO)
+  var config = XMarketManagerConfig(
     maxNumbersOfOrders = 100, /* unsupported */
     priceDecimals = 5
   )

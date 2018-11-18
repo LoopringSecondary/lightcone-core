@@ -18,7 +18,7 @@ package org.loopring.lightcone.core.data
 
 import org.loopring.lightcone.core.base._
 
-import OrderStatus._
+import XOrderStatus._
 
 case class OrderState(
     amountS: BigInt = 0,
@@ -42,7 +42,7 @@ case class Order(
     amountB: BigInt = 0,
     amountFee: BigInt = 0,
     createdAt: Long = -1,
-    status: OrderStatus = NEW,
+    status: XOrderStatus = NEW,
     walletSplitPercentage: Double = 0,
     _outstanding: Option[OrderState] = None,
     _reserved: Option[OrderState] = None,
@@ -112,7 +112,7 @@ case class Order(
     }
 
   // Private methods
-  private[core] def as(status: OrderStatus) = {
+  private[core] def as(status: XOrderStatus) = {
     assert(status != PENDING)
     copy(
       status = status,
@@ -133,12 +133,12 @@ case class Order(
   private[core] def displayableAmountFee()(implicit tokenMetadataManager: TokenMetadataManager) =
     calcDisplayableAmount(tokenFee, actual.amountFee)
 
-  private[core] def isSell()(implicit marketId: MarketId) =
+  private[core] def isSell()(implicit marketId: XMarketId) =
     (tokenS == marketId.secondary)
 
   private[core] def displayablePrice()(
     implicit
-    marketId: MarketId,
+    marketId: XMarketId,
     tokenMetadataManager: TokenMetadataManager
   ) = {
     if (tokenS == marketId.secondary) Rational(amountS, amountB).doubleValue
@@ -147,7 +147,7 @@ case class Order(
 
   private[core] def displayableAmount()(
     implicit
-    marketId: MarketId, tokenMetadataManager: TokenMetadataManager
+    marketId: XMarketId, tokenMetadataManager: TokenMetadataManager
   ) = {
     if (tokenS == marketId.secondary) displayableAmountS
     else displayableAmountB
@@ -155,7 +155,7 @@ case class Order(
 
   private[core] def displayableTotal()(
     implicit
-    marketId: MarketId,
+    marketId: XMarketId,
     tokenMetadataManager: TokenMetadataManager
   ) = {
     if (tokenS == marketId.secondary) displayableAmountB

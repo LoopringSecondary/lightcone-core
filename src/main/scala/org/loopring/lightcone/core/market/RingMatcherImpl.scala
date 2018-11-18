@@ -17,7 +17,7 @@
 package org.loopring.lightcone.core.market
 
 import org.loopring.lightcone.core.data._
-import org.loopring.lightcone.core.data.MatchingFailure._
+import org.loopring.lightcone.core.data.XMatchingFailure._
 import org.slf4s.Logging
 
 class RingMatcherImpl()(implicit rie: RingIncomeEstimator)
@@ -27,7 +27,7 @@ class RingMatcherImpl()(implicit rie: RingIncomeEstimator)
     taker: Order,
     maker: Order,
     minFiatValue: Double = 0
-  ): Either[MatchingFailure, OrderRing] = {
+  ): Either[XMatchingFailure, OrderRing] = {
     val ringOpt = makeRing(maker, taker)
     ringOpt match {
       case Right(ring) if !rie.isProfitable(ring, minFiatValue) ⇒
@@ -36,7 +36,7 @@ class RingMatcherImpl()(implicit rie: RingIncomeEstimator)
     }
   }
 
-  private def makeRing(maker: Order, taker: Order): Either[MatchingFailure, OrderRing] = {
+  private def makeRing(maker: Order, taker: Order): Either[XMatchingFailure, OrderRing] = {
     if (taker.amountB <= 0 || taker.amountS <= 0) {
       Left(INVALID_TAKER_ORDER)
     } else if (maker.amountB <= 0 || maker.amountS <= 0) {

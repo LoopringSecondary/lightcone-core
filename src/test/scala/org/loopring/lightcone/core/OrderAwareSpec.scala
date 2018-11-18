@@ -28,10 +28,10 @@ trait OrderAwareSpec extends CommonSpec {
   val DAI = "DAI"
   val WETH = "WETH"
 
-  val LRC_TOKEN = TokenMetadata(LRC, 0, 0.1, 1.0)
-  val GTO_TOKEN = TokenMetadata(GTO, 10, 0.2, 1400.0)
-  val DAI_TOKEN = TokenMetadata(DAI, 20, 0.3, 7.0)
-  val WETH_TOKEN = TokenMetadata(WETH, 23, 0.4, 0.5)
+  val LRC_TOKEN = XTokenMetadata(LRC, 0, 0.1, 1.0)
+  val GTO_TOKEN = XTokenMetadata(GTO, 10, 0.2, 1400.0)
+  val DAI_TOKEN = XTokenMetadata(DAI, 20, 0.3, 7.0)
+  val WETH_TOKEN = XTokenMetadata(WETH, 23, 0.4, 0.5)
 
   implicit val tmm = new TokenMetadataManager()
   tmm.addToken(LRC_TOKEN)
@@ -160,7 +160,7 @@ trait OrderAwareSpec extends CommonSpec {
   }
 
   implicit class RichOrder(order: Order) {
-    def asPending() = order.copy(status = OrderStatus.PENDING)
+    def asPending() = order.copy(status = XOrderStatus.PENDING)
     def withActualAsOriginal() = order.copy(_actual = Some(order.original))
     def withMatchableAsActual() = order.copy(_matchable = Some(order.actual))
     def matchableAsOriginal() = order.copy(_matchable = Some(order.original))

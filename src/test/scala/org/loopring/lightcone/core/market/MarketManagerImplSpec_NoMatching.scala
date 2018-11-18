@@ -19,7 +19,7 @@ package org.loopring.lightcone.core.market
 import org.loopring.lightcone.core.base._
 import org.loopring.lightcone.core.data._
 import org.loopring.lightcone.core._
-import OrderStatus._
+import XOrderStatus._
 
 class MarketManagerImplSpec_NoMatching extends MarketAwareSpec {
 
@@ -49,7 +49,7 @@ class MarketManagerImplSpec_NoMatching extends MarketAwareSpec {
     var order2 = actualNotDust(sellGTO(100000, 101))
 
     (fakePendingRingPool.getOrderPendingAmountS _).when(*).returns(0)
-    (fakeAggregator.getOrderbookUpdate _).when(0).returns(OrderbookUpdate())
+    (fakeAggregator.getXOrderbookUpdate _).when(0).returns(XOrderbookUpdate())
 
     var result = marketManager.submitOrder(order1, 0)
     result should be(emptyMatchingResult(order1, PENDING))
@@ -80,7 +80,7 @@ class MarketManagerImplSpec_NoMatching extends MarketAwareSpec {
     var order2 = actualNotDust(buyGTO(101, 100000))
 
     (fakePendingRingPool.getOrderPendingAmountS _).when(*).returns(0)
-    (fakeAggregator.getOrderbookUpdate _).when(0).returns(OrderbookUpdate())
+    (fakeAggregator.getXOrderbookUpdate _).when(0).returns(XOrderbookUpdate())
 
     var result = marketManager.submitOrder(order1, 0)
     result should be(emptyMatchingResult(order1, PENDING))

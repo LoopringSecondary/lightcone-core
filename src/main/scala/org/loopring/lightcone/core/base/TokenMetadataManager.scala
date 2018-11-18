@@ -20,13 +20,13 @@ import org.loopring.lightcone.core.data._
 
 class TokenMetadataManager(defaultBurnRate: Double = 0.2) {
 
-  private var tokens = Map.empty[String, TokenMetadata]
+  private var tokens = Map.empty[String, XTokenMetadata]
 
   private var decimalsMap = Map.empty[String, Int]
   private var priceMap = Map.empty[String, Double]
   private var burnRateMap = Map.empty[String, Double]
 
-  def addToken(token: TokenMetadata) {
+  def addToken(token: XTokenMetadata) {
     tokens += token.address -> token
   }
 

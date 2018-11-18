@@ -19,8 +19,8 @@ package org.loopring.lightcone.core.market
 import org.loopring.lightcone.core.base._
 import org.loopring.lightcone.core.data._
 import org.loopring.lightcone.core._
-import OrderStatus._
-import MatchingFailure._
+import XOrderStatus._
+import XMatchingFailure._
 
 class MarketManagerImplSpec_SkipOrderMatching extends MarketAwareSpec {
   "MarketManager" should "skip non-profitable orders" in {
@@ -30,7 +30,7 @@ class MarketManagerImplSpec_SkipOrderMatching extends MarketAwareSpec {
 
     (fakeDustOrderEvaluator.isMatchableDust _).when(*).returns(false)
     (fakePendingRingPool.getOrderPendingAmountS _).when(*).returns(0)
-    (fakeAggregator.getOrderbookUpdate _).when(0).returns(OrderbookUpdate())
+    (fakeAggregator.getXOrderbookUpdate _).when(0).returns(XOrderbookUpdate())
 
     marketManager.submitOrder(buy1, 0)
     marketManager.submitOrder(buy2, 0)
@@ -64,7 +64,7 @@ class MarketManagerImplSpec_SkipOrderMatching extends MarketAwareSpec {
     result should be(MarketManager.MatchResult(
       Seq(ring),
       sell1.copy(status = PENDING),
-      OrderbookUpdate()
+      XOrderbookUpdate()
     ))
 
     marketManager.getSellOrders(100) should be(Seq(

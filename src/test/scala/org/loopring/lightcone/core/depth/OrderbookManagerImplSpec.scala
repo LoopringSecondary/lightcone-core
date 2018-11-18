@@ -22,7 +22,7 @@ import org.scalatest._
 
 class OrderbookManagerImplSpec extends CommonSpec {
   var obm: OrderbookManager = _
-  val config = OrderbookConfig(
+  val config = XOrderbookConfig(
     levels = 2,
     priceDecimals = 5,
     precisionForAmount = 2,
@@ -34,99 +34,99 @@ class OrderbookManagerImplSpec extends CommonSpec {
   }
 
   "OrderbookManagerImplSpec" should "return empty order book after initialized" in {
-    obm.getOrderbook(0, 100) should be(Orderbook(Nil, Nil))
-    obm.getOrderbook(1, 100) should be(Orderbook(Nil, Nil))
+    obm.getXOrderbook(0, 100) should be(XOrderbook(Nil, Nil))
+    obm.getXOrderbook(1, 100) should be(XOrderbook(Nil, Nil))
   }
 
   "OrderbookManagerImplSpec" should "process very small slot" in {
-    obm.processUpdate(OrderbookUpdate(Seq(
-      OrderbookSlot(1, 10, 100)
+    obm.processUpdate(XOrderbookUpdate(Seq(
+      XOrderbookSlot(1, 10, 100)
     ), Nil))
 
-    obm.getOrderbook(0, 100) should be(Orderbook(Seq(
-      OrderbookItem("0.00001", "10.00", "100.0")
+    obm.getXOrderbook(0, 100) should be(XOrderbook(Seq(
+      XOrderbookItem("0.00001", "10.00", "100.0")
     ), Nil))
 
-    obm.getOrderbook(1, 100) should be(Orderbook(Seq(
-      OrderbookItem("0.0001", "10.00", "100.0")
+    obm.getXOrderbook(1, 100) should be(XOrderbook(Seq(
+      XOrderbookItem("0.0001", "10.00", "100.0")
     ), Nil))
   }
 
   "OrderbookManagerImplSpec" should "skip 0 value slots" in {
-    obm.processUpdate(OrderbookUpdate(Seq(
-      OrderbookSlot(0, 10, 100)
+    obm.processUpdate(XOrderbookUpdate(Seq(
+      XOrderbookSlot(0, 10, 100)
     ), Seq(
-      OrderbookSlot(0, 10, 100)
+      XOrderbookSlot(0, 10, 100)
     )))
-    obm.getOrderbook(0, 100) should be(Orderbook(Nil, Nil))
-    obm.getOrderbook(1, 100) should be(Orderbook(Nil, Nil))
+    obm.getXOrderbook(0, 100) should be(XOrderbook(Nil, Nil))
+    obm.getXOrderbook(1, 100) should be(XOrderbook(Nil, Nil))
   }
 
   "OrderbookManagerImplSpec" should "process sell slot and round up" in {
-    obm.processUpdate(OrderbookUpdate(Seq(
-      OrderbookSlot(12344, 10, 100)
+    obm.processUpdate(XOrderbookUpdate(Seq(
+      XOrderbookSlot(12344, 10, 100)
     ), Nil))
-    obm.getOrderbook(0, 100) should be(Orderbook(Seq(
-      OrderbookItem("0.12344", "10.00", "100.0")
+    obm.getXOrderbook(0, 100) should be(XOrderbook(Seq(
+      XOrderbookItem("0.12344", "10.00", "100.0")
     ), Nil))
 
-    obm.getOrderbook(1, 100) should be(Orderbook(Seq(
-      OrderbookItem("0.1235", "10.00", "100.0")
+    obm.getXOrderbook(1, 100) should be(XOrderbook(Seq(
+      XOrderbookItem("0.1235", "10.00", "100.0")
     ), Nil))
   }
 
   "OrderbookManagerImplSpec" should "process buy slot and round down" in {
-    obm.processUpdate(OrderbookUpdate(Nil, Seq(
-      OrderbookSlot(12344, 10, 100)
+    obm.processUpdate(XOrderbookUpdate(Nil, Seq(
+      XOrderbookSlot(12344, 10, 100)
     )))
-    obm.getOrderbook(0, 100) should be(Orderbook(Nil, Seq(
-      OrderbookItem("0.12344", "10.00", "100.0")
+    obm.getXOrderbook(0, 100) should be(XOrderbook(Nil, Seq(
+      XOrderbookItem("0.12344", "10.00", "100.0")
     )))
 
-    obm.getOrderbook(1, 100) should be(Orderbook(Nil, Seq(
-      OrderbookItem("0.1234", "10.00", "100.0")
+    obm.getXOrderbook(1, 100) should be(XOrderbook(Nil, Seq(
+      XOrderbookItem("0.1234", "10.00", "100.0")
     )))
   }
 
   "OrderbookManagerImplSpec" should "process sell slot with new lower values" in {
-    obm.processUpdate(OrderbookUpdate(Seq(
-      OrderbookSlot(12344, 10, 100),
-      OrderbookSlot(12345, 20, 200)
+    obm.processUpdate(XOrderbookUpdate(Seq(
+      XOrderbookSlot(12344, 10, 100),
+      XOrderbookSlot(12345, 20, 200)
     ), Nil))
 
-    obm.processUpdate(OrderbookUpdate(Seq(
-      OrderbookSlot(12344, 5, 40),
-      OrderbookSlot(12345, 10, 80)
+    obm.processUpdate(XOrderbookUpdate(Seq(
+      XOrderbookSlot(12344, 5, 40),
+      XOrderbookSlot(12345, 10, 80)
     ), Nil))
 
-    obm.getOrderbook(0, 100) should be(Orderbook(Seq(
-      OrderbookItem("0.12344", "5.00", "40.0"),
-      OrderbookItem("0.12345", "10.00", "80.0")
+    obm.getXOrderbook(0, 100) should be(XOrderbook(Seq(
+      XOrderbookItem("0.12344", "5.00", "40.0"),
+      XOrderbookItem("0.12345", "10.00", "80.0")
     ), Nil))
 
-    obm.getOrderbook(1, 100) should be(Orderbook(Seq(
-      OrderbookItem("0.1235", "15.00", "120.0")
+    obm.getXOrderbook(1, 100) should be(XOrderbook(Seq(
+      XOrderbookItem("0.1235", "15.00", "120.0")
     ), Nil))
   }
 
   "OrderbookManagerImplSpec" should "process buy slot with new lower values" in {
-    obm.processUpdate(OrderbookUpdate(Nil, Seq(
-      OrderbookSlot(12344, 10, 100),
-      OrderbookSlot(12345, 20, 200)
+    obm.processUpdate(XOrderbookUpdate(Nil, Seq(
+      XOrderbookSlot(12344, 10, 100),
+      XOrderbookSlot(12345, 20, 200)
     )))
 
-    obm.processUpdate(OrderbookUpdate(Nil, Seq(
-      OrderbookSlot(12344, 5, 40),
-      OrderbookSlot(12345, 10, 80)
+    obm.processUpdate(XOrderbookUpdate(Nil, Seq(
+      XOrderbookSlot(12344, 5, 40),
+      XOrderbookSlot(12345, 10, 80)
     )))
 
-    obm.getOrderbook(0, 100) should be(Orderbook(Nil, Seq(
-      OrderbookItem("0.12345", "10.00", "80.0"),
-      OrderbookItem("0.12344", "5.00", "40.0")
+    obm.getXOrderbook(0, 100) should be(XOrderbook(Nil, Seq(
+      XOrderbookItem("0.12345", "10.00", "80.0"),
+      XOrderbookItem("0.12344", "5.00", "40.0")
     )))
 
-    obm.getOrderbook(1, 100) should be(Orderbook(Nil, Seq(
-      OrderbookItem("0.1234", "15.00", "120.0")
+    obm.getXOrderbook(1, 100) should be(XOrderbook(Nil, Seq(
+      XOrderbookItem("0.1234", "15.00", "120.0")
     )))
   }
 }

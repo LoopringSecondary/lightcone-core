@@ -23,7 +23,7 @@ final private[core] class AccountManagerImpl()(
     implicit
     orderPool: AccountOrderPoolWithUpdatedOrdersTracing
 ) extends AccountManager with Logging {
-  import OrderStatus._
+  import XOrderStatus._
 
   private[core] implicit var tokens =
     Map.empty[String, AccountTokenManager]

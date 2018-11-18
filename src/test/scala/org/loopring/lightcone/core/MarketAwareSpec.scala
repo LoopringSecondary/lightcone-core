@@ -20,8 +20,8 @@ import org.loopring.lightcone.core.base._
 import org.loopring.lightcone.core.data._
 import org.loopring.lightcone.core.market._
 import org.loopring.lightcone.core.depth._
-import OrderStatus._
-import MatchingFailure._
+import XOrderStatus._
+import XMatchingFailure._
 
 trait MarketAwareSpec extends OrderAwareSpec {
   type MR = MarketManager.MatchResult
@@ -30,8 +30,8 @@ trait MarketAwareSpec extends OrderAwareSpec {
     def getCurrentTimeMillis = -1
   }
 
-  var marketId = MarketId(primary = WETH, secondary = GTO)
-  var config = MarketManagerConfig(
+  var marketId = XMarketId(primary = WETH, secondary = GTO)
+  var config = XMarketManagerConfig(
     maxNumbersOfOrders = 100, /* unsupported */
     priceDecimals = 5
   )
@@ -67,8 +67,8 @@ trait MarketAwareSpec extends OrderAwareSpec {
     o
   }
 
-  def emptyMatchingResult(order: Order, newStatus: OrderStatus) =
-    MarketManager.MatchResult(Nil, order.copy(status = newStatus), OrderbookUpdate())
+  def emptyMatchingResult(order: Order, newStatus: XOrderStatus) =
+    MarketManager.MatchResult(Nil, order.copy(status = newStatus), XOrderbookUpdate())
 
   def noMatchingActivity() = {
     (fackRingMatcher.matchOrders(_: Order, _: Order, _: Double))
